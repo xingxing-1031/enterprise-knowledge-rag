@@ -79,6 +79,7 @@ class DocumentRecord(StrictModel):
 class ChunkRecord(StrictModel):
     chunk_id: str = Field(min_length=1)
     document_id: str = Field(min_length=1)
+    document_version: str = Field(min_length=1)
     section_path: list[str] = Field(min_length=1)
     chunk_index: int = Field(ge=0)
     content: str = Field(min_length=1)
@@ -134,3 +135,12 @@ class ChatResult(StrictModel):
     evidence: list[RetrievalEvidence] = Field(default_factory=list)
     refusal_reason: RefusalReason | None = None
     degradation_reason: str | None = None
+
+
+class IndexingSummary(StrictModel):
+    discovered: int = Field(ge=0)
+    indexed: int = Field(ge=0)
+    skipped: int = Field(ge=0)
+    failed: int = Field(ge=0)
+    chunk_count: int = Field(ge=0)
+    errors: list[str] = Field(default_factory=list)

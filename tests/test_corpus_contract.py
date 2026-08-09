@@ -10,6 +10,11 @@ from enterprise_knowledge_rag.models import DocumentRecord
 CORPUS_DIR = Path(__file__).parents[1] / "knowledge"
 
 
+def read_manifest() -> dict:
+    path = CORPUS_DIR / "manifest.yaml"
+    return yaml.safe_load(path.read_text(encoding="utf-8"))
+
+
 def read_front_matter(path: Path) -> dict:
     text = path.read_text(encoding="utf-8")
     assert text.startswith("---\n"), f"missing front matter: {path}"
@@ -22,9 +27,7 @@ def read_front_matter(path: Path) -> dict:
 
 
 def test_manifest_lists_existing_synthetic_documents() -> None:
-    manifest = yaml.safe_load(
-        (CORPUS_DIR / "manifest.yaml").read_text(encoding="utf-8")
-    )
+    manifest = read_manifest()
     assert manifest["synthetic"] is True
     listed = {CORPUS_DIR / item for item in manifest["documents"]}
     assert listed
@@ -33,9 +36,7 @@ def test_manifest_lists_existing_synthetic_documents() -> None:
 
 
 def test_documents_satisfy_metadata_contract() -> None:
-    manifest = yaml.safe_load(
-        (CORPUS_DIR / "manifest.yaml").read_text(encoding="utf-8")
-    )
+    manifest = read_manifest()
     records = [
         DocumentRecord.model_validate(read_front_matter(CORPUS_DIR / item))
         for item in manifest["documents"]
@@ -46,9 +47,7 @@ def test_documents_satisfy_metadata_contract() -> None:
 
 
 def test_active_versions_are_not_duplicated_for_same_as_of_date() -> None:
-    manifest = yaml.safe_load(
-        (CORPUS_DIR / "manifest.yaml").read_text(encoding="utf-8")
-    )
+    manifest = read_manifest()
     records = [
         DocumentRecord.model_validate(read_front_matter(CORPUS_DIR / item))
         for item in manifest["documents"]

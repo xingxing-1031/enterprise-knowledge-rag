@@ -58,6 +58,7 @@ def test_chunk_rejects_empty_stable_identifier() -> None:
         ChunkRecord(
             chunk_id="",
             document_id="finance-expense-policy",
+            document_version="2.1",
             section_path=["报销范围"],
             chunk_index=0,
             content="员工提交报销前应准备有效票据。",

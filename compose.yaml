@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: enterprise_rag
+      POSTGRES_USER: rag_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-local}
+    ports:
+      - "${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - enterprise_rag_pgdata:/var/lib/postgresql/data
+      - ./db/migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rag_user -d enterprise_rag"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  enterprise_rag_pgdata:
+

@@ -141,6 +141,7 @@ def chunk_document(
                         content,
                     ),
                     document_id=document.record.document_id,
+                    document_version=document.record.version,
                     section_path=list(section.path),
                     chunk_index=chunk_index,
                     content=content,
