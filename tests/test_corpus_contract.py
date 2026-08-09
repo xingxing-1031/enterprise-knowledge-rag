@@ -7,7 +7,6 @@ import yaml
 
 from enterprise_knowledge_rag.models import DocumentRecord
 
-
 CORPUS_DIR = Path(__file__).parents[1] / "knowledge"
 
 
