@@ -1,3 +1,4 @@
+import hashlib
 from datetime import UTC, datetime
 
 from enterprise_knowledge_rag.models import (
@@ -39,7 +40,7 @@ def make_candidate(
         chunk_index=0,
         content=content,
         token_count=max(1, len(content)),
-        content_hash="b" * 64,
+        content_hash=hashlib.sha256(content.encode("utf-8")).hexdigest(),
         embedding_model="fake",
     )
     return RetrievalCandidate(chunk=chunk, document=document)
