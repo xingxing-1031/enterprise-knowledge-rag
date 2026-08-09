@@ -6,7 +6,7 @@
 
 项目已完成版本化合成语料、标题感知切分、PostgreSQL/pgvector 增量索引、权限与版本过滤、BM25 + 向量 + RRF + Reranker、最小证据、引用校验、拒答、LangGraph、FastAPI/SSE 和受控评测框架。
 
-真实运行适配器和启动入口已经接通，但当前环境尚未完成 PostgreSQL/pgvector 与实际 bge/Qwen 的端到端验收，也还没有 React 演示端。旧重庆文旅项目保持不变；本 README 的效果指标只在对应原始评测报告生成后填写。
+真实运行适配器、启动入口和 React 企业知识工作台已经接通，但当前环境尚未完成 PostgreSQL/pgvector 与实际 bge/Qwen 的端到端验收。旧重庆文旅项目保持不变；本 README 的效果指标只在对应原始评测报告生成后填写。
 
 ## 固定演示场景
 
