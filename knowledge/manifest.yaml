@@ -1,0 +1,15 @@
+dataset_id: synthetic-enterprise-policy-v1
+description: 构造的企业制度与流程知识库评测语料
+synthetic: true
+documents:
+  - hr/leave-policy-v1.md
+  - hr/leave-policy-v2.md
+  - hr/leave-policy-v3-future.md
+  - hr/onboarding-process.md
+  - finance/expense-policy-v1.md
+  - finance/expense-policy-v2.md
+  - finance/payment-approval-restricted.md
+  - procurement/purchase-process.md
+  - security/account-access-policy.md
+  - admin/asset-management-policy.md
+
