@@ -21,6 +21,11 @@ class Settings(BaseSettings):
     reranker_model: str = "BAAI/bge-reranker-v2-m3"
     public_demo_mode: bool = True
     public_demo_max_rows: int = Field(default=20, ge=1, le=100)
+    demo_user_id: str = "demo-employee"
+    demo_role: str = "employee"
+    demo_departments: str = "hr,finance,admin"
+    allowed_origins: str = "http://127.0.0.1:5173,http://localhost:5173"
+    request_max_bytes: int = Field(default=16_384, ge=1024, le=1_048_576)
 
 
 @lru_cache(maxsize=1)
