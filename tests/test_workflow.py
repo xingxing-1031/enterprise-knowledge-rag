@@ -129,6 +129,12 @@ def test_version_ambiguity_returns_specific_refusal() -> None:
     assert result.result.refusal_reason is RefusalReason.VERSION_AMBIGUOUS
 
 
+def test_permission_denial_returns_specific_refusal() -> None:
+    result = run(make_graph(retrieval_status=RetrievalStatus.PERMISSION_DENIED))
+    assert result.result.refusal_reason is RefusalReason.PERMISSION_DENIED
+    assert "generate" not in {event.component for event in result.trace}
+
+
 def test_invalid_generation_degrades_after_bounded_retry() -> None:
     result = run(make_graph(invalid_answer=True))
     assert result.result.status == "degraded"

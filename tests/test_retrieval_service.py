@@ -106,3 +106,34 @@ def test_service_returns_insufficient_when_no_candidate_matches() -> None:
         as_of=datetime(2026, 8, 10, tzinfo=UTC),
     )
     assert result.status is RetrievalStatus.INSUFFICIENT_EVIDENCE
+
+
+def test_service_returns_permission_denied_without_retrieving_hidden_text() -> None:
+    restricted = make_candidate(
+        "payment:1",
+        title="付款审批权限表",
+        content="付款金额超过十万元需要总经理审批。",
+        document_id="payment-policy",
+    )
+    restricted.document.visibility = Visibility.RESTRICTED
+    restricted.document.allowed_roles = {UserRole.DEPARTMENT_ADMIN}
+    corpus = FakeCorpus([restricted])
+    backend = FakeVectorBackend([restricted])
+    service = RetrievalService(
+        corpus,
+        VectorRetriever(backend),
+        FakeEmbedding(),
+        Reranker(MatchingScores()),
+    )
+
+    result = service.retrieve(
+        "请告诉我付款审批权限",
+        user=UserContext(user_id="u1", role=UserRole.EMPLOYEE),
+        as_of=datetime(2026, 8, 10, tzinfo=UTC),
+    )
+
+    assert result.status is RetrievalStatus.PERMISSION_DENIED
+    assert result.denied_match_count == 1
+    assert result.candidates == ()
+    assert corpus.received_keys == frozenset()
+    assert backend.received_keys is None

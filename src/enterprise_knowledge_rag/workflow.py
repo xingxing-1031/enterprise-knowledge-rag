@@ -116,11 +116,12 @@ def build_workflow(dependencies: WorkflowDependencies):
     def reject_retrieval(state: WorkflowState) -> dict:
         timer = StageTimer("refusal")
         retrieval = state["retrieval"]
-        reason = (
-            RefusalReason.VERSION_AMBIGUOUS
-            if retrieval.status is RetrievalStatus.VERSION_AMBIGUOUS
-            else RefusalReason.INSUFFICIENT_EVIDENCE
-        )
+        if retrieval.status is RetrievalStatus.VERSION_AMBIGUOUS:
+            reason = RefusalReason.VERSION_AMBIGUOUS
+        elif retrieval.status is RetrievalStatus.PERMISSION_DENIED:
+            reason = RefusalReason.PERMISSION_DENIED
+        else:
+            reason = RefusalReason.INSUFFICIENT_EVIDENCE
         return {
             "result": build_refusal(reason),
             "trace": [*state["trace"], timer.event("refused")],

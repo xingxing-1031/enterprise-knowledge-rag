@@ -16,7 +16,7 @@ from enterprise_knowledge_rag.policy import (
     resolve_effective_versions,
 )
 
-from .lexical import LexicalRetriever
+from .lexical import LexicalRetriever, tokenize
 from .reranker import Reranker
 from .rrf import reciprocal_rank_fusion
 from .vector import VectorRetriever
@@ -26,6 +26,7 @@ class RetrievalStatus(StrEnum):
     READY = "ready"
     INSUFFICIENT_EVIDENCE = "insufficient_evidence"
     VERSION_AMBIGUOUS = "version_ambiguous"
+    PERMISSION_DENIED = "permission_denied"
 
 
 @dataclass(frozen=True, slots=True)
@@ -34,6 +35,20 @@ class RetrievalResult:
     candidates: tuple[RetrievalCandidate, ...]
     authorized_document_keys: frozenset[tuple[str, str]]
     ambiguous_document_ids: tuple[str, ...] = ()
+    denied_match_count: int = 0
+
+
+def _metadata_matches(query: str, document: DocumentRecord) -> bool:
+    query_tokens = {token for token in tokenize(query) if len(token) >= 2}
+    metadata_tokens = {
+        token
+        for token in tokenize(
+            f"{document.title} {document.document_id} {document.department}"
+        )
+        if len(token) >= 2
+    }
+    overlap = query_tokens & metadata_tokens
+    return len(overlap) >= 2 or any(len(token) >= 4 for token in overlap)
 
 
 class CorpusSnapshot(Protocol):
@@ -75,11 +90,11 @@ class RetrievalService:
         requested_versions = requested_versions or {}
         grouped: dict[str, list[DocumentRecord]] = defaultdict(list)
         for document in self._corpus.list_documents():
-            if can_access(user, document):
-                grouped[document.document_id].append(document)
+            grouped[document.document_id].append(document)
 
         authorized_keys: set[tuple[str, str]] = set()
         ambiguous_ids: list[str] = []
+        denied_match_count = 0
         for document_id, documents in grouped.items():
             resolution = resolve_effective_versions(
                 documents,
@@ -88,9 +103,13 @@ class RetrievalService:
             )
             if resolution.status is VersionResolutionStatus.SELECTED:
                 selected = resolution.document
-                authorized_keys.add((selected.document_id, selected.version))
+                if can_access(user, selected):
+                    authorized_keys.add((selected.document_id, selected.version))
+                elif _metadata_matches(query, selected):
+                    denied_match_count += 1
             elif resolution.status is VersionResolutionStatus.AMBIGUOUS:
-                ambiguous_ids.append(document_id)
+                if any(can_access(user, document) for document in documents):
+                    ambiguous_ids.append(document_id)
 
         frozen_keys = frozenset(authorized_keys)
         lexical_candidates = self._corpus.list_candidates(frozen_keys)
@@ -113,6 +132,8 @@ class RetrievalService:
             status = RetrievalStatus.READY
         elif ambiguous_ids:
             status = RetrievalStatus.VERSION_AMBIGUOUS
+        elif denied_match_count:
+            status = RetrievalStatus.PERMISSION_DENIED
         else:
             status = RetrievalStatus.INSUFFICIENT_EVIDENCE
         return RetrievalResult(
@@ -120,4 +141,5 @@ class RetrievalService:
             candidates=tuple(reranked),
             authorized_document_keys=frozen_keys,
             ambiguous_document_ids=tuple(sorted(ambiguous_ids)),
+            denied_match_count=denied_match_count,
         )

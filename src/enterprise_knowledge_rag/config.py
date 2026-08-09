@@ -1,4 +1,5 @@
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -18,7 +19,13 @@ class Settings(BaseSettings):
     model_name: str = "qwen3:4b"
     model_api_key: str = "ollama"
     embedding_model: str = "BAAI/bge-m3"
+    embedding_dimension: int = Field(default=1024, ge=1, le=4096)
     reranker_model: str = "BAAI/bge-reranker-v2-m3"
+    reranker_min_score: float = 0.0
+    model_timeout_seconds: float = Field(default=30.0, gt=0.0, le=120.0)
+    knowledge_dir: Path = Path("knowledge")
+    latest_evaluation_path: Path = Path("evaluation/reports/latest-development.json")
+    history_max_messages: int = Field(default=8, ge=2, le=20)
     public_demo_mode: bool = True
     public_demo_max_rows: int = Field(default=20, ge=1, le=100)
     demo_user_id: str = "demo-employee"

@@ -10,6 +10,7 @@ requires-python = ">=3.11,<3.13"
 dependencies = [
   "fastapi>=0.115,<1",
   "langgraph>=0.6,<2",
+  "openai>=1.40,<2",
   "pydantic>=2.8,<3",
   "pydantic-settings>=2.4,<3",
   "pyyaml>=6,<7",
@@ -23,7 +24,6 @@ retrieval = [
   "psycopg[binary]>=3.2,<4",
 ]
 models = [
-  "openai>=1.40,<2",
   "sentence-transformers>=3,<6",
 ]
 dev = [
