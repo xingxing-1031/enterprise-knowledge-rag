@@ -15,6 +15,7 @@ class FakeRepository:
     def __init__(self):
         self.hashes = {}
         self.by_hash = {}
+        self.embedding_models = set()
         self.upserts = []
 
     def get_content_hash(self, document_id, version):
@@ -23,10 +24,16 @@ class FakeRepository:
     def find_document_by_hash(self, content_hash):
         return self.by_hash.get(content_hash)
 
+    def has_embeddings(self, document_id, version, embedding_model):
+        return (document_id, version, embedding_model) in self.embedding_models
+
     def upsert_document(self, document, chunks, embeddings):
         key = (document.document_id, document.version)
         self.hashes[key] = document.content_hash
         self.by_hash[document.content_hash] = key
+        self.embedding_models.add(
+            (document.document_id, document.version, chunks[0].embedding_model)
+        )
         self.upserts.append((document, list(chunks), list(embeddings)))
 
 
@@ -66,6 +73,23 @@ def test_unchanged_document_is_skipped() -> None:
     assert first.indexed == 1
     assert second.skipped == 1
     assert len(repository.upserts) == 1
+
+
+def test_embedding_model_change_reindexes_unchanged_document() -> None:
+    repository = FakeRepository()
+    path = CORPUS_DIR / "finance" / "expense-policy-v2.md"
+
+    first = make_service(repository).index_paths([path])
+    changed_model = IndexingService(
+        repository=repository,
+        embeddings=FakeEmbeddings(),
+        settings=Settings(embedding_model="replacement-embedding-model"),
+    ).index_paths([path])
+
+    assert first.indexed == 1
+    assert changed_model.indexed == 1
+    assert changed_model.skipped == 0
+    assert repository.upserts[-1][1][0].embedding_model == "replacement-embedding-model"
 
 
 def test_duplicate_content_under_another_identity_is_rejected() -> None:

@@ -86,6 +86,21 @@ def test_list_documents_maps_database_metadata() -> None:
     assert documents[0].allowed_roles == set()
 
 
+def test_has_embeddings_is_scoped_to_document_version_and_model() -> None:
+    repository, cursor = make_repository([(True,)])
+
+    assert repository.has_embeddings(
+        "finance-expense-policy",
+        "2.0",
+        "BAAI/bge-m3",
+    )
+    assert cursor.executions[0][1] == (
+        "finance-expense-policy",
+        "2.0",
+        "BAAI/bge-m3",
+    )
+
+
 def test_list_candidates_requires_authorized_document_versions() -> None:
     repository, cursor = make_repository([CHUNK_ROW])
 
@@ -124,8 +139,13 @@ def test_empty_authorization_never_queries_database() -> None:
 
 
 def test_ready_requires_documents_and_chunks() -> None:
-    ready_repository, _ = make_repository([{"document_count": 10, "chunk_count": 24}])
-    empty_repository, _ = make_repository([{"document_count": 0, "chunk_count": 0}])
+    ready_repository, cursor = make_repository(
+        [{"document_count": 10, "chunk_count": 24, "indexed_document_count": 10}]
+    )
+    empty_repository, _ = make_repository(
+        [{"document_count": 0, "chunk_count": 0, "indexed_document_count": 0}]
+    )
 
     assert ready_repository.ready() is True
     assert empty_repository.ready() is False
+    assert cursor.executions[0][1] == {"embedding_model": "BAAI/bge-m3"}

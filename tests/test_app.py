@@ -112,3 +112,24 @@ def test_oversized_request_is_rejected() -> None:
         headers={"content-type": "application/json"},
     )
     assert response.status_code == 413
+
+
+def test_built_frontend_is_served_without_shadowing_api(tmp_path) -> None:
+    frontend = tmp_path / "dist"
+    assets = frontend / "assets"
+    assets.mkdir(parents=True)
+    (frontend / "index.html").write_text(
+        "<html><body>企业知识工作台</body></html>", encoding="utf-8"
+    )
+    (assets / "app.js").write_text("console.log('ready')", encoding="utf-8")
+    app = create_app(
+        FakeService(),
+        settings=Settings(app_env="test"),
+        session_resolver=FixedResolver(),
+        static_dir=frontend,
+    )
+    client = TestClient(app)
+
+    assert client.get("/").text == "<html><body>企业知识工作台</body></html>"
+    assert client.get("/assets/app.js").status_code == 200
+    assert client.get("/health").json() == {"status": "ok"}

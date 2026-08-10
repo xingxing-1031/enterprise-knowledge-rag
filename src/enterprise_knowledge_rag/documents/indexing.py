@@ -16,6 +16,13 @@ class EmbeddingProvider(Protocol):
 class IndexRepository(Protocol):
     def get_content_hash(self, document_id: str, version: str) -> str | None: ...
 
+    def has_embeddings(
+        self,
+        document_id: str,
+        version: str,
+        embedding_model: str,
+    ) -> bool: ...
+
     def find_document_by_hash(self, content_hash: str) -> tuple[str, str] | None: ...
 
     def upsert_document(
@@ -51,7 +58,14 @@ class IndexingService:
                     parsed.record.document_id,
                     parsed.record.version,
                 )
-                if current_hash == parsed.record.content_hash:
+                if (
+                    current_hash == parsed.record.content_hash
+                    and self._repository.has_embeddings(
+                        parsed.record.document_id,
+                        parsed.record.version,
+                        self._settings.embedding_model,
+                    )
+                ):
                     skipped += 1
                     continue
 

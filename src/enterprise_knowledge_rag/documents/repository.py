@@ -106,6 +106,28 @@ class KnowledgeRepository:
             row = cursor.fetchone()
         return row[0].strip() if row else None
 
+    def has_embeddings(
+        self,
+        document_id: str,
+        version: str,
+        embedding_model: str,
+    ) -> bool:
+        with self._connection() as connection, connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT EXISTS (
+                    SELECT 1
+                    FROM knowledge_chunks
+                    WHERE document_id = %s
+                      AND document_version = %s
+                      AND embedding_model = %s
+                )
+                """,
+                (document_id, version, embedding_model),
+            )
+            row = cursor.fetchone()
+        return bool(row and row[0])
+
     def find_document_by_hash(self, content_hash: str) -> tuple[str, str] | None:
         with self._connection() as connection, connection.cursor() as cursor:
             cursor.execute(
@@ -145,13 +167,25 @@ class KnowledgeRepository:
                     SELECT
                         (SELECT COUNT(*) FROM knowledge_documents)
                             AS document_count,
-                        (SELECT COUNT(*) FROM knowledge_chunks) AS chunk_count
-                    """
+                        (SELECT COUNT(*) FROM knowledge_chunks
+                         WHERE embedding_model = %(embedding_model)s)
+                            AS chunk_count,
+                        (SELECT COUNT(DISTINCT (document_id, document_version))
+                         FROM knowledge_chunks
+                         WHERE embedding_model = %(embedding_model)s)
+                            AS indexed_document_count
+                    """,
+                    {"embedding_model": self._embedding_model},
                 )
                 row = cursor.fetchone()
         except Error:
             return False
-        return bool(row and row["document_count"] > 0 and row["chunk_count"] > 0)
+        return bool(
+            row
+            and row["document_count"] > 0
+            and row["chunk_count"] > 0
+            and row["indexed_document_count"] == row["document_count"]
+        )
 
     def list_candidates(
         self,

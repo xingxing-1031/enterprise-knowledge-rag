@@ -1,0 +1,119 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Python lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - run: python -m pip install "ruff>=0.9,<1"
+      - run: ruff check src tests scripts
+
+  python-tests:
+    name: Python ${{ matrix.python-version }} tests
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - run: python -m pip install -e ".[dev,retrieval]"
+      - run: python -m pytest
+
+  frontend:
+    name: Frontend checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm --prefix frontend ci
+      - run: npm --prefix frontend run test
+      - run: npm --prefix frontend run lint
+      - run: npm --prefix frontend run build
+      - run: npm --prefix frontend audit --audit-level=high
+
+  responsive:
+    name: Responsive browser checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm --prefix frontend ci
+      - run: npm --prefix frontend run build
+      - run: npx playwright install --with-deps chromium
+        working-directory: frontend
+      - run: npm run test:e2e
+        working-directory: frontend
+
+  delivery-smoke:
+    name: Empty-volume pgvector delivery smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      APP_ENV: ci
+      POSTGRES_PASSWORD: ci-only-password
+      POSTGRES_PORT: "55432"
+      APP_PORT: "58010"
+      EMBEDDING_MODEL: ci-deterministic-1024
+      EMBEDDING_DIMENSION: "1024"
+      DETERMINISTIC_TEST_EMBEDDINGS: "true"
+      MODEL_BASE_URL: http://127.0.0.1:9/v1
+      MODEL_NAME: ci-not-called
+      MODEL_API_KEY: ci-not-called
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Compose configuration
+        run: docker compose config --quiet
+      - name: Build and start from an empty volume
+        run: docker compose up -d --build --wait --wait-timeout 600
+      - name: Verify API readiness and pgvector retrieval
+        run: |
+          curl --fail --silent http://127.0.0.1:58010/ready
+          docker compose exec -T api python scripts/retrieval_smoke.py
+      - name: Verify migration and indexing records
+        run: >-
+          docker compose exec -T postgres
+          psql -v ON_ERROR_STOP=1
+          -U rag_user
+          -d enterprise_rag
+          -c "SELECT COUNT(*) AS migrations FROM schema_migrations;"
+          -c "SELECT COUNT(*) AS documents FROM knowledge_documents;"
+          -c "SELECT COUNT(*) AS chunks FROM knowledge_chunks;"
+      - name: Show service logs after failure
+        if: failure()
+        run: docker compose logs
+      - name: Remove CI resources
+        if: always()
+        run: docker compose down --volumes

@@ -6,7 +6,15 @@
 
 项目已完成版本化合成语料、标题感知切分、PostgreSQL/pgvector 增量索引、权限与版本过滤、BM25 + 向量 + RRF + Reranker、最小证据、引用校验、拒答、LangGraph、FastAPI/SSE 和受控评测框架。
 
-真实运行适配器、启动入口和 React 企业知识工作台已经接通，但当前环境尚未完成 PostgreSQL/pgvector 与实际 bge/Qwen 的端到端验收。旧重庆文旅项目保持不变；本 README 的效果指标只在对应原始评测报告生成后填写。
+真实运行适配器、连接池、增量迁移与索引命令、启动入口和 React 企业知识工作台已经接通。Docker Compose 按 PostgreSQL、迁移、索引、API 的顺序启动，并由 FastAPI 同源提供前端。当前环境尚未完成 PostgreSQL/pgvector 与实际 bge/Qwen 的端到端验收。旧重庆文旅项目保持不变；本 README 的效果指标只在对应原始评测报告生成后填写。
+
+## 快速启动
+
+```powershell
+docker compose up -d --build --wait
+```
+
+启动完成后打开 `http://127.0.0.1:8010/`。首次运行需要下载本地检索模型，具体配置、迁移、索引、验证和安全清理方式见 [`docs/OPERATIONS.md`](docs/OPERATIONS.md)。
 
 ## 固定演示场景
 

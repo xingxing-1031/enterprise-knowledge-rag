@@ -1,10 +1,12 @@
 import json
 from collections.abc import Sequence
+from pathlib import Path
 from typing import Any, Protocol
 
 from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+from fastapi.staticfiles import StaticFiles
 
 from enterprise_knowledge_rag.config import Settings, get_settings
 from enterprise_knowledge_rag.models import (
@@ -87,12 +89,15 @@ def create_app(
     *,
     settings: Settings | None = None,
     session_resolver: SessionResolver | None = None,
+    lifespan: Any | None = None,
+    static_dir: Path | None = None,
 ) -> FastAPI:
     settings = settings or get_settings()
     resolver = session_resolver or ConfiguredSessionResolver(settings)
     app = FastAPI(
         title="企业制度与流程知识库助手 API",
         version="0.1.0",
+        lifespan=lifespan,
     )
     app.add_middleware(
         CORSMiddleware,
@@ -111,7 +116,8 @@ def create_app(
         content_length = request.headers.get("content-length")
         if content_length and int(content_length) > settings.request_max_bytes:
             return Response(
-                "请求内容过大", status_code=status.HTTP_413_CONTENT_TOO_LARGE
+                "请求内容过大",
+                status_code=status.HTTP_413_CONTENT_TOO_LARGE,
             )
         return await call_next(request)
 
@@ -194,5 +200,12 @@ def create_app(
     @app.get("/evaluations/latest")
     def latest_evaluation() -> dict[str, Any]:
         return service.latest_evaluation()
+
+    if static_dir is not None and (static_dir / "index.html").is_file():
+        app.mount(
+            "/",
+            StaticFiles(directory=static_dir, html=True),
+            name="frontend",
+        )
 
     return app

@@ -2,6 +2,10 @@ from typing import Any
 
 from enterprise_knowledge_rag.app import create_app
 from enterprise_knowledge_rag.config import Settings, get_settings
+from enterprise_knowledge_rag.database import (
+    connection_pool_lifespan,
+    create_connection_pool,
+)
 from enterprise_knowledge_rag.documents.indexing import IndexingService
 from enterprise_knowledge_rag.documents.repository import KnowledgeRepository
 from enterprise_knowledge_rag.generation import AnswerGenerator
@@ -96,4 +100,17 @@ def build_runtime_service(
 
 def create_runtime_app(settings: Settings | None = None):
     resolved = settings or get_settings()
-    return create_app(build_runtime_service(resolved), settings=resolved)
+    pool = create_connection_pool(resolved)
+    service = build_runtime_service(
+        resolved,
+        connection_factory=pool.connection,
+    )
+    return create_app(
+        service,
+        settings=resolved,
+        lifespan=connection_pool_lifespan(
+            pool,
+            timeout_seconds=resolved.database_pool_timeout_seconds,
+        ),
+        static_dir=resolved.frontend_dist_dir,
+    )
