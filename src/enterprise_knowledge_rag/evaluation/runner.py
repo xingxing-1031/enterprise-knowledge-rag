@@ -16,6 +16,7 @@ from .models import (
     EvaluationReport,
     EvaluationSplit,
     EvaluationStrategy,
+    ExperimentMetadata,
 )
 
 
@@ -118,6 +119,7 @@ class EvaluationRunner:
         *,
         strategy: EvaluationStrategy,
         corpus_snapshot: str,
+        experiment: ExperimentMetadata,
         ranking_k: int = 5,
     ) -> EvaluationReport:
         if dataset.split is EvaluationSplit.FROZEN_HOLDOUT and not self._allow_frozen:
@@ -160,6 +162,7 @@ class EvaluationRunner:
             strategy=strategy,
             corpus_snapshot=corpus_snapshot,
             ranking_k=ranking_k,
+            experiment=experiment,
             started_at=started_at,
             completed_at=completed_at,
             holdout_consumed_at=(

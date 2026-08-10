@@ -34,7 +34,7 @@ class FixedRetrieval:
     def __init__(self, status=RetrievalStatus.READY):
         self.status = status
 
-    def retrieve(self, query, *, user, as_of):
+    def retrieve(self, query, *, user, as_of, strategy=None):
         candidate = make_candidate(
             "expense:1",
             title="差旅与费用报销管理制度",
@@ -102,6 +102,9 @@ def test_workflow_success_returns_evidence_and_safe_trace() -> None:
     assert result.result.status == "success"
     assert result.result.evidence
     assert result.result.citations
+    assert result.in_scope is True
+    assert len(result.retrieval_candidates) == 1
+    assert result.model_calls == 1
     assert [event.component for event in result.trace] == [
         "domain",
         "rewrite",
@@ -140,3 +143,4 @@ def test_invalid_generation_degrades_after_bounded_retry() -> None:
     assert result.result.status == "degraded"
     assert result.result.degradation_reason
     assert result.result.evidence
+    assert result.model_calls == 2

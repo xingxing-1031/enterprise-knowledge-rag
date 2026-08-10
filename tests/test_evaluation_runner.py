@@ -10,6 +10,7 @@ from enterprise_knowledge_rag.evaluation.models import (
     EvaluationSplit,
     EvaluationStrategy,
     ExpectedOutcome,
+    ExperimentMetadata,
     ObservedEvidence,
 )
 from enterprise_knowledge_rag.evaluation.runner import (
@@ -20,6 +21,18 @@ from enterprise_knowledge_rag.evaluation.runner import (
 from enterprise_knowledge_rag.models import RefusalReason, UserContext, UserRole
 
 NOW = datetime(2026, 8, 10, 8, 0, tzinfo=UTC)
+
+
+EXPERIMENT = ExperimentMetadata(
+    code_commit="abc1234",
+    embedding_model="BAAI/bge-m3",
+    reranker_model="BAAI/bge-reranker-v2-m3",
+    llm_model="qwen3:8b",
+    prompt_version="generation-v1",
+    temperature=0.0,
+    repetition=1,
+    environment="unit-test",
+)
 
 
 def make_answer_case(case_id: str = "dev-answer-001") -> EvaluationCase:
@@ -103,6 +116,7 @@ def test_runner_freezes_strategy_snapshot_and_aggregates_stages() -> None:
         dataset,
         strategy=EvaluationStrategy.HYBRID_RRF_RERANKER,
         corpus_snapshot="sha256:corpus-v1",
+        experiment=EXPERIMENT,
         ranking_k=5,
     )
 
@@ -127,6 +141,7 @@ def test_runner_freezes_strategy_snapshot_and_aggregates_stages() -> None:
     assert report.metrics.p50_latency_ms == 200.0
     assert report.metrics.p95_latency_ms == 300.0
     assert report.metrics.total_model_calls == 2
+    assert report.experiment.code_commit == "abc1234"
 
 
 class FailingExecutor(FixedExecutor):
@@ -152,6 +167,7 @@ def test_runner_records_case_failure_without_leaking_exception_text() -> None:
         dataset,
         strategy=EvaluationStrategy.VECTOR_BASELINE,
         corpus_snapshot="sha256:corpus-v1",
+        experiment=EXPERIMENT,
     )
 
     assert report.metrics.execution_success_rate == 0.5
@@ -181,6 +197,7 @@ def test_frozen_holdout_is_locked_by_default() -> None:
             dataset,
             strategy=EvaluationStrategy.HYBRID_RRF,
             corpus_snapshot="sha256:corpus-v1",
+            experiment=EXPERIMENT,
         )
 
     assert executor.calls == []

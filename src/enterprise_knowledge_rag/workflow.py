@@ -23,6 +23,7 @@ from enterprise_knowledge_rag.retrieval import (
     RetrievalResult,
     RetrievalService,
     RetrievalStatus,
+    RetrievalStrategy,
 )
 from enterprise_knowledge_rag.tracing import StageTimer, TraceEvent
 
@@ -60,12 +61,16 @@ class WorkflowDependencies:
     retrieval: RetrievalService
     generator: AnswerGenerator
     min_reranker_score: float = 0.0
+    retrieval_strategy: RetrievalStrategy = RetrievalStrategy.HYBRID_RRF_RERANKER
 
 
 @dataclass(frozen=True, slots=True)
 class WorkflowRun:
     result: ChatResult
     trace: tuple[TraceEvent, ...]
+    in_scope: bool = False
+    retrieval_candidates: tuple = ()
+    model_calls: int = 0
 
 
 def build_workflow(dependencies: WorkflowDependencies):
@@ -101,6 +106,7 @@ def build_workflow(dependencies: WorkflowDependencies):
             state["rewritten_query"],
             user=state["user"],
             as_of=state["as_of"],
+            strategy=dependencies.retrieval_strategy,
         )
         return {
             "retrieval": retrieval,
@@ -237,4 +243,14 @@ def run_chat(
         "trace": [],
     }
     final = graph.invoke(initial)
-    return WorkflowRun(result=final["result"], trace=tuple(final["trace"]))
+    retrieval = final.get("retrieval")
+    grounded = final.get("grounded")
+    return WorkflowRun(
+        result=final["result"],
+        trace=tuple(final["trace"]),
+        in_scope=final["in_scope"],
+        retrieval_candidates=(
+            tuple(retrieval.candidates) if retrieval is not None else ()
+        ),
+        model_calls=grounded.retry_count + 1 if grounded is not None else 0,
+    )

@@ -17,6 +17,7 @@ from enterprise_knowledge_rag.providers import (
 from enterprise_knowledge_rag.retrieval import (
     Reranker,
     RetrievalService,
+    RetrievalStrategy,
     VectorRetriever,
 )
 from enterprise_knowledge_rag.runtime import (
@@ -49,6 +50,7 @@ def build_runtime_service(
     chat_client: Any | None = None,
     embeddings: Any | None = None,
     reranker_scores: Any | None = None,
+    retrieval_strategy: RetrievalStrategy = RetrievalStrategy.HYBRID_RRF_RERANKER,
 ) -> RuntimeChatService:
     connection_factory = connection_factory or _default_connection_factory(
         settings.database_url
@@ -85,6 +87,7 @@ def build_runtime_service(
             retrieval=retrieval,
             generator=generator,
             min_reranker_score=settings.reranker_min_score,
+            retrieval_strategy=retrieval_strategy,
         )
     )
     indexing = IndexingService(repository, embeddings, settings)

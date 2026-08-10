@@ -70,7 +70,7 @@
 
 - 题集结构和 gold 证据契约已自动验证。
 - 评分器和冻结锁定已用确定性测试替身验证。
-- 未接入真实 PostgreSQL、Embedding、Reranker 和 LLM 执行适配器。
+- 三方案真实执行器、工作流观测转换和报告实验元数据已接入；`scripts/run_development.py` 只允许加载 development 数据集。
+- 当前机器仍未启动 PostgreSQL/pgvector，因此尚未执行真实数据库、Embedding、Reranker 和 LLM 评测。
 - 未运行三方案 development 实验。
 - frozen holdout 未提交给 Agent。
-

@@ -51,6 +51,16 @@ def test_evidence_requires_reranker_threshold() -> None:
     assert build_minimal_evidence([candidate], min_reranker_score=0.5) == []
 
 
+def test_evidence_accepts_ordered_non_reranked_candidates_at_zero_threshold() -> None:
+    candidate = make_candidate("a:1", title="A制度", content="可引用规则")
+
+    evidence = build_minimal_evidence([candidate], min_reranker_score=0.0)
+
+    assert len(evidence) == 1
+    assert evidence[0].reranker_score is None
+    assert build_minimal_evidence([candidate], min_reranker_score=0.1) == []
+
+
 def test_evidence_respects_item_and_token_budgets() -> None:
     candidates = [
         scored(make_candidate(f"{name}:1", title=name, content=name * 5))

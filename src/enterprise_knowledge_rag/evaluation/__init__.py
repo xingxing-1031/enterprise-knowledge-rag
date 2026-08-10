@@ -1,3 +1,4 @@
+from .executor import WorkflowEvaluationExecutor
 from .graders import grade_case, grade_ranking
 from .models import (
     AggregateMetrics,
@@ -10,6 +11,7 @@ from .models import (
     EvaluationSplit,
     EvaluationStrategy,
     ExpectedOutcome,
+    ExperimentMetadata,
     ObservedEvidence,
     RankingMetrics,
 )
@@ -21,6 +23,7 @@ __all__ = [
     "CaseMetrics",
     "EvaluationCase",
     "EvaluationDataset",
+    "ExperimentMetadata",
     "EvaluationObservation",
     "EvaluationReport",
     "EvaluationRunner",
@@ -32,5 +35,6 @@ __all__ = [
     "RankingMetrics",
     "grade_case",
     "grade_ranking",
+    "WorkflowEvaluationExecutor",
     "load_dataset",
 ]

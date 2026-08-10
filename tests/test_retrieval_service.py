@@ -7,6 +7,7 @@ from enterprise_knowledge_rag.retrieval import (
     Reranker,
     RetrievalService,
     RetrievalStatus,
+    RetrievalStrategy,
     VectorRetriever,
 )
 
@@ -52,6 +53,11 @@ class FakeEmbedding:
 class MatchingScores:
     def score(self, query, passages):
         return [1.0 if "请假" in passage else 0.1 for passage in passages]
+
+
+class ForbiddenScores:
+    def score(self, query, passages):
+        raise AssertionError("reranker must not run for this strategy")
 
 
 def test_service_filters_restricted_document_before_retrieval() -> None:
@@ -137,3 +143,57 @@ def test_service_returns_permission_denied_without_retrieving_hidden_text() -> N
     assert result.candidates == ()
     assert corpus.received_keys == frozenset()
     assert backend.received_keys is None
+
+
+def test_vector_baseline_skips_lexical_and_reranker() -> None:
+    candidate = make_candidate(
+        "leave:1",
+        title="员工请假管理制度",
+        content="员工请假需要提前提交申请。",
+        document_id="leave-policy",
+    )
+    corpus = FakeCorpus([candidate])
+    service = RetrievalService(
+        corpus,
+        VectorRetriever(FakeVectorBackend([candidate])),
+        FakeEmbedding(),
+        Reranker(ForbiddenScores()),
+    )
+
+    result = service.retrieve(
+        "请假怎么申请",
+        user=UserContext(user_id="u1", role=UserRole.EMPLOYEE),
+        as_of=datetime(2026, 8, 10, tzinfo=UTC),
+        strategy=RetrievalStrategy.VECTOR_BASELINE,
+    )
+
+    assert corpus.received_keys is None
+    assert result.candidates[0].channels == {"vector"}
+    assert result.candidates[0].reranker_score is None
+
+
+def test_hybrid_rrf_skips_reranker_but_preserves_both_channels() -> None:
+    candidate = make_candidate(
+        "leave:1",
+        title="员工请假管理制度",
+        content="员工请假需要提前提交申请。",
+        document_id="leave-policy",
+    )
+    corpus = FakeCorpus([candidate])
+    service = RetrievalService(
+        corpus,
+        VectorRetriever(FakeVectorBackend([candidate])),
+        FakeEmbedding(),
+        Reranker(ForbiddenScores()),
+    )
+
+    result = service.retrieve(
+        "员工请假管理制度怎么申请",
+        user=UserContext(user_id="u1", role=UserRole.EMPLOYEE),
+        as_of=datetime(2026, 8, 10, tzinfo=UTC),
+        strategy=RetrievalStrategy.HYBRID_RRF,
+    )
+
+    assert corpus.received_keys == frozenset({("leave-policy", "1.0")})
+    assert result.candidates[0].channels == {"bm25", "vector"}
+    assert result.candidates[0].reranker_score is None

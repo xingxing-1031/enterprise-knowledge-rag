@@ -84,6 +84,17 @@ class EvaluationObservation(StrictModel):
     model_calls: int = Field(ge=0)
 
 
+class ExperimentMetadata(StrictModel):
+    code_commit: str = Field(min_length=7)
+    embedding_model: str = Field(min_length=1)
+    reranker_model: str | None = None
+    llm_model: str = Field(min_length=1)
+    prompt_version: str = Field(min_length=1)
+    temperature: float
+    repetition: int = Field(ge=1)
+    environment: str = Field(min_length=1)
+
+
 class RankingMetrics(StrictModel):
     recall_at_k: float = Field(ge=0.0, le=1.0)
     reciprocal_rank: float = Field(ge=0.0, le=1.0)
@@ -135,6 +146,7 @@ class EvaluationReport(StrictModel):
     strategy: EvaluationStrategy
     corpus_snapshot: str = Field(min_length=1)
     ranking_k: int = Field(ge=1)
+    experiment: ExperimentMetadata
     started_at: datetime
     completed_at: datetime
     holdout_consumed_at: datetime | None = None

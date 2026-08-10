@@ -29,6 +29,12 @@ class RetrievalStatus(StrEnum):
     PERMISSION_DENIED = "permission_denied"
 
 
+class RetrievalStrategy(StrEnum):
+    VECTOR_BASELINE = "vector_baseline"
+    HYBRID_RRF = "hybrid_rrf"
+    HYBRID_RRF_RERANKER = "hybrid_rrf_reranker"
+
+
 @dataclass(frozen=True, slots=True)
 class RetrievalResult:
     status: RetrievalStatus
@@ -86,6 +92,7 @@ class RetrievalService:
         requested_versions: Mapping[str, str] | None = None,
         pool_limit: int = 10,
         final_limit: int = 5,
+        strategy: RetrievalStrategy = RetrievalStrategy.HYBRID_RRF_RERANKER,
     ) -> RetrievalResult:
         requested_versions = requested_versions or {}
         grouped: dict[str, list[DocumentRecord]] = defaultdict(list)
@@ -112,23 +119,30 @@ class RetrievalService:
                     ambiguous_ids.append(document_id)
 
         frozen_keys = frozenset(authorized_keys)
-        lexical_candidates = self._corpus.list_candidates(frozen_keys)
-        lexical = LexicalRetriever(lexical_candidates).search(
-            query,
-            limit=pool_limit,
-        )
         vector = self._vector.search(
             self._query_embeddings.embed_query(query),
             document_keys=frozen_keys,
             limit=pool_limit,
         )
-        fused = reciprocal_rank_fusion(
-            {"bm25": lexical, "vector": vector},
-            limit=pool_limit,
-        )
-        reranked = self._reranker.rerank(query, fused, limit=final_limit)
+        if strategy is RetrievalStrategy.VECTOR_BASELINE:
+            selected = vector[:final_limit]
+        else:
+            lexical_candidates = self._corpus.list_candidates(frozen_keys)
+            lexical = LexicalRetriever(lexical_candidates).search(
+                query,
+                limit=pool_limit,
+            )
+            fused = reciprocal_rank_fusion(
+                {"bm25": lexical, "vector": vector},
+                limit=pool_limit,
+            )
+            selected = (
+                fused[:final_limit]
+                if strategy is RetrievalStrategy.HYBRID_RRF
+                else self._reranker.rerank(query, fused, limit=final_limit)
+            )
 
-        if reranked:
+        if selected:
             status = RetrievalStatus.READY
         elif ambiguous_ids:
             status = RetrievalStatus.VERSION_AMBIGUOUS
@@ -138,7 +152,7 @@ class RetrievalService:
             status = RetrievalStatus.INSUFFICIENT_EVIDENCE
         return RetrievalResult(
             status=status,
-            candidates=tuple(reranked),
+            candidates=tuple(selected),
             authorized_document_keys=frozen_keys,
             ambiguous_document_ids=tuple(sorted(ambiguous_ids)),
             denied_match_count=denied_match_count,

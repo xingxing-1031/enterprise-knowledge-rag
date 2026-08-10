@@ -20,7 +20,9 @@ def build_minimal_evidence(
 
     for candidate in candidates:
         score = candidate.reranker_score
-        if score is None or score < min_reranker_score:
+        if score is None and min_reranker_score > 0:
+            continue
+        if score is not None and score < min_reranker_score:
             continue
         chunk = candidate.chunk
         document = candidate.document

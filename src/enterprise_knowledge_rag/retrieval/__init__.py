@@ -3,7 +3,12 @@
 from .lexical import LexicalRetriever, tokenize
 from .reranker import Reranker, RerankerScoreProvider
 from .rrf import reciprocal_rank_fusion
-from .service import RetrievalResult, RetrievalService, RetrievalStatus
+from .service import (
+    RetrievalResult,
+    RetrievalService,
+    RetrievalStatus,
+    RetrievalStrategy,
+)
 from .vector import VectorRetriever, VectorSearchBackend
 
 __all__ = [
@@ -13,6 +18,7 @@ __all__ = [
     "RetrievalResult",
     "RetrievalService",
     "RetrievalStatus",
+    "RetrievalStrategy",
     "VectorRetriever",
     "VectorSearchBackend",
     "reciprocal_rank_fusion",
