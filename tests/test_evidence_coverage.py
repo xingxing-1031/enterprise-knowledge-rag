@@ -1,3 +1,4 @@
+import pytest
 from retrieval_fixtures import make_candidate
 
 from enterprise_knowledge_rag.documents.source_models import (
@@ -56,3 +57,43 @@ def test_low_reranker_score_does_not_count_as_coverage() -> None:
 
     assert result.covered_need_ids == frozenset()
     assert result.missing_required_need_ids == frozenset({"material", "exception"})
+
+
+def test_coverage_does_not_mark_a_need_from_one_generic_shared_token() -> None:
+    plan = RetrievalPlan(
+        primary_query="new supplier",
+        topic="procurement",
+        evidence_needs=[
+            EvidenceNeed(
+                need_id="rule",
+                kind="rule",
+                query="supplier purchase threshold",
+            ),
+            EvidenceNeed(
+                need_id="material",
+                kind="material",
+                query="supplier registration package",
+            ),
+        ],
+        requires_multi_hop=True,
+        max_hops=2,
+    )
+    threshold = make_candidate(
+        "supplier:threshold",
+        title="Supplier policy",
+        content="A new supplier purchase threshold is 30,000 yuan.",
+    )
+
+    result = EvidenceCoverageService(min_query_token_overlap=0.5).cover(
+        plan,
+        [threshold],
+    )
+
+    assert result.covered_need_ids == frozenset({"rule"})
+    assert result.missing_required_need_ids == frozenset({"material"})
+
+
+@pytest.mark.parametrize("overlap", [-0.1, 1.1])
+def test_query_token_overlap_must_be_between_zero_and_one(overlap: float) -> None:
+    with pytest.raises(ValueError, match="between 0 and 1"):
+        EvidenceCoverageService(min_query_token_overlap=overlap)

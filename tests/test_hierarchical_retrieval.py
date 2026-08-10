@@ -96,13 +96,13 @@ def test_missing_exception_need_triggers_one_supplemental_hop() -> None:
         title="员工请假制度",
         content="病假超过两天需要提交医疗机构证明材料。",
         document_id="leave-policy",
-    )
+    ).model_copy(update={"supports_need_ids": {"material"}})
     exception = make_candidate(
         "leave:exception",
         title="员工请假制度",
         content="紧急就医可先电话报备，返岗后补交材料。",
         document_id="leave-policy",
-    )
+    ).model_copy(update={"supports_need_ids": {"exception"}})
     restricted = make_candidate(
         "payment:secret",
         title="付款审批权限",
@@ -123,7 +123,9 @@ def test_missing_exception_need_triggers_one_supplemental_hop() -> None:
     result = service.retrieve(PLAN, USER, AS_OF)
 
     assert result.status is RetrievalStatus.READY
+    assert len(sections.calls) == 2
     assert result.hop_count == 2
+    assert result.coverage.covered_need_ids == frozenset({"material", "exception"})
     assert result.coverage.missing_required_need_ids == frozenset()
     assert {item.retrieval_hop for item in result.evidence_candidates} == {1, 2}
     allowed = frozenset({("leave-policy", "1.0")})

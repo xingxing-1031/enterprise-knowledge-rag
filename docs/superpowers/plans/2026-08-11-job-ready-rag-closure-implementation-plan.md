@@ -178,7 +178,7 @@ git commit -m "fix: canonicalize retrieval evidence needs"
 - Consumes: canonical `RetrievalPlan` and retrieved `RetrievalCandidate` objects.
 - Produces: `EvidenceCoverageService(min_query_token_overlap: float = 0.5)` that accepts explicit need support or sufficient lexical overlap.
 
-- [ ] **Step 1: Write failing overlap tests**
+- [x] **Step 1: Write failing overlap tests**
 
 Add tests that distinguish meaningful overlap from one generic shared token:
 
@@ -219,7 +219,7 @@ def test_coverage_does_not_mark_a_need_from_one_generic_shared_token() -> None:
 
 Add constructor validation tests for values below `0` and above `1`.
 
-- [ ] **Step 2: Run coverage tests and confirm RED**
+- [x] **Step 2: Run coverage tests and confirm RED**
 
 Run:
 
@@ -229,7 +229,7 @@ Run:
 
 Expected: constructor rejects the new argument or incorrectly marks both needs covered.
 
-- [ ] **Step 3: Implement ratio-based matching**
+- [x] **Step 3: Implement ratio-based matching**
 
 Store the validated threshold and replace any-token matching with:
 
@@ -241,7 +241,7 @@ if overlap >= self._min_query_token_overlap:
 
 Explicit `supports_need_ids` must continue to count regardless of lexical overlap, subject to the existing Reranker score gate.
 
-- [ ] **Step 4: Strengthen hierarchical tests**
+- [x] **Step 4: Strengthen hierarchical tests**
 
 Update the existing two-hop fixture so the first candidate covers only `material`, the second call explicitly returns `exception`, and assert:
 
@@ -254,7 +254,7 @@ assert result.coverage.missing_required_need_ids == frozenset()
 
 Keep the assertion that every call receives only the authorized `leave-policy` key and never the restricted payment key.
 
-- [ ] **Step 5: Run retrieval tests**
+- [x] **Step 5: Run retrieval tests**
 
 Run:
 
@@ -264,7 +264,7 @@ Run:
 
 Expected: all pass.
 
-- [ ] **Step 6: Commit Task 2**
+- [x] **Step 6: Commit Task 2**
 
 ```powershell
 git add src/enterprise_knowledge_rag/retrieval/coverage.py tests/test_evidence_coverage.py tests/test_hierarchical_retrieval.py

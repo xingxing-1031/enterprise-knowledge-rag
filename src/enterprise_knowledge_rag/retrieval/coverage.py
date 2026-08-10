@@ -17,10 +17,18 @@ class CoverageResult(StrictModel):
 class EvidenceCoverageService:
     """Deterministically map retrieved sections to required evidence needs."""
 
-    def __init__(self, *, min_reranker_score: float = 0.0) -> None:
+    def __init__(
+        self,
+        *,
+        min_reranker_score: float = 0.0,
+        min_query_token_overlap: float = 0.5,
+    ) -> None:
         if min_reranker_score < 0:
             raise ValueError("min_reranker_score must not be negative")
+        if not 0 <= min_query_token_overlap <= 1:
+            raise ValueError("min_query_token_overlap must be between 0 and 1")
         self._min_reranker_score = min_reranker_score
+        self._min_query_token_overlap = min_query_token_overlap
 
     def cover(
         self,
@@ -46,7 +54,10 @@ class EvidenceCoverageService:
                 query_tokens = {
                     token for token in tokenize(need.query) if len(token) >= 2
                 }
-                if query_tokens and query_tokens.intersection(haystack_tokens):
+                if not query_tokens:
+                    continue
+                overlap = len(query_tokens & haystack_tokens) / len(query_tokens)
+                if overlap >= self._min_query_token_overlap:
                     matched.add(need.need_id)
             if not matched:
                 continue
