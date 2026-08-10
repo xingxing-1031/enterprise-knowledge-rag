@@ -1,0 +1,831 @@
+{
+  "dataset_id": "enterprise-rag-development-v1",
+  "dataset_version": "1.0",
+  "split": "development",
+  "strategy": "hybrid_rrf",
+  "corpus_snapshot": "sha256:810fac5143fd89480857f7f04db6b1781487bf872d1d4ba32b014c86592ada65",
+  "ranking_k": 5,
+  "experiment": {
+    "code_commit": "37e7f3e",
+    "embedding_model": "BAAI/bge-m3",
+    "reranker_model": null,
+    "llm_model": "qwen3:4b",
+    "prompt_version": "generation-v1",
+    "temperature": 0.0,
+    "repetition": 1,
+    "environment": "development"
+  },
+  "started_at": "2026-08-10T20:41:52.122234Z",
+  "completed_at": "2026-08-10T21:07:48.970793Z",
+  "holdout_consumed_at": null,
+  "metrics": {
+    "case_count": 17,
+    "execution_success_rate": 0.7058823529411765,
+    "core_pass_rate": 0.5294117647058824,
+    "domain_accuracy": 1.0,
+    "recall_at_k": 0.8518518518518519,
+    "reciprocal_rank": 0.8888888888888888,
+    "ndcg_at_k": 0.8628178485542912,
+    "access_leakage_rate": 0.0,
+    "version_accuracy": 0.7777777777777778,
+    "citation_accuracy": 0.8888888888888888,
+    "correct_refusal_rate": 1.0,
+    "false_refusal_rate": 0.0,
+    "automated_answer_score": 0.42592592592592593,
+    "document_route_recall": 1.0,
+    "evidence_need_coverage": 0.0,
+    "second_hop_trigger_accuracy": 0.3333333333333333,
+    "second_hop_success": 0.0,
+    "irrelevant_evidence_ratio": 0.32916666666666666,
+    "p50_latency_ms": 60022.975805499984,
+    "p95_latency_ms": 111917.90694100018,
+    "total_model_calls": 20
+  },
+  "cases": [
+    {
+      "case_id": "dev-hr-leave-approval-current",
+      "observation": {
+        "in_scope": true,
+        "retrieved": [
+          {
+            "evidence_key": "hr-leave-policy@2.0#申请与审批",
+            "document_id": "hr-leave-policy",
+            "version": "2.0"
+          },
+          {
+            "evidence_key": "hr-leave-policy@2.0#材料要求",
+            "document_id": "hr-leave-policy",
+            "version": "2.0"
+          },
+          {
+            "evidence_key": "hr-leave-policy@2.0#例外处理",
+            "document_id": "hr-leave-policy",
+            "version": "2.0"
+          },
+          {
+            "evidence_key": "admin-asset-management@1.0#领用登记",
+            "document_id": "admin-asset-management",
+            "version": "1.0"
+          },
+          {
+            "evidence_key": "hr-leave-policy@2.0#适用范围",
+            "document_id": "hr-leave-policy",
+            "version": "2.0"
+          }
+        ],
+        "citations": [
+          "hr-leave-policy@2.0#申请与审批"
+        ],
+        "status": "success",
+        "refusal_reason": null,
+        "answer": "直属主管",
+        "latency_ms": 105856.78485500012,
+        "model_calls": 2,
+        "routed_document_keys": [
+          "hr-leave-policy@2.0",
+          "hr-onboarding-process@1.2",
+          "admin-asset-management@1.0",
+          "hr-medical-certificate-process@1.0"
+        ],
+        "retrieval_hops": 1,
+        "required_need_ids": [
+          "rule"
+        ],
+        "covered_need_ids": [
+          "rule"
+        ]
+      },
+      "metrics": {
+        "domain_accuracy": 1.0,
+        "ranking": {
+          "recall_at_k": 1.0,
+          "reciprocal_rank": 1.0,
+          "ndcg_at_k": 1.0
+        },
+        "access_leakage": 0.0,
+        "version_accuracy": 1.0,
+        "citation_accuracy": 1.0,
+        "correct_refusal": null,
+        "false_refusal": 0.0,
+        "automated_answer_score": 0.0,
+        "document_route_recall": 1.0,
+        "evidence_need_coverage": null,
+        "second_hop_trigger_accuracy": null,
+        "second_hop_success": null,
+        "irrelevant_evidence_ratio": 0.2,
+        "core_pass": true
+      },
+      "error_type": null
+    },
+    {
+      "case_id": "dev-hr-leave-materials",
+      "observation": {
+        "in_scope": true,
+        "retrieved": [
+          {
+            "evidence_key": "hr-leave-policy@2.0#材料要求",
+            "document_id": "hr-leave-policy",
+            "version": "2.0"
+          },
+          {
+            "evidence_key": "hr-leave-policy@2.0#例外处理",
+            "document_id": "hr-leave-policy",
+            "version": "2.0"
+          },
+          {
+            "evidence_key": "hr-leave-policy@2.0#申请与审批",
+            "document_id": "hr-leave-policy",
+            "version": "2.0"
+          },
+          {
+            "evidence_key": "finance-expense-policy@2.0#报销期限",
+            "document_id": "finance-expense-policy",
+            "version": "2.0"
+          },
+          {
+            "evidence_key": "hr-onboarding-process@1.2#办理时限",
+            "document_id": "hr-onboarding-process",
+            "version": "1.2"
+          }
+        ],
+        "citations": [
+          "hr-leave-policy@2.0#材料要求"
+        ],
+        "status": "success",
+        "refusal_reason": null,
+        "answer": "病假超过2个工作日时，应上传医疗机构出具的证明。紧急就医可先电话报备，返岗后2个工作日内补交材料。",
+        "latency_ms": 48707.04872200031,
+        "model_calls": 2,
+        "routed_document_keys": [
+          "hr-leave-policy@2.0",
+          "hr-medical-certificate-process@1.0",
+          "hr-onboarding-process@1.2",
+          "finance-expense-policy@2.0"
+        ],
+        "retrieval_hops": 1,
+        "required_need_ids": [
+          "emergency_proc",
+          "material_req"
+        ],
+        "covered_need_ids": [
+          "emergency_proc",
+          "material_req"
+        ]
+      },
+      "metrics": {
+        "domain_accuracy": 1.0,
+        "ranking": {
+          "recall_at_k": 1.0,
+          "reciprocal_rank": 1.0,
+          "ndcg_at_k": 1.0
+        },
+        "access_leakage": 0.0,
+        "version_accuracy": 1.0,
+        "citation_accuracy": 1.0,
+        "correct_refusal": null,
+        "false_refusal": 0.0,
+        "automated_answer_score": 1.0,
+        "document_route_recall": 1.0,
+        "evidence_need_coverage": null,
+        "second_hop_trigger_accuracy": null,
+        "second_hop_success": null,
+        "irrelevant_evidence_ratio": 0.4,
+        "core_pass": true
+      },
+      "error_type": null
+    },
+    {
+      "case_id": "dev-finance-expense-deadline-current",
+      "observation": {
+        "in_scope": true,
+        "retrieved": [
+          {
+            "evidence_key": "finance-expense-policy@2.0#报销期限",
+            "document_id": "finance-expense-policy",
+            "version": "2.0"
+          },
+          {
+            "evidence_key": "finance-expense-policy@2.0#票据要求",
+            "document_id": "finance-expense-policy",
+            "version": "2.0"
+          },
+          {
+            "evidence_key": "hr-leave-policy@2.0#申请与审批",
+            "document_id": "hr-leave-policy",
+            "version": "2.0"
+          },
+          {
+            "evidence_key": "finance-expense-policy@2.0#交通标准",
+            "document_id": "finance-expense-policy",
+            "version": "2.0"
+          }
+        ],
+        "citations": [
+          "finance-expense-policy@2.0#报销期限"
+        ],
+        "status": "success",
+        "refusal_reason": null,
+        "answer": "15个自然日",
+        "latency_ms": 103333.32086300015,
+        "model_calls": 2,
+        "routed_document_keys": [
+          "finance-expense-policy@2.0",
+          "hr-leave-policy@2.0",
+          "admin-asset-management@1.0",
+          "hr-onboarding-process@1.2"
+        ],
+        "retrieval_hops": 1,
+        "required_need_ids": [
+          "rule"
+        ],
+        "covered_need_ids": [
+          "rule"
+        ]
+      },
+      "metrics": {
+        "domain_accuracy": 1.0,
+        "ranking": {
+          "recall_at_k": 1.0,
+          "reciprocal_rank": 1.0,
+          "ndcg_at_k": 1.0
+        },
+        "access_leakage": 0.0,
+        "version_accuracy": 1.0,
+        "citation_accuracy": 1.0,
+        "correct_refusal": null,
+        "false_refusal": 0.0,
+        "automated_answer_score": 0.3333333333333333,
+        "document_route_recall": 1.0,
+        "evidence_need_coverage": null,
+        "second_hop_trigger_accuracy": null,
+        "second_hop_success": null,
+        "irrelevant_evidence_ratio": 0.25,
+        "core_pass": true
+      },
+      "error_type": null
+    },
+    {
+      "case_id": "dev-finance-expense-deadline-historical",
+      "observation": {
+        "in_scope": true,
+        "retrieved": [
+          {
+            "evidence_key": "finance-expense-policy@1.0#报销期限",
+            "document_id": "finance-expense-policy",
+            "version": "1.0"
+          },
+          {
+            "evidence_key": "finance-expense-policy@1.0#交通标准",
+            "document_id": "finance-expense-policy",
+            "version": "1.0"
+          },
+          {
+            "evidence_key": "hr-leave-policy@1.0#适用范围",
+            "document_id": "hr-leave-policy",
+            "version": "1.0"
+          },
+          {
+            "evidence_key": "hr-leave-policy@1.0#申请与审批",
+            "document_id": "hr-leave-policy",
+            "version": "1.0"
+          },
+          {
+            "evidence_key": "hr-leave-policy@1.0#材料要求",
+            "document_id": "hr-leave-policy",
+            "version": "1.0"
+          }
+        ],
+        "citations": [
+          "finance-expense-policy@1.0#报销期限"
+        ],
+        "status": "success",
+        "refusal_reason": null,
+        "answer": "出差结束后10个自然日内提交报销申请，逾期需要说明原因。",
+        "latency_ms": 106433.14048899992,
+        "model_calls": 2,
+        "routed_document_keys": [
+          "finance-expense-policy@1.0",
+          "hr-leave-policy@1.0"
+        ],
+        "retrieval_hops": 1,
+        "required_need_ids": [
+          "rule"
+        ],
+        "covered_need_ids": [
+          "rule"
+        ]
+      },
+      "metrics": {
+        "domain_accuracy": 1.0,
+        "ranking": {
+          "recall_at_k": 1.0,
+          "reciprocal_rank": 1.0,
+          "ndcg_at_k": 1.0
+        },
+        "access_leakage": 0.0,
+        "version_accuracy": 1.0,
+        "citation_accuracy": 1.0,
+        "correct_refusal": null,
+        "false_refusal": 0.0,
+        "automated_answer_score": 1.0,
+        "document_route_recall": 1.0,
+        "evidence_need_coverage": null,
+        "second_hop_trigger_accuracy": null,
+        "second_hop_success": null,
+        "irrelevant_evidence_ratio": 0.6,
+        "core_pass": true
+      },
+      "error_type": null
+    },
+    {
+      "case_id": "dev-hr-onboarding-materials",
+      "observation": {
+        "in_scope": true,
+        "retrieved": [
+          {
+            "evidence_key": "hr-onboarding-process@1.2#入职前准备",
+            "document_id": "hr-onboarding-process",
+            "version": "1.2"
+          },
+          {
+            "evidence_key": "hr-onboarding-process@1.2#到岗办理",
+            "document_id": "hr-onboarding-process",
+            "version": "1.2"
+          },
+          {
+            "evidence_key": "hr-onboarding-process@1.2#办理时限",
+            "document_id": "hr-onboarding-process",
+            "version": "1.2"
+          },
+          {
+            "evidence_key": "admin-asset-management@1.0#领用登记",
+            "document_id": "admin-asset-management",
+            "version": "1.0"
+          },
+          {
+            "evidence_key": "hr-leave-policy@2.0#材料要求",
+            "document_id": "hr-leave-policy",
+            "version": "2.0"
+          }
+        ],
+        "citations": [
+          "hr-onboarding-process@1.2#入职前准备"
+        ],
+        "status": "success",
+        "refusal_reason": null,
+        "answer": "身份证明、学历证明和银行卡信息",
+        "latency_ms": 108896.5071270004,
+        "model_calls": 2,
+        "routed_document_keys": [
+          "hr-onboarding-process@1.2",
+          "hr-leave-policy@2.0",
+          "hr-medical-certificate-process@1.0",
+          "admin-asset-management@1.0"
+        ],
+        "retrieval_hops": 1,
+        "required_need_ids": [
+          "rule"
+        ],
+        "covered_need_ids": [
+          "rule"
+        ]
+      },
+      "metrics": {
+        "domain_accuracy": 1.0,
+        "ranking": {
+          "recall_at_k": 1.0,
+          "reciprocal_rank": 1.0,
+          "ndcg_at_k": 1.0
+        },
+        "access_leakage": 0.0,
+        "version_accuracy": 1.0,
+        "citation_accuracy": 1.0,
+        "correct_refusal": null,
+        "false_refusal": 0.0,
+        "automated_answer_score": 1.0,
+        "document_route_recall": 1.0,
+        "evidence_need_coverage": null,
+        "second_hop_trigger_accuracy": null,
+        "second_hop_success": null,
+        "irrelevant_evidence_ratio": 0.4,
+        "core_pass": true
+      },
+      "error_type": null
+    },
+    {
+      "case_id": "dev-procurement-quotation",
+      "observation": null,
+      "metrics": null,
+      "error_type": "ModelProviderError"
+    },
+    {
+      "case_id": "dev-security-role-transfer",
+      "observation": {
+        "in_scope": true,
+        "retrieved": [
+          {
+            "evidence_key": "security-account-access@1.0#账号生命周期",
+            "document_id": "security-account-access",
+            "version": "1.0"
+          },
+          {
+            "evidence_key": "hr-onboarding-process@1.2#到岗办理",
+            "document_id": "hr-onboarding-process",
+            "version": "1.2"
+          },
+          {
+            "evidence_key": "security-account-access@1.0#最小权限",
+            "document_id": "security-account-access",
+            "version": "1.0"
+          },
+          {
+            "evidence_key": "hr-onboarding-process@1.2#办理时限",
+            "document_id": "hr-onboarding-process",
+            "version": "1.2"
+          },
+          {
+            "evidence_key": "admin-asset-management@1.0#领用登记",
+            "document_id": "admin-asset-management",
+            "version": "1.0"
+          }
+        ],
+        "citations": [
+          "security-account-access@1.0#账号生命周期"
+        ],
+        "status": "success",
+        "refusal_reason": null,
+        "answer": "转岗生效日结束前",
+        "latency_ms": 71338.90288899966,
+        "model_calls": 2,
+        "routed_document_keys": [
+          "security-account-access@1.0",
+          "hr-leave-policy@2.0",
+          "hr-onboarding-process@1.2",
+          "admin-asset-management@1.0"
+        ],
+        "retrieval_hops": 1,
+        "required_need_ids": [
+          "perm_recycle_time"
+        ],
+        "covered_need_ids": [
+          "perm_recycle_time"
+        ]
+      },
+      "metrics": {
+        "domain_accuracy": 1.0,
+        "ranking": {
+          "recall_at_k": 1.0,
+          "reciprocal_rank": 1.0,
+          "ndcg_at_k": 1.0
+        },
+        "access_leakage": 0.0,
+        "version_accuracy": 1.0,
+        "citation_accuracy": 1.0,
+        "correct_refusal": null,
+        "false_refusal": 0.0,
+        "automated_answer_score": 0.0,
+        "document_route_recall": 1.0,
+        "evidence_need_coverage": null,
+        "second_hop_trigger_accuracy": null,
+        "second_hop_success": null,
+        "irrelevant_evidence_ratio": 0.6,
+        "core_pass": true
+      },
+      "error_type": null
+    },
+    {
+      "case_id": "dev-admin-asset-loss",
+      "observation": {
+        "in_scope": true,
+        "retrieved": [
+          {
+            "evidence_key": "admin-asset-management@1.0#异常处理",
+            "document_id": "admin-asset-management",
+            "version": "1.0"
+          },
+          {
+            "evidence_key": "hr-leave-policy@2.0#例外处理",
+            "document_id": "hr-leave-policy",
+            "version": "2.0"
+          },
+          {
+            "evidence_key": "admin-asset-management@1.0#领用登记",
+            "document_id": "admin-asset-management",
+            "version": "1.0"
+          },
+          {
+            "evidence_key": "hr-leave-policy@2.0#材料要求",
+            "document_id": "hr-leave-policy",
+            "version": "2.0"
+          }
+        ],
+        "citations": [
+          "admin-asset-management@1.0#异常处理"
+        ],
+        "status": "success",
+        "refusal_reason": null,
+        "answer": "1个工作日内",
+        "latency_ms": 46540.55844200002,
+        "model_calls": 2,
+        "routed_document_keys": [
+          "hr-leave-policy@2.0",
+          "hr-onboarding-process@1.2",
+          "admin-asset-management@1.0",
+          "finance-expense-policy@2.0"
+        ],
+        "retrieval_hops": 1,
+        "required_need_ids": [
+          "report_deadline"
+        ],
+        "covered_need_ids": [
+          "report_deadline"
+        ]
+      },
+      "metrics": {
+        "domain_accuracy": 1.0,
+        "ranking": {
+          "recall_at_k": 1.0,
+          "reciprocal_rank": 1.0,
+          "ndcg_at_k": 1.0
+        },
+        "access_leakage": 0.0,
+        "version_accuracy": 1.0,
+        "citation_accuracy": 1.0,
+        "correct_refusal": null,
+        "false_refusal": 0.0,
+        "automated_answer_score": 0.0,
+        "document_route_recall": 1.0,
+        "evidence_need_coverage": null,
+        "second_hop_trigger_accuracy": null,
+        "second_hop_success": null,
+        "irrelevant_evidence_ratio": 0.5,
+        "core_pass": true
+      },
+      "error_type": null
+    },
+    {
+      "case_id": "dev-finance-payment-permission",
+      "observation": null,
+      "metrics": null,
+      "error_type": "ModelProviderError"
+    },
+    {
+      "case_id": "dev-out-of-scope-recipe",
+      "observation": {
+        "in_scope": false,
+        "retrieved": [],
+        "citations": [],
+        "status": "refused",
+        "refusal_reason": "out_of_scope",
+        "answer": "这个问题不属于当前企业制度与流程知识库的范围。",
+        "latency_ms": 2.6727880003818427,
+        "model_calls": 0,
+        "routed_document_keys": [],
+        "retrieval_hops": 0,
+        "required_need_ids": [],
+        "covered_need_ids": []
+      },
+      "metrics": {
+        "domain_accuracy": 1.0,
+        "ranking": null,
+        "access_leakage": 0.0,
+        "version_accuracy": null,
+        "citation_accuracy": null,
+        "correct_refusal": 1.0,
+        "false_refusal": 0.0,
+        "automated_answer_score": null,
+        "document_route_recall": null,
+        "evidence_need_coverage": null,
+        "second_hop_trigger_accuracy": null,
+        "second_hop_success": null,
+        "irrelevant_evidence_ratio": 0.0,
+        "core_pass": true
+      },
+      "error_type": null
+    },
+    {
+      "case_id": "dev-insufficient-parental-leave",
+      "observation": {
+        "in_scope": true,
+        "retrieved": [],
+        "citations": [],
+        "status": "refused",
+        "refusal_reason": "insufficient_evidence",
+        "answer": "当前知识库中没有足够依据回答这个问题。",
+        "latency_ms": 21402.8952460003,
+        "model_calls": 1,
+        "routed_document_keys": [
+          "hr-leave-policy@2.0",
+          "hr-onboarding-process@1.2",
+          "admin-asset-management@1.0",
+          "finance-expense-policy@2.0"
+        ],
+        "retrieval_hops": 1,
+        "required_need_ids": [
+          "child_leave_days"
+        ],
+        "covered_need_ids": []
+      },
+      "metrics": {
+        "domain_accuracy": 1.0,
+        "ranking": null,
+        "access_leakage": 0.0,
+        "version_accuracy": null,
+        "citation_accuracy": null,
+        "correct_refusal": 1.0,
+        "false_refusal": 0.0,
+        "automated_answer_score": null,
+        "document_route_recall": null,
+        "evidence_need_coverage": null,
+        "second_hop_trigger_accuracy": null,
+        "second_hop_success": null,
+        "irrelevant_evidence_ratio": 0.0,
+        "core_pass": true
+      },
+      "error_type": null
+    },
+    {
+      "case_id": "dev-future-draft-not-effective",
+      "observation": null,
+      "metrics": null,
+      "error_type": "ModelProviderError"
+    },
+    {
+      "case_id": "dev-hr-leave-emergency-two-hop",
+      "observation": {
+        "in_scope": true,
+        "retrieved": [
+          {
+            "evidence_key": "hr-medical-certificate-process@1.0#Certificate requirements",
+            "document_id": "hr-medical-certificate-process",
+            "version": "1.0"
+          },
+          {
+            "evidence_key": "hr-medical-certificate-process@1.0#Emergency submission",
+            "document_id": "hr-medical-certificate-process",
+            "version": "1.0"
+          }
+        ],
+        "citations": [
+          "hr-medical-certificate-process@1.0#Emergency submission",
+          "hr-medical-certificate-process@1.0#Certificate requirements"
+        ],
+        "status": "success",
+        "refusal_reason": null,
+        "answer": "Extended sick leave longer than two working days requires a medical certificate issued by a medical institution that identifies the employee and covered dates. In case of emergency preventing advance submission, notify the direct manager before the workday starts and submit the system request and supporting certificate within two working days after returning.",
+        "latency_ms": 111917.90694100018,
+        "model_calls": 2,
+        "routed_document_keys": [
+          "hr-medical-certificate-process@1.0",
+          "hr-onboarding-process@1.2",
+          "admin-asset-management@1.0",
+          "hr-leave-policy@2.0"
+        ],
+        "retrieval_hops": 1,
+        "required_need_ids": [
+          "emergency_process",
+          "certificate_type"
+        ],
+        "covered_need_ids": [
+          "emergency_process",
+          "certificate_type"
+        ]
+      },
+      "metrics": {
+        "domain_accuracy": 1.0,
+        "ranking": {
+          "recall_at_k": 0.6666666666666666,
+          "reciprocal_rank": 1.0,
+          "ndcg_at_k": 0.7653606369886217
+        },
+        "access_leakage": 0.0,
+        "version_accuracy": 0.0,
+        "citation_accuracy": 1.0,
+        "correct_refusal": null,
+        "false_refusal": 0.0,
+        "automated_answer_score": 0.5,
+        "document_route_recall": 1.0,
+        "evidence_need_coverage": 0.0,
+        "second_hop_trigger_accuracy": 0.0,
+        "second_hop_success": 0.0,
+        "irrelevant_evidence_ratio": 0.0,
+        "core_pass": false
+      },
+      "error_type": null
+    },
+    {
+      "case_id": "dev-procurement-supplier-two-hop",
+      "observation": null,
+      "metrics": null,
+      "error_type": "ModelProviderError"
+    },
+    {
+      "case_id": "dev-finance-deadline-single-hop",
+      "observation": {
+        "in_scope": true,
+        "retrieved": [
+          {
+            "evidence_key": "hr-medical-certificate-process@1.0#Emergency submission",
+            "document_id": "hr-medical-certificate-process",
+            "version": "1.0"
+          },
+          {
+            "evidence_key": "hr-medical-certificate-process@1.0#Certificate requirements",
+            "document_id": "hr-medical-certificate-process",
+            "version": "1.0"
+          }
+        ],
+        "citations": [
+          "hr-medical-certificate-process@1.0#Emergency submission",
+          "hr-medical-certificate-process@1.0#Certificate requirements"
+        ],
+        "status": "success",
+        "refusal_reason": null,
+        "answer": "无法从提供的证据中找到关于费用提交截止日期的信息",
+        "latency_ms": 47118.08227899928,
+        "model_calls": 2,
+        "routed_document_keys": [
+          "hr-medical-certificate-process@1.0",
+          "finance-expense-policy@2.0",
+          "admin-asset-management@1.0",
+          "hr-leave-policy@2.0"
+        ],
+        "retrieval_hops": 1,
+        "required_need_ids": [
+          "exp_deadline"
+        ],
+        "covered_need_ids": [
+          "exp_deadline"
+        ]
+      },
+      "metrics": {
+        "domain_accuracy": 1.0,
+        "ranking": {
+          "recall_at_k": 0.0,
+          "reciprocal_rank": 0.0,
+          "ndcg_at_k": 0.0
+        },
+        "access_leakage": 0.0,
+        "version_accuracy": 0.0,
+        "citation_accuracy": 0.0,
+        "correct_refusal": null,
+        "false_refusal": 0.0,
+        "automated_answer_score": 0.0,
+        "document_route_recall": 1.0,
+        "evidence_need_coverage": 0.0,
+        "second_hop_trigger_accuracy": 1.0,
+        "second_hop_success": null,
+        "irrelevant_evidence_ratio": 1.0,
+        "core_pass": false
+      },
+      "error_type": null
+    },
+    {
+      "case_id": "dev-hr-missing-exception-refusal",
+      "observation": {
+        "in_scope": true,
+        "retrieved": [],
+        "citations": [],
+        "status": "refused",
+        "refusal_reason": "insufficient_evidence",
+        "answer": "当前知识库中没有足够依据回答这个问题。",
+        "latency_ms": 29299.414468000577,
+        "model_calls": 1,
+        "routed_document_keys": [
+          "hr-leave-policy@2.0",
+          "hr-onboarding-process@1.2",
+          "finance-expense-policy@2.0",
+          "admin-asset-management@1.0"
+        ],
+        "retrieval_hops": 1,
+        "required_need_ids": [
+          "parental_exception_contractor"
+        ],
+        "covered_need_ids": []
+      },
+      "metrics": {
+        "domain_accuracy": 1.0,
+        "ranking": null,
+        "access_leakage": 0.0,
+        "version_accuracy": null,
+        "citation_accuracy": null,
+        "correct_refusal": 1.0,
+        "false_refusal": 0.0,
+        "automated_answer_score": null,
+        "document_route_recall": null,
+        "evidence_need_coverage": 0.0,
+        "second_hop_trigger_accuracy": 0.0,
+        "second_hop_success": 0.0,
+        "irrelevant_evidence_ratio": 0.0,
+        "core_pass": false
+      },
+      "error_type": null
+    },
+    {
+      "case_id": "dev-finance-restricted-supplement-no-leak",
+      "observation": null,
+      "metrics": null,
+      "error_type": "ModelProviderError"
+    }
+  ]
+}

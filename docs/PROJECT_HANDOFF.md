@@ -62,12 +62,14 @@
 
 ## 4. 当前验证状态
 
-已完成的是确定性单元测试、前端静态检查、迁移和交付脚本的代码路径验证。当前机器没有可用的 PostgreSQL/pgvector、Docker 和真实模型评测环境，因此：
+当前机器已通过 Docker 运行 PostgreSQL/pgvector，并完成真实 `bge-m3`、`bge-reranker-v2-m3` 与 Qwen 的三方案 development 评测：
 
-- 尚未生成真实三方案 development 报告
-- 尚未验证真实 bge-m3、bge-reranker-v2-m3 与 Qwen 的端到端结果
-- `frozen_holdout.json` 已存在但仍锁定，不能用于调参或提前宣称准确率
-- README、简历和最终验收材料不得填写准确率、提升比例、用户数或生产指标
+- `evaluation/reports/development-*-qwen3-4b-local-r1.json` 保留本地 `qwen3:4b` 单次基线。
+- `evaluation/reports/development-*-r1.json` 保存百炼 `qwen-plus` 单次对比，`latest-development.json` 指向其 Reranker 方案。
+- `qwen-plus` 三方案执行成功率分别为 88.24%、94.12% 和 100%，核心通过率分别为 52.94%、52.94% 和 58.82%；详细口径见 `docs/INTERVIEW_GUIDE.md`。
+- 全部六份报告的权限泄漏率均为 0；第二跳成功率仍为 0，不能宣称多跳优化已经有效。
+- `frozen_holdout.json` 仍锁定且未运行，development 数字不能表述成最终泛化结果。
+- README、简历和验收材料只能引用 `evaluation/reports/` 可追溯的指标，不能填写用户数或生产指标。
 
 ## 5. 下一次运行顺序
 
@@ -83,7 +85,7 @@ npm --prefix frontend run build
 
 Windows 本地若无法创建临时文件，应设置可写的 `TEMP`/`TMP` 后重试；Docker 和 PostgreSQL 相关检查优先以 GitHub Actions 的 `delivery-smoke` 为准。
 
-### 真实 development 评测
+### 复现 development 评测
 
 1. 准备 PostgreSQL + pgvector，并执行迁移和索引。
 2. 配置固定的 `EMBEDDING_MODEL`、`RERANKER_MODEL`、`MODEL_NAME`、提示词版本和温度。

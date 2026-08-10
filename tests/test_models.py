@@ -81,7 +81,7 @@ def test_user_context_normalizes_departments_and_roles() -> None:
 def test_settings_have_portable_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("EMBEDDING_MODEL", raising=False)
     monkeypatch.delenv("MODEL_BASE_URL", raising=False)
-    settings = Settings()
+    settings = Settings(_env_file=None)
     assert settings.embedding_model == "BAAI/bge-m3"
     assert settings.model_base_url == "http://127.0.0.1:11434/v1"
     assert "E:/" not in settings.embedding_model
