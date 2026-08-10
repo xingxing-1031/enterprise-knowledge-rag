@@ -16,11 +16,18 @@ from .models import (
     RankingMetrics,
 )
 from .runner import EvaluationRunner, FrozenHoldoutLockedError, load_dataset
+from .summary import (
+    DevelopmentSummary,
+    MetricDistribution,
+    StrategyDevelopmentSummary,
+    summarize_development_reports,
+)
 
 __all__ = [
     "AggregateMetrics",
     "CaseEvaluation",
     "CaseMetrics",
+    "DevelopmentSummary",
     "EvaluationCase",
     "EvaluationDataset",
     "ExperimentMetadata",
@@ -31,10 +38,13 @@ __all__ = [
     "EvaluationStrategy",
     "ExpectedOutcome",
     "FrozenHoldoutLockedError",
+    "MetricDistribution",
     "ObservedEvidence",
     "RankingMetrics",
+    "StrategyDevelopmentSummary",
     "grade_case",
     "grade_ranking",
+    "summarize_development_reports",
     "WorkflowEvaluationExecutor",
     "load_dataset",
 ]

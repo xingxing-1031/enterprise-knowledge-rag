@@ -446,7 +446,7 @@ git commit -m "feat: configure the default retrieval strategy"
 - Produces: `build_live_services(settings, connection_factory) -> Mapping[EvaluationStrategy, RuntimeChatService]` shared by development, smoke, and final runners.
 - Writes: `evaluation/reports/development-summary.json` after all requested repetitions finish.
 
-- [ ] **Step 1: Write failing summary tests**
+- [x] **Step 1: Write failing summary tests**
 
 Create two reports for each strategy with known values and assert:
 
@@ -466,7 +466,7 @@ assert hybrid.metrics["core_pass_rate"].population_stddev == 0.25
 
 Add failure tests for mixed dataset IDs, corpus snapshots, LLM models, and duplicate `(strategy, repetition)` pairs.
 
-- [ ] **Step 2: Run the summary test and confirm RED**
+- [x] **Step 2: Run the summary test and confirm RED**
 
 Run:
 
@@ -476,7 +476,7 @@ Run:
 
 Expected: import failure because the module does not exist.
 
-- [ ] **Step 3: Implement structured aggregation**
+- [x] **Step 3: Implement structured aggregation**
 
 Define strict models in `summary.py`:
 
@@ -506,7 +506,7 @@ class DevelopmentSummary(StrictModel):
 
 Aggregate these report metrics: execution success, core pass, Recall@5, citation accuracy, leakage, evidence coverage, second-hop trigger accuracy, second-hop success, irrelevant evidence ratio, P50, P95, and model calls. Reject missing strategies or repetition gaps.
 
-- [ ] **Step 4: Extract shared report metadata helpers**
+- [x] **Step 4: Extract shared report metadata helpers**
 
 Move the corpus hash, commit lookup, and shared live service construction from `run_development.py` into `scripts/evaluation_support.py`. The commit helper must prefer an explicit container value:
 
@@ -529,7 +529,7 @@ Test the override without exposing any secret.
 
 Create `run_development_smoke.py`. It must read `EVAL_CASE_ID`, default to `dev-hr-leave-emergency-two-hop`, load only `evaluation/development.json`, select exactly one matching case, run only the configured default strategy, print a JSON object containing case ID, status, hop count, canonical required/covered IDs, citations, and routed document keys, and write no report file. A missing or duplicate case ID must fail before any model or database client is constructed.
 
-- [ ] **Step 5: Integrate the summary into the development runner**
+- [x] **Step 5: Integrate the summary into the development runner**
 
 Collect all generated `EvaluationReport` objects, write every raw `rN` report, and after the loops write:
 
@@ -543,7 +543,7 @@ summary = summarize_development_reports(generated_reports)
 
 Write `latest-development.json` only for the strategy selected by `settings.retrieval_strategy`; after three repetitions it therefore points to repetition 3 of the demo default.
 
-- [ ] **Step 6: Run evaluation unit tests**
+- [x] **Step 6: Run evaluation unit tests**
 
 Run:
 
@@ -554,7 +554,7 @@ Run:
 
 Expected: all pass and Ruff reports no violations.
 
-- [ ] **Step 7: Commit Task 5**
+- [x] **Step 7: Commit Task 5**
 
 ```powershell
 git add src/enterprise_knowledge_rag/evaluation scripts/run_development.py scripts/run_development_smoke.py scripts/evaluation_support.py tests/test_evaluation_summary.py tests/test_evaluation_scripts.py
