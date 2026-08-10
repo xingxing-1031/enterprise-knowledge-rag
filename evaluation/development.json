@@ -187,7 +187,7 @@
       "expected_outcome": "answer",
       "gold_evidence_keys": ["procurement-purchase-process@1.0#供应商与比价", "procurement-supplier-onboarding-process@1.0#Required registration"],
       "expected_versions": {"procurement-purchase-process": "1.0", "procurement-supplier-onboarding-process": "1.0"},
-      "required_need_ids": ["threshold", "registration"],
+      "required_need_ids": ["rule", "material"],
       "expected_retrieval_hops": 2,
       "required_answer_facts": ["30,000 元", "tax registration"]
     },

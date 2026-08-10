@@ -1,7 +1,12 @@
+import re
 from datetime import UTC, datetime
 from pathlib import Path
 
-from enterprise_knowledge_rag.documents import chunk_document, parse_document
+from enterprise_knowledge_rag.documents import (
+    EvidenceKind,
+    chunk_document,
+    parse_document,
+)
 from enterprise_knowledge_rag.evaluation.runner import load_dataset
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -73,3 +78,13 @@ def test_development_covers_controlled_hierarchical_scenarios() -> None:
     assert cases[
         "dev-finance-restricted-supplement-no-leak"
     ].forbidden_document_ids == {"finance-payment-approval"}
+
+
+def test_development_need_ids_use_server_canonical_vocabulary() -> None:
+    dataset = load_dataset(PROJECT_ROOT / "evaluation" / "development.json")
+    allowed = {kind.value for kind in EvidenceKind}
+
+    for case in dataset.cases:
+        for need_id in case.required_need_ids:
+            base = re.sub(r"_\d+$", "", need_id)
+            assert base in allowed, (case.case_id, need_id)

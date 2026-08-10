@@ -282,7 +282,7 @@ git commit -m "fix: require meaningful evidence need coverage"
 - Consumes: canonical need IDs generated in Task 1.
 - Produces: development gold IDs restricted to `EvidenceKind` values with optional numeric suffixes.
 
-- [ ] **Step 1: Add a failing development contract test**
+- [x] **Step 1: Add a failing development contract test**
 
 ```python
 import re
@@ -299,7 +299,7 @@ def test_development_need_ids_use_server_canonical_vocabulary() -> None:
             assert base in allowed, (case.case_id, need_id)
 ```
 
-- [ ] **Step 2: Run the contract test and confirm RED**
+- [x] **Step 2: Run the contract test and confirm RED**
 
 Run:
 
@@ -309,7 +309,7 @@ Run:
 
 Expected: `dev-procurement-supplier-two-hop` fails for `threshold` and `registration`.
 
-- [ ] **Step 3: Update development-only gold**
+- [x] **Step 3: Update development-only gold**
 
 Change only this case:
 
@@ -319,7 +319,7 @@ Change only this case:
 
 Do not edit `evaluation/frozen_holdout.json`.
 
-- [ ] **Step 4: Verify graders and frozen hash**
+- [x] **Step 4: Verify graders and frozen hash**
 
 Run:
 
@@ -330,7 +330,7 @@ Get-FileHash evaluation\frozen_holdout.json -Algorithm SHA256
 
 Expected: tests pass and hash remains `571616F9172881B0196C4D889A1D5D3691905FB7DB035A14EFFB5F7D46CD465D`.
 
-- [ ] **Step 5: Commit Task 3**
+- [x] **Step 5: Commit Task 3**
 
 ```powershell
 git add evaluation/development.json tests/test_evaluation_dataset_contract.py
