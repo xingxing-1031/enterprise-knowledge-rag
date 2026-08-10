@@ -660,7 +660,7 @@ git commit -m "feat: gate the final frozen evaluation"
 - Consumes: Tasks 1-6, the existing Docker database/model cache, and ignored local Bailian credentials.
 - Produces: committed repeated development evidence, one frozen report, and consistent recruiting claims.
 
-- [ ] **Step 1: Run all deterministic verification before external evaluation**
+- [x] **Step 1: Run all deterministic verification before external evaluation**
 
 Run in parallel where possible:
 
@@ -674,7 +674,7 @@ npm --prefix frontend run build
 
 Expected: all commands exit 0; document any intentional skip.
 
-- [ ] **Step 2: Run a Docker development smoke**
+- [x] **Step 2: Run a Docker development smoke**
 
 Use one development answer case through the same mounted source, database, local Embedding, and remote `qwen-plus`. Do not load frozen:
 
@@ -691,7 +691,7 @@ docker compose -p enterprise-rag-dev run -T --rm --no-deps `
 
 Expected: the JSON output contains canonical `material` / `exception` IDs, no forbidden document, at least one valid citation, and the observed hop count needed for development diagnosis.
 
-- [ ] **Step 3: Commit the fixed code and configuration before the full experiment**
+- [x] **Step 3: Commit the fixed code and configuration before the full experiment**
 
 If Task 1-6 commits are already complete and the tree is clean, record:
 
