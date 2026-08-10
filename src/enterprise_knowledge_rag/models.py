@@ -1,5 +1,6 @@
 from datetime import datetime
 from enum import StrEnum
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -115,6 +116,8 @@ class RetrievalEvidence(StrictModel):
     retrieval_channels: set[str] = Field(default_factory=set)
     retrieval_rank: int = Field(ge=1)
     reranker_score: float | None = None
+    supports_need_ids: set[str] = Field(default_factory=set)
+    retrieval_hop: Literal[1, 2] = 1
 
 
 class Citation(StrictModel):

@@ -9,6 +9,7 @@ from enterprise_knowledge_rag.models import (
     DocumentRecord,
     DocumentStatus,
     DocumentType,
+    RetrievalEvidence,
     UserContext,
     UserRole,
     Visibility,
@@ -84,3 +85,36 @@ def test_settings_have_portable_defaults(monkeypatch: pytest.MonkeyPatch) -> Non
     assert settings.embedding_model == "BAAI/bge-m3"
     assert settings.model_base_url == "http://127.0.0.1:11434/v1"
     assert "E:/" not in settings.embedding_model
+
+
+def test_retrieval_evidence_has_backward_compatible_need_defaults() -> None:
+    evidence = RetrievalEvidence(
+        evidence_id="evidence-1",
+        chunk_id="chunk-1",
+        document_id="finance-expense-policy",
+        title="费用报销管理制度",
+        section_path=["报销范围"],
+        version="2.1",
+        effective_from=datetime(2026, 1, 1, tzinfo=UTC),
+        quote="员工提交报销前应准备有效票据。",
+        retrieval_rank=1,
+    )
+
+    assert evidence.supports_need_ids == set()
+    assert evidence.retrieval_hop == 1
+
+
+def test_retrieval_evidence_rejects_unbounded_hop_number() -> None:
+    with pytest.raises(ValidationError, match="retrieval_hop"):
+        RetrievalEvidence(
+            evidence_id="evidence-1",
+            chunk_id="chunk-1",
+            document_id="finance-expense-policy",
+            title="费用报销管理制度",
+            section_path=["报销范围"],
+            version="2.1",
+            effective_from=datetime(2026, 1, 1, tzinfo=UTC),
+            quote="员工提交报销前应准备有效票据。",
+            retrieval_rank=1,
+            retrieval_hop=3,
+        )
