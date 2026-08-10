@@ -20,7 +20,8 @@ DOCUMENT_SELECT = """
     d.document_id, d.version, d.title, d.document_type, d.department,
     d.visibility, d.allowed_roles, d.status, d.effective_from,
     d.effective_to, d.supersedes_id,
-    d.content_hash AS document_content_hash, d.source_path, d.indexed_at
+    d.content_hash AS document_content_hash, d.source_path, d.indexed_at,
+    d.topic_tags
 """
 
 
@@ -41,6 +42,7 @@ def _document_from_row(row: dict[str, Any]) -> DocumentRecord:
         content_hash=content_hash.strip(),
         source_path=row["source_path"],
         indexed_at=row["indexed_at"],
+        topic_tags=set(row.get("topic_tags") or []),
     )
 
 
@@ -86,6 +88,15 @@ class ParentDocumentMatch(StrictModel):
     document_type: DocumentType
     department: str = Field(min_length=1)
     similarity: float
+
+
+class ParentDocumentSource(StrictModel):
+    document_id: str = Field(min_length=1)
+    version: str = Field(min_length=1)
+    title: str = Field(min_length=1)
+    document_type: DocumentType
+    department: str = Field(min_length=1)
+    document_search_text: str = Field(min_length=1)
 
 
 class KnowledgeRepository:
@@ -140,6 +151,29 @@ class KnowledgeRepository:
             row = cursor.fetchone()
         return bool(row and row[0])
 
+    def has_parent_embedding(
+        self,
+        document_id: str,
+        version: str,
+        embedding_model: str,
+    ) -> bool:
+        with self._connection() as connection, connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT EXISTS (
+                    SELECT 1
+                    FROM knowledge_documents
+                    WHERE document_id = %s
+                      AND version = %s
+                      AND document_embedding_model = %s
+                      AND document_embedding IS NOT NULL
+                )
+                """,
+                (document_id, version, embedding_model),
+            )
+            row = cursor.fetchone()
+        return bool(row and row[0])
+
     def find_document_by_hash(self, content_hash: str) -> tuple[str, str] | None:
         with self._connection() as connection, connection.cursor() as cursor:
             cursor.execute(
@@ -185,7 +219,11 @@ class KnowledgeRepository:
                         (SELECT COUNT(DISTINCT (document_id, document_version))
                          FROM knowledge_chunks
                          WHERE embedding_model = %(embedding_model)s)
-                            AS indexed_document_count
+                            AS indexed_document_count,
+                        (SELECT COUNT(*) FROM knowledge_documents
+                         WHERE document_embedding_model = %(embedding_model)s
+                           AND document_embedding IS NOT NULL)
+                            AS parent_indexed_document_count
                     """,
                     {"embedding_model": self._embedding_model},
                 )
@@ -197,6 +235,7 @@ class KnowledgeRepository:
             and row["document_count"] > 0
             and row["chunk_count"] > 0
             and row["indexed_document_count"] == row["document_count"]
+            and row["parent_indexed_document_count"] == row["document_count"]
         )
 
     def list_candidates(
@@ -323,6 +362,34 @@ class KnowledgeRepository:
             rows = cursor.fetchall()
         return [ParentDocumentMatch.model_validate(row) for row in rows]
 
+    def list_document_route_sources(
+        self,
+        document_keys: frozenset[tuple[str, str]],
+    ) -> list[ParentDocumentSource]:
+        if not document_keys:
+            return []
+        from psycopg.rows import dict_row
+
+        query = """
+            SELECT d.document_id, d.version, d.title, d.document_type,
+                d.department, d.document_search_text
+            FROM knowledge_documents d
+            JOIN jsonb_to_recordset(%(authorized)s::jsonb)
+              AS allowed(document_id text, version text)
+              ON allowed.document_id = d.document_id
+             AND allowed.version = d.version
+            WHERE d.document_search_text IS NOT NULL
+            ORDER BY d.document_id, d.version
+        """
+        params = {"authorized": _authorized_payload(document_keys)}
+        with (
+            self._connection() as connection,
+            connection.cursor(row_factory=dict_row) as cursor,
+        ):
+            cursor.execute(query, params)
+            rows = cursor.fetchall()
+        return [ParentDocumentSource.model_validate(row) for row in rows]
+
     def upsert_document(
         self,
         document: DocumentRecord,
@@ -389,7 +456,9 @@ class KnowledgeRepository:
                         role.value for role in document.allowed_roles
                     ),
                     "status": document.status.value,
-                    "topic_tags": sorted(topic_tags or set()),
+                    "topic_tags": sorted(
+                        document.topic_tags if topic_tags is None else topic_tags
+                    ),
                     "document_search_text": document_search_text,
                     "document_embedding_model": document_embedding_model,
                     "document_embedding": (

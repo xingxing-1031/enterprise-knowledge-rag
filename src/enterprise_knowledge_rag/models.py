@@ -50,6 +50,7 @@ class DocumentRecord(StrictModel):
     department: str = Field(min_length=1)
     visibility: Visibility
     allowed_roles: set[UserRole] = Field(default_factory=set)
+    topic_tags: set[str] = Field(default_factory=set, max_length=20)
     version: str = Field(min_length=1)
     status: DocumentStatus
     effective_from: datetime

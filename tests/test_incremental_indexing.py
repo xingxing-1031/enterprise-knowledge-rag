@@ -16,6 +16,7 @@ class FakeRepository:
         self.hashes = {}
         self.by_hash = {}
         self.embedding_models = set()
+        self.parent_embedding_models = set()
         self.upserts = []
 
     def get_content_hash(self, document_id, version):
@@ -27,14 +28,25 @@ class FakeRepository:
     def has_embeddings(self, document_id, version, embedding_model):
         return (document_id, version, embedding_model) in self.embedding_models
 
-    def upsert_document(self, document, chunks, embeddings):
+    def has_parent_embedding(self, document_id, version, embedding_model):
+        return (document_id, version, embedding_model) in self.parent_embedding_models
+
+    def upsert_document(self, document, chunks, embeddings, **parent):
         key = (document.document_id, document.version)
         self.hashes[key] = document.content_hash
         self.by_hash[document.content_hash] = key
         self.embedding_models.add(
             (document.document_id, document.version, chunks[0].embedding_model)
         )
-        self.upserts.append((document, list(chunks), list(embeddings)))
+        if parent.get("document_embedding_model"):
+            self.parent_embedding_models.add(
+                (
+                    document.document_id,
+                    document.version,
+                    parent["document_embedding_model"],
+                )
+            )
+        self.upserts.append((document, list(chunks), list(embeddings), parent))
 
 
 def make_service(repository=None):
@@ -56,9 +68,55 @@ def test_first_index_writes_document_chunks_and_vectors() -> None:
     assert result.skipped == 0
     assert result.failed == 0
     assert result.chunk_count > 0
-    document, chunks, vectors = repository.upserts[0]
+    document, chunks, vectors, _ = repository.upserts[0]
     assert document.version == "2.0"
     assert all(chunk.document_version == "2.0" for chunk in chunks)
+    assert len(chunks) == len(vectors)
+
+
+def test_index_persists_deterministic_parent_search_text_and_vector(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "leave-guide.md"
+    path.write_text(
+        """---
+document_id: hr-leave-guide
+title: 员工请假指南
+document_type: handbook
+department: hr
+visibility: public
+allowed_roles: []
+version: "1.0"
+status: active
+effective_from: "2026-08-01T00:00:00+08:00"
+effective_to: null
+supersedes_id: null
+source_path: hr/leave-guide.md
+topic_tags: [请假, 病假]
+---
+# 员工请假指南
+
+## 申请流程
+
+员工应在系统中提交申请。
+
+# 紧急情况
+
+紧急就医可先电话报备。
+""",
+        encoding="utf-8",
+    )
+    repository = FakeRepository()
+
+    result = make_service(repository).index_paths([path])
+
+    assert result.indexed == 1
+    _, chunks, vectors, parent = repository.upserts[0]
+    assert parent["document_search_text"] == (
+        "员工请假指南\nhandbook\nhr\n病假\n请假\n紧急情况"
+    )
+    assert parent["document_embedding_model"] == "BAAI/bge-m3"
+    assert parent["document_embedding"] == [29.0, 1.0, 0.0, 0.0]
     assert len(chunks) == len(vectors)
 
 

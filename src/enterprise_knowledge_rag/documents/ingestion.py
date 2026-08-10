@@ -255,6 +255,7 @@ class IngestionService:
             "department": metadata.department,
             "visibility": metadata.visibility.value,
             "allowed_roles": sorted(role.value for role in metadata.allowed_roles),
+            "topic_tags": sorted(metadata.topic_tags),
             "version": metadata.version,
             "status": "active",
             "effective_from": metadata.effective_from,

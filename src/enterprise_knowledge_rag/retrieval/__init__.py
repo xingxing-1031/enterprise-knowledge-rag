@@ -3,6 +3,7 @@
 from .lexical import LexicalRetriever, tokenize
 from .reranker import Reranker, RerankerScoreProvider
 from .rrf import reciprocal_rank_fusion
+from .routing import DocumentRouteCandidate, DocumentRouter
 from .service import (
     RetrievalResult,
     RetrievalService,
@@ -22,5 +23,7 @@ __all__ = [
     "VectorRetriever",
     "VectorSearchBackend",
     "reciprocal_rank_fusion",
+    "DocumentRouteCandidate",
+    "DocumentRouter",
     "tokenize",
 ]
