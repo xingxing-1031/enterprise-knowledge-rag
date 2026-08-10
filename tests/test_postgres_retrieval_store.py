@@ -33,6 +33,15 @@ CHUNK_ROW = {
     "similarity": 0.88,
 }
 
+PARENT_ROW = {
+    "document_id": "finance-expense-policy",
+    "version": "2.0",
+    "title": "差旅与费用报销管理制度",
+    "document_type": "policy",
+    "department": "finance",
+    "similarity": 0.91,
+}
+
 
 class FakeCursor:
     def __init__(self, rows):
@@ -149,3 +158,21 @@ def test_ready_requires_documents_and_chunks() -> None:
     assert ready_repository.ready() is True
     assert empty_repository.ready() is False
     assert cursor.executions[0][1] == {"embedding_model": "BAAI/bge-m3"}
+
+
+def test_parent_vector_search_respects_authorized_document_keys() -> None:
+    repository, cursor = make_repository([PARENT_ROW])
+
+    results = repository.search_documents(
+        [0.1, 0.2, 0.3],
+        document_keys=frozenset({("finance-expense-policy", "2.0")}),
+        limit=4,
+    )
+
+    assert {(item.document_id, item.version) for item in results} == {
+        ("finance-expense-policy", "2.0")
+    }
+    query, params = cursor.executions[0]
+    assert "jsonb_to_recordset" in query
+    assert "finance-expense-policy" in params["authorized"]
+    assert params["limit"] == 4

@@ -30,6 +30,10 @@ class Settings(BaseSettings):
     migrations_dir: Path = Path("db/migrations")
     frontend_dist_dir: Path = Path("frontend/dist")
     latest_evaluation_path: Path = Path("evaluation/reports/latest-development.json")
+    upload_storage_dir: Path = Path("data/uploads")
+    upload_max_bytes: int = Field(default=15 * 1024 * 1024, ge=1)
+    pdf_max_pages: int = Field(default=200, ge=1, le=2_000)
+    document_route_limit: int = Field(default=4, ge=1, le=20)
     history_max_messages: int = Field(default=8, ge=2, le=20)
     public_demo_mode: bool = True
     public_demo_max_rows: int = Field(default=20, ge=1, le=100)

@@ -85,6 +85,9 @@ def test_settings_have_portable_defaults(monkeypatch: pytest.MonkeyPatch) -> Non
     assert settings.embedding_model == "BAAI/bge-m3"
     assert settings.model_base_url == "http://127.0.0.1:11434/v1"
     assert "E:/" not in settings.embedding_model
+    assert settings.upload_max_bytes == 15 * 1024 * 1024
+    assert settings.pdf_max_pages == 200
+    assert settings.document_route_limit == 4
 
 
 def test_retrieval_evidence_has_backward_compatible_need_defaults() -> None:

@@ -3,12 +3,15 @@ from collections.abc import Sequence
 from contextlib import contextmanager
 from typing import Any, Iterator
 
+from pydantic import Field
+
 from enterprise_knowledge_rag.models import (
     ChunkRecord,
     DocumentRecord,
     DocumentStatus,
     DocumentType,
     RetrievalCandidate,
+    StrictModel,
     UserRole,
     Visibility,
 )
@@ -74,6 +77,15 @@ def _authorized_payload(
 
 def _vector_literal(vector: Sequence[float]) -> str:
     return "[" + ",".join(str(float(value)) for value in vector) + "]"
+
+
+class ParentDocumentMatch(StrictModel):
+    document_id: str = Field(min_length=1)
+    version: str = Field(min_length=1)
+    title: str = Field(min_length=1)
+    document_type: DocumentType
+    department: str = Field(min_length=1)
+    similarity: float
 
 
 class KnowledgeRepository:
@@ -268,11 +280,59 @@ class KnowledgeRepository:
             rows = cursor.fetchall()
         return [_candidate_from_row(row) for row in rows]
 
+    def search_documents(
+        self,
+        query_vector: Sequence[float],
+        *,
+        document_keys: frozenset[tuple[str, str]],
+        limit: int,
+    ) -> list[ParentDocumentMatch]:
+        if not document_keys:
+            return []
+        if not query_vector:
+            raise ValueError("query_vector must not be empty")
+        from psycopg.rows import dict_row
+
+        query = """
+            SELECT d.document_id, d.version, d.title, d.document_type,
+                d.department,
+                1 - (d.document_embedding <=> %(query_vector)s::vector)
+                    AS similarity
+            FROM knowledge_documents d
+            JOIN jsonb_to_recordset(%(authorized)s::jsonb)
+              AS allowed(document_id text, version text)
+              ON allowed.document_id = d.document_id
+             AND allowed.version = d.version
+            WHERE d.document_embedding IS NOT NULL
+              AND d.document_embedding_model = %(embedding_model)s
+            ORDER BY d.document_embedding <=> %(query_vector)s::vector,
+                d.document_id, d.version
+            LIMIT %(limit)s
+        """
+        params = {
+            "authorized": _authorized_payload(document_keys),
+            "embedding_model": self._embedding_model,
+            "query_vector": _vector_literal(query_vector),
+            "limit": limit,
+        }
+        with (
+            self._connection() as connection,
+            connection.cursor(row_factory=dict_row) as cursor,
+        ):
+            cursor.execute(query, params)
+            rows = cursor.fetchall()
+        return [ParentDocumentMatch.model_validate(row) for row in rows]
+
     def upsert_document(
         self,
         document: DocumentRecord,
         chunks: Sequence[ChunkRecord],
         embeddings: Sequence[Sequence[float]],
+        *,
+        document_search_text: str | None = None,
+        document_embedding: Sequence[float] | None = None,
+        document_embedding_model: str | None = None,
+        topic_tags: set[str] | None = None,
     ) -> None:
         if len(chunks) != len(embeddings):
             raise ValueError("chunks and embeddings must have the same length")
@@ -284,13 +344,15 @@ class KnowledgeRepository:
                     document_id, version, title, document_type, department,
                     visibility, allowed_roles, status, effective_from,
                     effective_to, supersedes_id, content_hash, source_path,
-                    indexed_at
+                    indexed_at, topic_tags, document_search_text,
+                    document_embedding_model, document_embedding
                 ) VALUES (
                     %(document_id)s, %(version)s, %(title)s, %(document_type)s,
                     %(department)s, %(visibility)s, %(allowed_roles)s,
                     %(status)s, %(effective_from)s, %(effective_to)s,
                     %(supersedes_id)s, %(content_hash)s, %(source_path)s,
-                    %(indexed_at)s
+                    %(indexed_at)s, %(topic_tags)s, %(document_search_text)s,
+                    %(document_embedding_model)s, %(document_embedding)s::vector
                 )
                 ON CONFLICT (document_id, version) DO UPDATE SET
                     title = EXCLUDED.title,
@@ -304,7 +366,20 @@ class KnowledgeRepository:
                     supersedes_id = EXCLUDED.supersedes_id,
                     content_hash = EXCLUDED.content_hash,
                     source_path = EXCLUDED.source_path,
-                    indexed_at = EXCLUDED.indexed_at
+                    indexed_at = EXCLUDED.indexed_at,
+                    topic_tags = EXCLUDED.topic_tags,
+                    document_search_text = COALESCE(
+                        EXCLUDED.document_search_text,
+                        knowledge_documents.document_search_text
+                    ),
+                    document_embedding_model = COALESCE(
+                        EXCLUDED.document_embedding_model,
+                        knowledge_documents.document_embedding_model
+                    ),
+                    document_embedding = COALESCE(
+                        EXCLUDED.document_embedding,
+                        knowledge_documents.document_embedding
+                    )
                 """,
                 {
                     **document.model_dump(mode="python"),
@@ -314,6 +389,14 @@ class KnowledgeRepository:
                         role.value for role in document.allowed_roles
                     ),
                     "status": document.status.value,
+                    "topic_tags": sorted(topic_tags or set()),
+                    "document_search_text": document_search_text,
+                    "document_embedding_model": document_embedding_model,
+                    "document_embedding": (
+                        _vector_literal(document_embedding)
+                        if document_embedding is not None
+                        else None
+                    ),
                 },
             )
             cursor.execute(

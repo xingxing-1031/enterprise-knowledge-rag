@@ -51,6 +51,22 @@ def test_migrations_are_sorted_and_content_addressed(tmp_path: Path) -> None:
     assert migrations[0].sql == "SELECT 1;\n"
 
 
+def test_ingestion_migration_adds_import_jobs_and_parent_vectors() -> None:
+    migration_path = (
+        Path(__file__).parents[1]
+        / "db"
+        / "migrations"
+        / "004_ingestion_and_document_routing.sql"
+    )
+
+    sql = migration_path.read_text(encoding="utf-8")
+
+    assert "CREATE TABLE IF NOT EXISTS knowledge_imports" in sql
+    assert "document_search_text" in sql
+    assert "document_embedding vector(1024)" in sql
+    assert "storage_path TEXT NOT NULL" in sql
+
+
 def test_deterministic_embeddings_are_stable_and_ci_only(monkeypatch) -> None:
     provider = DeterministicTestEmbeddings(8)
     first = provider.embed_query("报销期限")
