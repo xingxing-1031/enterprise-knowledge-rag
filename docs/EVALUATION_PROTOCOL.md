@@ -83,3 +83,14 @@
 ## 8. 分层与多跳指标
 
 Development 题集额外记录父文档路由召回、必需证据需求覆盖、第二跳触发准确性、第二跳成功率和无关证据比例。异常题保留在执行成功率和核心通过率分母中；这些指标只描述当前报告，不代表生产效果。
+
+## 9. 一次性冻结验收入口
+
+只有 Task 7 的三次 development 结论已经提交、工作区干净且冻结文件哈希核对无误后，才允许执行以下命令。此前禁止运行：
+
+```powershell
+$env:FROZEN_HOLDOUT_CONFIRM = "CONSUME_ONCE"
+.\.venv\Scripts\python.exe scripts\run_final_holdout.py
+```
+
+入口会拒绝错误确认串，也不会覆盖已有的 `evaluation/reports/final-holdout.json`。冻结集一旦提交给 Agent，无论结果如何都视为已经消费，不能根据单题结果调参后重跑并继续宣称为未见集。

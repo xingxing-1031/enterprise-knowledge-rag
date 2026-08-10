@@ -4,6 +4,7 @@ import pytest
 
 from scripts.evaluation_support import code_commit, corpus_snapshot
 from scripts.run_development_smoke import select_case
+from scripts.run_final_holdout import require_frozen_confirmation
 
 
 def test_code_commit_prefers_explicit_container_value(
@@ -36,3 +37,16 @@ def test_select_case_requires_exactly_one_match() -> None:
         select_case([SimpleNamespace(case_id="other")], "wanted")
     with pytest.raises(LookupError, match="exactly one"):
         select_case([wanted, wanted], "wanted")
+
+
+def test_frozen_guard_requires_exact_confirmation(tmp_path) -> None:
+    with pytest.raises(RuntimeError, match="CONSUME_ONCE"):
+        require_frozen_confirmation("", tmp_path / "final-holdout.json")
+
+
+def test_frozen_guard_refuses_to_overwrite(tmp_path) -> None:
+    output = tmp_path / "final-holdout.json"
+    output.write_text("existing", encoding="utf-8")
+
+    with pytest.raises(FileExistsError):
+        require_frozen_confirmation("CONSUME_ONCE", output)

@@ -572,7 +572,7 @@ git commit -m "feat: summarize repeated development evaluations"
 - Consumes: committed default `Settings.retrieval_strategy`, frozen SHA-256 constant, and `FROZEN_HOLDOUT_CONFIRM=CONSUME_ONCE`.
 - Writes: `evaluation/reports/final-holdout.json`; refuses to overwrite an existing report.
 
-- [ ] **Step 1: Write failing guard tests without running any dataset**
+- [x] **Step 1: Write failing guard tests without running any dataset**
 
 Extract a pure guard in the new script and test:
 
@@ -589,7 +589,7 @@ def test_frozen_guard_refuses_to_overwrite(tmp_path: Path) -> None:
         require_frozen_confirmation("CONSUME_ONCE", output)
 ```
 
-- [ ] **Step 2: Run guard tests and confirm RED**
+- [x] **Step 2: Run guard tests and confirm RED**
 
 Run:
 
@@ -599,7 +599,7 @@ Run:
 
 Expected: import failure because `run_final_holdout.py` does not exist.
 
-- [ ] **Step 3: Implement the final runner**
+- [x] **Step 3: Implement the final runner**
 
 The script must:
 
@@ -612,7 +612,7 @@ The script must:
 
 Keep all operational code inside `main()` so importing the guard in tests cannot connect to external services.
 
-- [ ] **Step 4: Document the irreversible command but do not run it**
+- [x] **Step 4: Document the irreversible command but do not run it**
 
 Add this exact gate to `docs/EVALUATION_PROTOCOL.md`:
 
@@ -623,7 +623,7 @@ $env:FROZEN_HOLDOUT_CONFIRM = "CONSUME_ONCE"
 
 State that the command is forbidden until Task 7 development conclusions are committed.
 
-- [ ] **Step 5: Run script tests and confirm frozen remains untouched**
+- [x] **Step 5: Run script tests and confirm frozen remains untouched**
 
 Run:
 
@@ -635,7 +635,7 @@ git diff --exit-code -- evaluation/frozen_holdout.json
 
 Expected: tests pass, hash matches, and Git shows no frozen diff.
 
-- [ ] **Step 6: Commit Task 6**
+- [x] **Step 6: Commit Task 6**
 
 ```powershell
 git add scripts/run_final_holdout.py tests/test_evaluation_scripts.py docs/EVALUATION_PROTOCOL.md
