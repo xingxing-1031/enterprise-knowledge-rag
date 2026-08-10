@@ -6,6 +6,12 @@ from threading import Lock
 from typing import Any, Protocol
 
 from enterprise_knowledge_rag.documents.indexing import IndexingService
+from enterprise_knowledge_rag.documents.ingestion import IngestionService
+from enterprise_knowledge_rag.documents.source_models import (
+    ImportMetadata,
+    ImportPreview,
+    SourceFile,
+)
 from enterprise_knowledge_rag.models import (
     ChatRequest,
     DocumentRecord,
@@ -85,6 +91,7 @@ class RuntimeChatService:
         graph: Any,
         repository: RuntimeRepository,
         indexing: IndexingService,
+        ingestion: IngestionService | None = None,
         knowledge_dir: Path,
         latest_evaluation_path: Path,
         chat_runner: ChatRunner = run_chat,
@@ -94,6 +101,7 @@ class RuntimeChatService:
         self._graph = graph
         self._repository = repository
         self._indexing = indexing
+        self._ingestion = ingestion
         self._knowledge_dir = knowledge_dir
         self._latest_evaluation_path = latest_evaluation_path
         self._chat_runner = chat_runner
@@ -179,3 +187,39 @@ class RuntimeChatService:
             return json.loads(self._latest_evaluation_path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             return {"status": "unavailable"}
+
+    @staticmethod
+    def _require_admin(user: UserContext) -> None:
+        if user.role is not UserRole.KNOWLEDGE_ADMIN:
+            raise PermissionError("knowledge administrator role required")
+
+    def _ingestion_service(self) -> IngestionService:
+        if self._ingestion is None:
+            raise RuntimeError("document ingestion is not configured")
+        return self._ingestion
+
+    def preview_import(
+        self,
+        source: SourceFile,
+        metadata: ImportMetadata,
+        user: UserContext,
+    ) -> ImportPreview:
+        self._require_admin(user)
+        return self._ingestion_service().preview(source, metadata, user)
+
+    def list_imports(self, user: UserContext) -> list[ImportPreview]:
+        self._require_admin(user)
+        return self._ingestion_service().list_imports(user)
+
+    def get_import(self, import_id: str, user: UserContext) -> ImportPreview | None:
+        self._require_admin(user)
+        return self._ingestion_service().get_import(import_id, user)
+
+    def approve_import(
+        self,
+        import_id: str,
+        metadata: ImportMetadata,
+        user: UserContext,
+    ) -> ImportPreview:
+        self._require_admin(user)
+        return self._ingestion_service().approve(import_id, metadata, user)

@@ -177,12 +177,13 @@ class CleanedDocument(StrictModel):
 
 
 class ImportMetadata(StrictModel):
+    document_id: str = Field(pattern=r"^[a-z0-9][a-z0-9-]{1,119}$")
     title: str = Field(min_length=1, max_length=200)
     document_type: DocumentType
     department: str = Field(min_length=1, max_length=80)
     visibility: Visibility
     allowed_roles: set[UserRole] = Field(default_factory=set)
-    version: str = Field(min_length=1, max_length=40)
+    version: str = Field(pattern=r"^[A-Za-z0-9][A-Za-z0-9._-]{0,39}$")
     effective_from: datetime
     effective_to: datetime | None = None
     supersedes_id: str | None = Field(default=None, max_length=120)

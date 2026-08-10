@@ -1,9 +1,15 @@
+import json
 from datetime import UTC, datetime
 
 from fastapi.testclient import TestClient
 
 from enterprise_knowledge_rag.app import create_app
 from enterprise_knowledge_rag.config import Settings
+from enterprise_knowledge_rag.documents.source_models import (
+    CleaningReport,
+    ImportPreview,
+    IngestionStatus,
+)
 from enterprise_knowledge_rag.models import ChatResult, UserContext, UserRole
 from enterprise_knowledge_rag.tracing import TraceEvent
 from enterprise_knowledge_rag.workflow import WorkflowRun
@@ -55,6 +61,47 @@ class FakeService:
     def latest_evaluation(self):
         return {"status": "not_run"}
 
+    def preview_import(self, source, metadata, user):
+        now = datetime(2026, 8, 10, tzinfo=UTC)
+        return ImportPreview(
+            import_id="import-001",
+            original_filename=source.original_filename,
+            source_hash=source.source_hash,
+            media_type=source.media_type,
+            size_bytes=source.size_bytes,
+            status=IngestionStatus.NEEDS_REVIEW,
+            metadata=metadata,
+            cleaning_report=CleaningReport(
+                characters_before=10,
+                characters_after=10,
+                blocks_before=1,
+                blocks_after=1,
+                table_count=0,
+                content_hash="a" * 64,
+            ),
+            normalized_preview="制度正文",
+            created_at=now,
+            updated_at=now,
+        )
+
+    def list_imports(self, user):
+        return []
+
+    def get_import(self, import_id, user):
+        return None
+
+    def approve_import(self, import_id, metadata, user):
+        return self.preview_import(
+            type("Source", (), {
+                "original_filename": "policy.txt",
+                "source_hash": "a" * 64,
+                "media_type": "text/plain",
+                "size_bytes": 10,
+            })(),
+            metadata,
+            user,
+        ).model_copy(update={"status": IngestionStatus.INDEXED})
+
 
 def make_client(role=UserRole.EMPLOYEE):
     service = FakeService()
@@ -95,6 +142,64 @@ def test_admin_can_trigger_indexing() -> None:
     response = client.post("/documents/index")
     assert response.status_code == 200
     assert response.json() == {"indexed": 1}
+
+
+def import_metadata_form() -> dict[str, str]:
+    return {
+        "metadata": json.dumps(
+            {
+                "document_id": "hr-leave-policy",
+                "title": "员工请假制度",
+                "document_type": "policy",
+                "department": "hr",
+                "visibility": "restricted",
+                "allowed_roles": ["employee"],
+                "version": "2.0",
+                "effective_from": "2026-08-10T00:00:00+00:00",
+            },
+            ensure_ascii=False,
+        )
+    }
+
+
+def test_employee_cannot_upload_enterprise_document() -> None:
+    client, _ = make_client()
+
+    response = client.post(
+        "/knowledge/imports",
+        files={"file": ("policy.txt", b"policy body", "text/plain")},
+        data=import_metadata_form(),
+    )
+
+    assert response.status_code == 403
+
+
+def test_admin_can_upload_and_receive_safe_preview() -> None:
+    client, _ = make_client(UserRole.KNOWLEDGE_ADMIN)
+
+    response = client.post(
+        "/knowledge/imports",
+        files={"file": ("policy.txt", "制度正文".encode(), "text/plain")},
+        data=import_metadata_form(),
+    )
+
+    assert response.status_code == 201
+    payload = response.json()
+    assert payload["status"] == "needs_review"
+    assert "storage_path" not in payload
+
+
+def test_admin_import_metadata_is_strictly_validated() -> None:
+    client, _ = make_client(UserRole.KNOWLEDGE_ADMIN)
+
+    response = client.post(
+        "/knowledge/imports",
+        files={"file": ("policy.txt", b"policy body", "text/plain")},
+        data={"metadata": json.dumps({"title": "缺少其他字段"})},
+    )
+
+    assert response.status_code == 422
+    assert response.json()["detail"] == "文档元数据不合法"
 
 
 def test_session_reports_trusted_role() -> None:

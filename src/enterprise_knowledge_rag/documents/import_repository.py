@@ -4,7 +4,7 @@ import json
 from contextlib import contextmanager
 from typing import Any, Iterator
 
-from .source_models import ImportPreview, IngestionStatus
+from .source_models import ImportMetadata, ImportPreview, IngestionStatus
 
 IMPORT_SELECT = """
     import_id::text AS import_id, original_filename, source_hash,
@@ -125,6 +125,24 @@ class ImportRepository:
             row = cursor.fetchone()
         return _preview_from_row(row) if row is not None else None
 
+    def find_by_hash(self, source_hash: str) -> ImportPreview | None:
+        from psycopg.rows import dict_row
+
+        with (
+            self._connection() as connection,
+            connection.cursor(row_factory=dict_row) as cursor,
+        ):
+            cursor.execute(
+                f"""
+                SELECT {IMPORT_SELECT}
+                FROM knowledge_imports
+                WHERE source_hash = %s
+                """,
+                (source_hash,),
+            )
+            row = cursor.fetchone()
+        return _preview_from_row(row) if row is not None else None
+
     def list_imports(self, *, limit: int = 50) -> list[ImportPreview]:
         if not 1 <= limit <= 100:
             raise ValueError("limit must be between 1 and 100")
@@ -171,6 +189,41 @@ class ImportRepository:
                     failure_type = %(failure_type)s,
                     updated_at = NOW()
                 WHERE import_id = %(import_id)s
+                RETURNING {IMPORT_SELECT}
+                """,
+                params,
+            )
+            row = cursor.fetchone()
+        return _preview_from_row(row) if row is not None else None
+
+    def approve_import(
+        self,
+        import_id: str,
+        metadata: ImportMetadata,
+        *,
+        approved_by: str,
+    ) -> ImportPreview | None:
+        from psycopg.rows import dict_row
+
+        params = {
+            "import_id": import_id,
+            "metadata": json.dumps(metadata.model_dump(mode="json")),
+            "approved_by": approved_by,
+        }
+        with (
+            self._connection() as connection,
+            connection.cursor(row_factory=dict_row) as cursor,
+        ):
+            cursor.execute(
+                f"""
+                UPDATE knowledge_imports
+                SET status = 'approved',
+                    metadata = %(metadata)s::jsonb,
+                    approved_by = %(approved_by)s,
+                    approved_at = NOW(),
+                    updated_at = NOW()
+                WHERE import_id = %(import_id)s
+                  AND status = 'needs_review'
                 RETURNING {IMPORT_SELECT}
                 """,
                 params,

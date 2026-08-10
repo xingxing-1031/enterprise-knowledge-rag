@@ -6,7 +6,9 @@ from enterprise_knowledge_rag.database import (
     connection_pool_lifespan,
     create_connection_pool,
 )
+from enterprise_knowledge_rag.documents.import_repository import ImportRepository
 from enterprise_knowledge_rag.documents.indexing import IndexingService
+from enterprise_knowledge_rag.documents.ingestion import IngestionService
 from enterprise_knowledge_rag.documents.repository import KnowledgeRepository
 from enterprise_knowledge_rag.generation import AnswerGenerator
 from enterprise_knowledge_rag.providers import (
@@ -91,10 +93,17 @@ def build_runtime_service(
         )
     )
     indexing = IndexingService(repository, embeddings, settings)
+    ingestion = IngestionService(
+        repository=ImportRepository(connection_factory),
+        indexing=indexing,
+        upload_dir=settings.upload_storage_dir,
+        knowledge_dir=settings.knowledge_dir,
+    )
     return RuntimeChatService(
         graph=graph,
         repository=repository,
         indexing=indexing,
+        ingestion=ingestion,
         knowledge_dir=settings.knowledge_dir,
         latest_evaluation_path=settings.latest_evaluation_path,
         history_max_messages=settings.history_max_messages,

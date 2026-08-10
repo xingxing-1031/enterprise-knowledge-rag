@@ -28,6 +28,7 @@ def make_preview(**overrides: object) -> ImportPreview:
         "page_count": 3,
         "status": IngestionStatus.NEEDS_REVIEW,
         "metadata": ImportMetadata(
+            document_id="hr-leave-policy",
             title="员工请假制度",
             document_type=DocumentType.POLICY,
             department="hr",

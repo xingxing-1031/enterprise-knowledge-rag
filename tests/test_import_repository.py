@@ -58,6 +58,7 @@ def import_row() -> dict[str, object]:
         "page_count": 3,
         "status": "needs_review",
         "metadata": {
+            "document_id": "hr-leave-policy",
             "title": "员工请假制度",
             "document_type": "policy",
             "department": "hr",

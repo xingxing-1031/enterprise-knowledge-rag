@@ -3,12 +3,31 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any, Protocol
 
-from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
+from fastapi import (
+    Depends,
+    FastAPI,
+    File,
+    Form,
+    HTTPException,
+    Request,
+    Response,
+    UploadFile,
+    status,
+)
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 from enterprise_knowledge_rag.config import Settings, get_settings
+from enterprise_knowledge_rag.documents.ingestion import (
+    ImportNotApprovableError,
+    ImportNotFoundError,
+)
+from enterprise_knowledge_rag.documents.source_models import (
+    ImportMetadata,
+    ImportPreview,
+    SourceFile,
+)
 from enterprise_knowledge_rag.models import (
     ChatRequest,
     ChatResult,
@@ -31,6 +50,24 @@ class ChatApiService(Protocol):
     def index_documents(self, user: UserContext) -> dict[str, Any]: ...
 
     def latest_evaluation(self) -> dict[str, Any]: ...
+
+    def preview_import(
+        self,
+        source: SourceFile,
+        metadata: ImportMetadata,
+        user: UserContext,
+    ) -> ImportPreview: ...
+
+    def list_imports(self, user: UserContext) -> list[ImportPreview]: ...
+
+    def get_import(self, import_id: str, user: UserContext) -> ImportPreview | None: ...
+
+    def approve_import(
+        self,
+        import_id: str,
+        metadata: ImportMetadata,
+        user: UserContext,
+    ) -> ImportPreview: ...
 
 
 class SessionResolver(Protocol):
@@ -114,7 +151,14 @@ def create_app(
     @app.middleware("http")
     async def enforce_request_size(request: Request, call_next):
         content_length = request.headers.get("content-length")
-        if content_length and int(content_length) > settings.request_max_bytes:
+        is_import_upload = (
+            request.method == "POST" and request.url.path == "/knowledge/imports"
+        )
+        if (
+            not is_import_upload
+            and content_length
+            and int(content_length) > settings.request_max_bytes
+        ):
             return Response(
                 "请求内容过大",
                 status_code=status.HTTP_413_CONTENT_TOO_LARGE,
@@ -200,6 +244,76 @@ def create_app(
     @app.get("/evaluations/latest")
     def latest_evaluation() -> dict[str, Any]:
         return service.latest_evaluation()
+
+    @app.post(
+        "/knowledge/imports",
+        response_model=ImportPreview,
+        status_code=status.HTTP_201_CREATED,
+    )
+    async def upload_knowledge_document(
+        file: UploadFile = File(...),
+        metadata: str = Form(...),
+        user: UserContext = Depends(require_admin),
+    ) -> ImportPreview:
+        from pydantic import ValidationError
+
+        try:
+            import_metadata = ImportMetadata.model_validate_json(metadata)
+        except (ValidationError, ValueError) as exc:
+            raise HTTPException(
+                status_code=422,
+                detail="文档元数据不合法",
+            ) from exc
+        content = await file.read(settings.upload_max_bytes + 1)
+        if len(content) > settings.upload_max_bytes:
+            raise HTTPException(status_code=413, detail="文件不能超过 15 MiB")
+        try:
+            source = SourceFile.from_bytes(
+                original_filename=file.filename or "upload",
+                media_type=file.content_type or "application/octet-stream",
+                content=content,
+            )
+            return service.preview_import(source, import_metadata, user)
+        except ValidationError as exc:
+            raise HTTPException(
+                status_code=422,
+                detail="文件格式不受支持",
+            ) from exc
+
+    @app.get("/knowledge/imports", response_model=list[ImportPreview])
+    def knowledge_imports(
+        user: UserContext = Depends(require_admin),
+    ) -> list[ImportPreview]:
+        return service.list_imports(user)
+
+    @app.get("/knowledge/imports/{import_id}", response_model=ImportPreview)
+    def knowledge_import(
+        import_id: str,
+        user: UserContext = Depends(require_admin),
+    ) -> ImportPreview:
+        preview = service.get_import(import_id, user)
+        if preview is None:
+            raise HTTPException(status_code=404, detail="导入任务不存在")
+        return preview
+
+    @app.post(
+        "/knowledge/imports/{import_id}/approve",
+        response_model=ImportPreview,
+    )
+    def approve_knowledge_import(
+        import_id: str,
+        metadata: ImportMetadata,
+        user: UserContext = Depends(require_admin),
+    ) -> ImportPreview:
+        try:
+            return service.approve_import(import_id, metadata, user)
+        except ImportNotFoundError as exc:
+            raise HTTPException(status_code=404, detail="导入任务不存在") from exc
+        except ImportNotApprovableError as exc:
+            raise HTTPException(
+                status_code=409,
+                detail="当前导入任务不能批准",
+            ) from exc
 
     if static_dir is not None and (static_dir / "index.html").is_file():
         app.mount(
