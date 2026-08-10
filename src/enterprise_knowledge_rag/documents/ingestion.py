@@ -112,6 +112,8 @@ class IngestionService:
         storage_path.write_bytes(source.content)
 
         cleaned = self._extract_and_clean(source)
+        normalized_path = self._upload_dir / f"{import_id}.normalized.md"
+        normalized_path.write_text(cleaned.normalized_markdown, encoding="utf-8")
         status = (
             IngestionStatus.QUARANTINED
             if cleaned.report.has_blocking_issues
@@ -260,7 +262,12 @@ class IngestionService:
             "supersedes_id": metadata.supersedes_id,
             "source_path": source_path,
         }
-        body = preview.normalized_preview.strip()
+        full_text_path = self._upload_dir / f"{preview.import_id}.normalized.md"
+        body = (
+            full_text_path.read_text(encoding="utf-8").strip()
+            if full_text_path.is_file()
+            else preview.normalized_preview.strip()
+        )
         if not body.startswith("#"):
             body = f"# {metadata.title}\n\n{body}".strip()
         yaml_text = yaml.safe_dump(

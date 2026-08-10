@@ -149,6 +149,14 @@ def text_source() -> SourceFile:
     )
 
 
+def long_text_source() -> SourceFile:
+    return SourceFile.from_bytes(
+        original_filename="long-policy.txt",
+        media_type="text/plain",
+        content=(("制度正文。" * 5_000) + "末尾关键条款").encode(),
+    )
+
+
 def test_employee_cannot_preview_enterprise_document(tmp_path: Path) -> None:
     service, _, _ = make_service(tmp_path)
 
@@ -195,3 +203,14 @@ def test_approval_writes_canonical_document_and_is_idempotent(tmp_path: Path) ->
     canonical = indexing.paths[0].read_text(encoding="utf-8")
     assert "document_id: hr-leave-policy" in canonical
     assert "# 员工请假制度" in canonical
+
+
+def test_approval_indexes_full_text_not_preview(tmp_path: Path) -> None:
+    service, _, indexing = make_service(tmp_path)
+    preview = service.preview(long_text_source(), metadata(), ADMIN)
+
+    service.approve(preview.import_id, metadata(), ADMIN)
+
+    assert len(preview.normalized_preview) == 20_000
+    canonical = indexing.paths[0].read_text(encoding="utf-8")
+    assert "末尾关键条款" in canonical
