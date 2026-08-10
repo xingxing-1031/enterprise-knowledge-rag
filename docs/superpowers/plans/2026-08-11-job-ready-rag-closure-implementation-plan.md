@@ -44,7 +44,7 @@
 - Consumes: validated `RetrievalPlan` objects returned by `StructuredPlanProvider.generate()`.
 - Produces: `normalize_retrieval_plan(plan: RetrievalPlan) -> RetrievalPlan` with server-owned IDs and consistent `requires_multi_hop` / `max_hops`.
 
-- [ ] **Step 1: Write failing canonicalization tests**
+- [x] **Step 1: Write failing canonicalization tests**
 
 Add tests proving that arbitrary provider IDs are ignored, two required kinds enable two hops, duplicate kinds receive stable suffixes, and fallback remains one-hop:
 
@@ -101,7 +101,7 @@ def test_normalization_suffixes_duplicate_kinds_stably() -> None:
     ]
 ```
 
-- [ ] **Step 2: Run the tests and confirm RED**
+- [x] **Step 2: Run the tests and confirm RED**
 
 Run:
 
@@ -111,7 +111,7 @@ Run:
 
 Expected: failures because provider IDs are still preserved and `normalize_retrieval_plan` does not exist.
 
-- [ ] **Step 3: Implement minimal server normalization**
+- [x] **Step 3: Implement minimal server normalization**
 
 In `planning.py`, add a public pure function and apply it only to successful provider plans:
 
@@ -140,7 +140,7 @@ def normalize_retrieval_plan(plan: RetrievalPlan) -> RetrievalPlan:
 
 Return `normalize_retrieval_plan(plan)` from the success path. Do not normalize `_fallback()`; its existing `rule` ID and one-hop budget are already safe.
 
-- [ ] **Step 4: Clarify the planner prompt**
+- [x] **Step 4: Clarify the planner prompt**
 
 Replace the free-ID instruction with:
 
@@ -150,7 +150,7 @@ Replace the free-ID instruction with:
 - 金额门槛和适用条件使用 rule；登记证件和提交材料使用 material。
 ```
 
-- [ ] **Step 5: Run focused and neighboring tests**
+- [x] **Step 5: Run focused and neighboring tests**
 
 Run:
 
@@ -160,7 +160,7 @@ Run:
 
 Expected: all pass.
 
-- [ ] **Step 6: Commit Task 1**
+- [x] **Step 6: Commit Task 1**
 
 ```powershell
 git add src/enterprise_knowledge_rag/retrieval/planning.py tests/test_retrieval_planning.py

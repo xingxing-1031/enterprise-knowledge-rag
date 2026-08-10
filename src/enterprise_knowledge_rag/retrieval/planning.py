@@ -53,6 +53,27 @@ def _fallback(question: str) -> RetrievalPlan:
     )
 
 
+def normalize_retrieval_plan(plan: RetrievalPlan) -> RetrievalPlan:
+    kind_counts: dict[str, int] = {}
+    normalized_needs: list[EvidenceNeed] = []
+    for need in plan.evidence_needs:
+        base = need.kind.value
+        count = kind_counts.get(base, 0) + 1
+        kind_counts[base] = count
+        need_id = base if count == 1 else f"{base}_{count}"
+        normalized_needs.append(need.model_copy(update={"need_id": need_id}))
+    required_count = sum(need.required for need in normalized_needs)
+    allows_supplemental = plan.requires_multi_hop or required_count >= 2
+    return RetrievalPlan(
+        primary_query=plan.primary_query,
+        topic=plan.topic,
+        departments=plan.departments,
+        evidence_needs=normalized_needs,
+        requires_multi_hop=allows_supplemental,
+        max_hops=2 if allows_supplemental else 1,
+    )
+
+
 class RetrievalPlanner:
     """Convert a question into bounded evidence needs with a safe fallback."""
 
@@ -65,8 +86,10 @@ class RetrievalPlanner:
         prompt = f"""你是企业知识检索规划器。将用户问题拆成可检索的证据需求。
 
 约束：
-- 最多四个证据需求，need_id 使用简短英文小写标识。
+- 最多四个证据需求。
 - kind 只能是 rule、procedure、material、exception、approver、deadline、scope。
+- need_id 只需在当前计划内唯一；服务端会根据 kind 重新生成最终 ID。
+- 金额门槛和适用条件使用 rule；登记证件和提交材料使用 material。
 - 只有问题确实需要不同制度段落共同回答时，requires_multi_hop 才为 true。
 - requires_multi_hop 为 true 时 max_hops 必须为 2，否则必须为 1。
 - departments 只是语义提示，不是权限过滤条件。
@@ -82,7 +105,7 @@ class RetrievalPlanner:
 """
         try:
             raw = self._provider.generate(prompt=prompt, schema=RetrievalPlan)
-            plan = RetrievalPlan.model_validate(raw)
+            plan = normalize_retrieval_plan(RetrievalPlan.model_validate(raw))
         except Exception:
             return PlannedRetrieval(
                 plan=fallback,
