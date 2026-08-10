@@ -65,9 +65,10 @@
 当前机器已通过 Docker 运行 PostgreSQL/pgvector，并完成真实 `bge-m3`、`bge-reranker-v2-m3` 与 Qwen 的三方案 development 评测：
 
 - `evaluation/reports/development-*-qwen3-4b-local-r1.json` 保留本地 `qwen3:4b` 单次基线。
-- `evaluation/reports/development-*-r1.json` 保存百炼 `qwen-plus` 单次对比，`latest-development.json` 指向其 Reranker 方案。
-- `qwen-plus` 三方案执行成功率分别为 88.24%、94.12% 和 100%，核心通过率分别为 52.94%、52.94% 和 58.82%；详细口径见 `docs/INTERVIEW_GUIDE.md`。
-- 全部六份报告的权限泄漏率均为 0；第二跳成功率仍为 0，不能宣称多跳优化已经有效。
+- `evaluation/reports/development-*-r1..r3.json` 保存百炼 `qwen-plus` 三策略各 3 次对比，`development-summary.json` 保存均值、范围和总体标准差；`latest-development.json` 指向默认 Hybrid RRF 的第 3 次报告。
+- 纯向量、Hybrid RRF、Hybrid + Reranker 的核心通过率均值都为 49.02%；执行成功率均值分别为 100%、98.04% 和 100%。
+- Hybrid RRF 相比纯向量将证据覆盖率从 66.67% 提高到 73.33%、二跳成功率从 58.33% 提高到 66.67%，P95 均值从 18.54s 降到 15.50s，因此固定为演示默认策略。
+- 9 份重复报告的权限泄漏率均为 0。Reranker 只把 Recall@5 提高 1.52 个百分点，没有提高核心通过率，且 P50/P95 均值升至 8.30s/20.40s。
 - `frozen_holdout.json` 仍锁定且未运行，development 数字不能表述成最终泛化结果。
 - README、简历和验收材料只能引用 `evaluation/reports/` 可追溯的指标，不能填写用户数或生产指标。
 

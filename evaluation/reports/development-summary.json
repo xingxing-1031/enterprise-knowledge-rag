@@ -1,0 +1,291 @@
+{
+  "dataset_id": "enterprise-rag-development-v1",
+  "dataset_version": "1.0",
+  "corpus_snapshot": "sha256:810fac5143fd89480857f7f04db6b1781487bf872d1d4ba32b014c86592ada65",
+  "code_commit": "2bd6b4b",
+  "llm_model": "qwen-plus",
+  "strategies": [
+    {
+      "strategy": "vector_baseline",
+      "repetitions": [
+        1,
+        2,
+        3
+      ],
+      "metrics": {
+        "execution_success_rate": {
+          "count": 3,
+          "mean": 1.0,
+          "minimum": 1.0,
+          "maximum": 1.0,
+          "population_stddev": 0.0
+        },
+        "core_pass_rate": {
+          "count": 3,
+          "mean": 0.4901960784313726,
+          "minimum": 0.47058823529411764,
+          "maximum": 0.5294117647058824,
+          "population_stddev": 0.027729677693590107
+        },
+        "recall_at_k": {
+          "count": 3,
+          "mean": 0.712121212121212,
+          "minimum": 0.712121212121212,
+          "maximum": 0.712121212121212,
+          "population_stddev": 0.0
+        },
+        "citation_accuracy": {
+          "count": 3,
+          "mean": 0.7651515151515151,
+          "minimum": 0.75,
+          "maximum": 0.7727272727272727,
+          "population_stddev": 0.010713739108887075
+        },
+        "access_leakage_rate": {
+          "count": 3,
+          "mean": 0.0,
+          "minimum": 0.0,
+          "maximum": 0.0,
+          "population_stddev": 0.0
+        },
+        "evidence_need_coverage": {
+          "count": 3,
+          "mean": 0.6666666666666666,
+          "minimum": 0.6,
+          "maximum": 0.8,
+          "population_stddev": 0.09428090415820636
+        },
+        "second_hop_trigger_accuracy": {
+          "count": 3,
+          "mean": 0.6666666666666666,
+          "minimum": 0.6,
+          "maximum": 0.8,
+          "population_stddev": 0.09428090415820636
+        },
+        "second_hop_success": {
+          "count": 3,
+          "mean": 0.5833333333333334,
+          "minimum": 0.5,
+          "maximum": 0.75,
+          "population_stddev": 0.11785113019775792
+        },
+        "irrelevant_evidence_ratio": {
+          "count": 3,
+          "mean": 0.25947712418300656,
+          "minimum": 0.21176470588235294,
+          "maximum": 0.3019607843137255,
+          "population_stddev": 0.037007549455926984
+        },
+        "p50_latency_ms": {
+          "count": 3,
+          "mean": 6455.474420666481,
+          "minimum": 5868.882758999462,
+          "maximum": 6900.321394999992,
+          "population_stddev": 432.8472265123221
+        },
+        "p95_latency_ms": {
+          "count": 3,
+          "mean": 18537.35013333365,
+          "minimum": 11257.715142000961,
+          "maximum": 32732.044406999194,
+          "population_stddev": 10038.26804463875
+        },
+        "total_model_calls": {
+          "count": 3,
+          "mean": 29.333333333333332,
+          "minimum": 29.0,
+          "maximum": 30.0,
+          "population_stddev": 0.4714045207910317
+        }
+      }
+    },
+    {
+      "strategy": "hybrid_rrf",
+      "repetitions": [
+        1,
+        2,
+        3
+      ],
+      "metrics": {
+        "execution_success_rate": {
+          "count": 3,
+          "mean": 0.9803921568627452,
+          "minimum": 0.9411764705882353,
+          "maximum": 1.0,
+          "population_stddev": 0.027729677693590107
+        },
+        "core_pass_rate": {
+          "count": 3,
+          "mean": 0.4901960784313726,
+          "minimum": 0.47058823529411764,
+          "maximum": 0.5294117647058824,
+          "population_stddev": 0.027729677693590107
+        },
+        "recall_at_k": {
+          "count": 3,
+          "mean": 0.712121212121212,
+          "minimum": 0.712121212121212,
+          "maximum": 0.712121212121212,
+          "population_stddev": 0.0
+        },
+        "citation_accuracy": {
+          "count": 3,
+          "mean": 0.7651515151515151,
+          "minimum": 0.75,
+          "maximum": 0.7727272727272727,
+          "population_stddev": 0.010713739108887075
+        },
+        "access_leakage_rate": {
+          "count": 3,
+          "mean": 0.0,
+          "minimum": 0.0,
+          "maximum": 0.0,
+          "population_stddev": 0.0
+        },
+        "evidence_need_coverage": {
+          "count": 3,
+          "mean": 0.7333333333333334,
+          "minimum": 0.6,
+          "maximum": 0.8,
+          "population_stddev": 0.09428090415820636
+        },
+        "second_hop_trigger_accuracy": {
+          "count": 3,
+          "mean": 0.7333333333333334,
+          "minimum": 0.6,
+          "maximum": 0.8,
+          "population_stddev": 0.09428090415820636
+        },
+        "second_hop_success": {
+          "count": 3,
+          "mean": 0.6666666666666666,
+          "minimum": 0.5,
+          "maximum": 0.75,
+          "population_stddev": 0.11785113019775792
+        },
+        "irrelevant_evidence_ratio": {
+          "count": 3,
+          "mean": 0.31789215686274513,
+          "minimum": 0.2125,
+          "maximum": 0.37254901960784315,
+          "population_stddev": 0.07454070351721068
+        },
+        "p50_latency_ms": {
+          "count": 3,
+          "mean": 6039.567203499549,
+          "minimum": 5874.087648000568,
+          "maximum": 6318.290310999146,
+          "population_stddev": 198.237362785196
+        },
+        "p95_latency_ms": {
+          "count": 3,
+          "mean": 15501.75834833317,
+          "minimum": 11787.700980999944,
+          "maximum": 17651.367544000095,
+          "population_stddev": 2637.077922231856
+        },
+        "total_model_calls": {
+          "count": 3,
+          "mean": 30.0,
+          "minimum": 28.0,
+          "maximum": 31.0,
+          "population_stddev": 1.4142135623730951
+        }
+      }
+    },
+    {
+      "strategy": "hybrid_rrf_reranker",
+      "repetitions": [
+        1,
+        2,
+        3
+      ],
+      "metrics": {
+        "execution_success_rate": {
+          "count": 3,
+          "mean": 1.0,
+          "minimum": 1.0,
+          "maximum": 1.0,
+          "population_stddev": 0.0
+        },
+        "core_pass_rate": {
+          "count": 3,
+          "mean": 0.4901960784313726,
+          "minimum": 0.47058823529411764,
+          "maximum": 0.5294117647058824,
+          "population_stddev": 0.027729677693590107
+        },
+        "recall_at_k": {
+          "count": 3,
+          "mean": 0.7272727272727274,
+          "minimum": 0.6666666666666666,
+          "maximum": 0.7575757575757577,
+          "population_stddev": 0.0428549564355484
+        },
+        "citation_accuracy": {
+          "count": 3,
+          "mean": 0.7196969696969697,
+          "minimum": 0.6818181818181818,
+          "maximum": 0.7727272727272727,
+          "population_stddev": 0.03862893570903625
+        },
+        "access_leakage_rate": {
+          "count": 3,
+          "mean": 0.0,
+          "minimum": 0.0,
+          "maximum": 0.0,
+          "population_stddev": 0.0
+        },
+        "evidence_need_coverage": {
+          "count": 3,
+          "mean": 0.7333333333333334,
+          "minimum": 0.6,
+          "maximum": 0.8,
+          "population_stddev": 0.09428090415820636
+        },
+        "second_hop_trigger_accuracy": {
+          "count": 3,
+          "mean": 0.7333333333333334,
+          "minimum": 0.6,
+          "maximum": 0.8,
+          "population_stddev": 0.09428090415820636
+        },
+        "second_hop_success": {
+          "count": 3,
+          "mean": 0.6666666666666666,
+          "minimum": 0.5,
+          "maximum": 0.75,
+          "population_stddev": 0.11785113019775792
+        },
+        "irrelevant_evidence_ratio": {
+          "count": 3,
+          "mean": 0.3137254901960784,
+          "minimum": 0.27254901960784317,
+          "maximum": 0.38431372549019605,
+          "population_stddev": 0.05014396804919379
+        },
+        "p50_latency_ms": {
+          "count": 3,
+          "mean": 8300.781856999796,
+          "minimum": 7061.672936999457,
+          "maximum": 9729.829461999543,
+          "population_stddev": 1097.5191231499073
+        },
+        "p95_latency_ms": {
+          "count": 3,
+          "mean": 20395.54327233297,
+          "minimum": 17876.521367999885,
+          "maximum": 24174.958610999965,
+          "population_stddev": 2721.3993499652156
+        },
+        "total_model_calls": {
+          "count": 3,
+          "mean": 29.666666666666668,
+          "minimum": 28.0,
+          "maximum": 31.0,
+          "population_stddev": 1.247219128924647
+        }
+      }
+    }
+  ]
+}

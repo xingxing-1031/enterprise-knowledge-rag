@@ -6,7 +6,7 @@
 
 项目已完成版本化合成语料、受控文档导入、标题感知切分、父文档/子章节双层索引、权限与版本过滤、BM25 + 向量 + RRF + Reranker、最多两跳的证据补全、引用校验、拒答、LangGraph、FastAPI/SSE 和受控评测框架。
 
-真实运行适配器、连接池、增量迁移与索引命令、启动入口和 React 企业知识工作台已经接通。Docker Compose 按 PostgreSQL、迁移、索引、API 的顺序启动，并由 FastAPI 同源提供前端。当前环境尚未完成 PostgreSQL/pgvector 与实际 bge/Qwen 的端到端验收。旧重庆文旅项目保持不变；本 README 的效果指标只在对应原始评测报告生成后填写。
+真实运行适配器、连接池、增量迁移与索引命令、启动入口和 React 企业知识工作台已经接通。Docker Compose 按 PostgreSQL、迁移、索引、API 的顺序启动，并由 FastAPI 同源提供前端。当前环境已完成 PostgreSQL/pgvector、本地 `bge-m3`、可选 `bge-reranker-v2-m3` 与百炼 `qwen-plus` 的端到端验收，演示默认使用 `hybrid_rrf`。
 
 ## 快速启动
 
@@ -27,6 +27,18 @@ docker compose up -d --build --wait
 ## 管理员导入
 
 知识管理员可导入 `.pdf`、`.docx`、`.md` 和 `.txt`。服务端限制单文件 15 MiB、PDF 200 页，并在索引前展示清洗报告与规范化预览。扫描件、空文件、损坏文件、格式/签名不一致和超限文件会进入隔离状态，未经管理员确认的元数据和正文不会进入索引。
+
+## Development 评测
+
+在 17 条合成 development 用例上，固定提交 `2bd6b4b`、语料快照、`qwen-plus`、Prompt 和运行环境，对三种检索策略各重复 3 次：
+
+| 策略 | 执行成功率均值 | 核心通过率均值 | 证据覆盖率均值 | 二跳成功率均值 | P50 / P95 均值 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 纯向量 | 100.00% | 49.02% | 66.67% | 58.33% | 6.46s / 18.54s |
+| Hybrid RRF | 98.04% | 49.02% | 73.33% | 66.67% | 6.04s / 15.50s |
+| Hybrid + Reranker | 100.00% | 49.02% | 73.33% | 66.67% | 8.30s / 20.40s |
+
+全部 9 次策略运行的权限泄漏率均为 0。相较纯向量，Hybrid RRF 的证据覆盖率提高 6.67 个百分点、二跳成功率提高 8.33 个百分点、P95 均值降低 16.38%，但核心通过率没有提升；Reranker 仅将 Recall@5 从 71.21% 提高到 72.73%，同时增加延迟。因此默认选择 Hybrid RRF。完整均值、范围与总体标准差见 [`evaluation/reports/development-summary.json`](evaluation/reports/development-summary.json)，指标定义与限制见 [`docs/EVALUATION_PROTOCOL.md`](docs/EVALUATION_PROTOCOL.md)。
 
 ## 诚实边界
 

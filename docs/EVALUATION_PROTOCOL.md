@@ -4,7 +4,7 @@
 
 本协议用于比较检索方案并定位工作流问题，不把单个总分当作 Agent 的真实准确率。语料均为项目构造的合成企业制度，评测结果不能表述为真实企业用户效果。
 
-当前已完成真实 development 单次实验，报告保存在 `evaluation/reports/`。README 和简历只能引用报告中可追溯的通过率、延迟或提升比例，并明确这是合成 development 集结果。
+当前已完成三策略各 3 次的真实 development 实验，原始报告与聚合结果保存在 `evaluation/reports/`。README 和简历只能引用报告中可追溯的均值、波动、延迟或提升比例，并明确这是合成 development 集结果。
 
 ## 2. 数据隔离
 
@@ -77,7 +77,9 @@
 - 评分器、路由/需求/hop 观测和冻结锁定已用确定性测试替身验证。
 - 三方案真实执行器、工作流观测转换和报告实验元数据已接入；`scripts/run_development.py` 只允许加载 development 数据集。
 - 当前机器已通过 Docker 启动 PostgreSQL/pgvector，并完成本地 Embedding、可选 Reranker 与真实 Qwen 的端到端评测。
-- 已分别保存本地 `qwen3:4b` 和百炼 `qwen-plus` 的三方案单次 development 报告；单次结果用于错误分析，不替代多次重复和人工盲审。
+- 已保存本地 `qwen3:4b` 单次基线，以及百炼 `qwen-plus` 三策略各 3 次的原始 development 报告和 `development-summary.json`。
+- 三次结果中 Hybrid RRF 的证据覆盖率/二跳成功率均值为 73.33%/66.67%，P50/P95 均值为 6.04s/15.50s；核心通过率均值为 49.02%，与其他策略相同。
+- 9 份 `qwen-plus` 报告的权限泄漏率均为 0。Reranker 没有提高核心通过率且增加稳态延迟，因此固定演示默认策略为 `hybrid_rrf`。
 - frozen holdout 未提交给 Agent。
 
 ## 8. 分层与多跳指标

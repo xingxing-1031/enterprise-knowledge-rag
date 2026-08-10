@@ -701,7 +701,7 @@ $evalCommit = git rev-parse --short HEAD
 
 Do not evaluate an uncommitted source tree.
 
-- [ ] **Step 4: Run three development repetitions in one Docker process**
+- [x] **Step 4: Run three development repetitions in one Docker process**
 
 ```powershell
 $env:POSTGRES_PASSWORD = "development-only-password"
@@ -718,7 +718,7 @@ docker compose -p enterprise-rag-dev run -T --rm --no-deps `
 
 Expected: nine raw reports and one summary, with all three strategies present for repetitions 1-3.
 
-- [ ] **Step 5: Validate reports and select the final default**
+- [x] **Step 5: Validate reports and select the final default**
 
 Programmatically assert:
 
@@ -731,7 +731,7 @@ Programmatically assert:
 
 Select the default in this order: leakage, execution/core pass, second-hop/citation quality, then P50/P95/calls. If the aggregate winner differs from `hybrid_rrf`, update `RETRIEVAL_STRATEGY` default, run configuration tests, commit the change, and rerun development three times because the declared fixed configuration changed.
 
-- [ ] **Step 6: Update and commit development conclusions**
+- [x] **Step 6: Update and commit development conclusions**
 
 Update README and the three docs with exact report-derived means, variation, cold/warm behavior, remaining failures, and the selected default. Commit raw reports and docs:
 
