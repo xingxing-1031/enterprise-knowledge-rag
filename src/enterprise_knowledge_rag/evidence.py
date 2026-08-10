@@ -50,6 +50,8 @@ def build_minimal_evidence(
                 retrieval_channels=candidate.channels,
                 retrieval_rank=len(evidence) + 1,
                 reranker_score=score,
+                supports_need_ids=candidate.supports_need_ids,
+                retrieval_hop=candidate.retrieval_hop,
             )
         )
         seen_content_hashes.add(chunk.content_hash)

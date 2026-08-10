@@ -75,3 +75,27 @@ def test_unsupported_approval_role_is_rejected() -> None:
     result = validate_citations(draft, [evidence])
     assert not result.valid
     assert "总经理" in result.errors[0]
+
+
+def test_citations_must_cover_every_required_evidence_need() -> None:
+    evidence = make_evidence().model_copy(
+        update={"supports_need_ids": {"deadline"}}
+    )
+    draft = DraftAnswer(
+        answer="请按制度期限提交。",
+        claims=[
+            AnswerClaim(
+                text="请按制度期限提交。",
+                evidence_ids=[evidence.evidence_id],
+            )
+        ],
+    )
+
+    result = validate_citations(
+        draft,
+        [evidence],
+        required_need_ids=frozenset({"deadline", "approver"}),
+    )
+
+    assert not result.valid
+    assert "missing required evidence needs" in result.errors[-1]

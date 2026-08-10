@@ -103,6 +103,8 @@ class RetrievalCandidate(StrictModel):
     channel_ranks: dict[str, int] = Field(default_factory=dict)
     retrieval_score: float = 0.0
     reranker_score: float | None = None
+    supports_need_ids: set[str] = Field(default_factory=set)
+    retrieval_hop: Literal[1, 2] = 1
 
 
 class RetrievalEvidence(StrictModel):

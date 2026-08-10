@@ -69,3 +69,16 @@ def test_evidence_respects_item_and_token_budgets() -> None:
     evidence = build_minimal_evidence(candidates, max_items=2, max_tokens=10)
     assert len(evidence) <= 2
     assert sum(len(item.quote) for item in evidence) <= 10
+
+
+def test_evidence_preserves_need_support_and_retrieval_hop() -> None:
+    candidate = scored(
+        make_candidate("leave:exception", title="请假制度", content="紧急就医可先报备")
+    ).model_copy(
+        update={"supports_need_ids": {"exception"}, "retrieval_hop": 2}
+    )
+
+    evidence = build_minimal_evidence([candidate])
+
+    assert evidence[0].supports_need_ids == {"exception"}
+    assert evidence[0].retrieval_hop == 2

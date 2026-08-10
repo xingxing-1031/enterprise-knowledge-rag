@@ -17,7 +17,11 @@ from enterprise_knowledge_rag.providers import (
     SentenceTransformerEmbeddingProvider,
 )
 from enterprise_knowledge_rag.retrieval import (
+    DocumentRouter,
+    EvidenceCoverageService,
+    HierarchicalRetrievalService,
     Reranker,
+    RetrievalPlanner,
     RetrievalService,
     RetrievalStrategy,
     VectorRetriever,
@@ -75,12 +79,21 @@ def build_runtime_service(
         embeddings,
         Reranker(reranker_scores),
     )
-    generator = AnswerGenerator(
-        OpenAICompatibleStructuredProvider(
-            chat_client,
-            model=settings.model_name,
-            timeout_seconds=settings.model_timeout_seconds,
-        )
+    structured_provider = OpenAICompatibleStructuredProvider(
+        chat_client,
+        model=settings.model_name,
+        timeout_seconds=settings.model_timeout_seconds,
+    )
+    generator = AnswerGenerator(structured_provider)
+    planner = RetrievalPlanner(structured_provider)
+    hierarchical = HierarchicalRetrievalService(
+        corpus=repository,
+        router=DocumentRouter(repository, embeddings),
+        section_retrieval=retrieval,
+        coverage=EvidenceCoverageService(
+            min_reranker_score=settings.reranker_min_score
+        ),
+        route_limit=settings.document_route_limit,
     )
     graph = build_workflow(
         WorkflowDependencies(
@@ -88,6 +101,8 @@ def build_runtime_service(
             rewriter=IdentityQueryRewriter(),
             retrieval=retrieval,
             generator=generator,
+            planner=planner,
+            hierarchical=hierarchical,
             min_reranker_score=settings.reranker_min_score,
             retrieval_strategy=retrieval_strategy,
         )

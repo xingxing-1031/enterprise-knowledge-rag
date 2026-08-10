@@ -197,3 +197,38 @@ def test_hybrid_rrf_skips_reranker_but_preserves_both_channels() -> None:
     assert corpus.received_keys == frozenset({("leave-policy", "1.0")})
     assert result.candidates[0].channels == {"bm25", "vector"}
     assert result.candidates[0].reranker_score is None
+
+
+def test_section_retrieval_cannot_expand_supplied_document_keys() -> None:
+    allowed = make_candidate(
+        "leave:1",
+        title="请假制度",
+        content="病假需要提交证明材料。",
+        document_id="leave-policy",
+    )
+    restricted = make_candidate(
+        "payment:1",
+        title="付款制度",
+        content="付款审批规则。",
+        document_id="payment-policy",
+    )
+    corpus = FakeCorpus([allowed, restricted])
+    backend = FakeVectorBackend([allowed, restricted])
+    service = RetrievalService(
+        corpus,
+        VectorRetriever(backend),
+        FakeEmbedding(),
+        Reranker(ForbiddenScores()),
+    )
+
+    result = service.retrieve_within_documents(
+        "病假材料",
+        document_keys=frozenset({("leave-policy", "1.0")}),
+        strategy=RetrievalStrategy.HYBRID_RRF,
+    )
+
+    assert corpus.received_keys == frozenset({("leave-policy", "1.0")})
+    assert backend.received_keys == frozenset({("leave-policy", "1.0")})
+    assert {item.document.document_id for item in result.candidates} == {
+        "leave-policy"
+    }

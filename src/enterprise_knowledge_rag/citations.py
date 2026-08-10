@@ -39,6 +39,8 @@ def _normalized_numbers(text: str) -> set[str]:
 def validate_citations(
     draft: DraftAnswer,
     evidence: Sequence[RetrievalEvidence],
+    *,
+    required_need_ids: frozenset[str] = frozenset(),
 ) -> CitationValidation:
     by_id = {item.evidence_id: item for item in evidence}
     errors: list[str] = []
@@ -69,6 +71,24 @@ def validate_citations(
             errors.append(
                 f"claim {index} has unsupported approval terms: {unsupported_terms}"
             )
+
+    cited_evidence_ids = {
+        evidence_id
+        for claim in draft.claims
+        for evidence_id in claim.evidence_ids
+        if evidence_id in by_id
+    }
+    covered_need_ids = {
+        need_id
+        for evidence_id in cited_evidence_ids
+        for need_id in by_id[evidence_id].supports_need_ids
+    }
+    missing_need_ids = required_need_ids - covered_need_ids
+    if missing_need_ids:
+        errors.append(
+            "missing required evidence needs: "
+            f"{sorted(missing_need_ids)}"
+        )
 
     return CitationValidation(valid=not errors, errors=tuple(errors))
 
@@ -112,6 +132,7 @@ def generate_validated_answer(
     evidence: Sequence[RetrievalEvidence],
     history: Sequence[dict[str, str]] | None = None,
     max_regenerations: int = 1,
+    required_need_ids: frozenset[str] = frozenset(),
 ) -> GroundedAnswer:
     if not evidence:
         raise ValueError("validated answer requires evidence")
@@ -119,7 +140,11 @@ def generate_validated_answer(
     last_errors: tuple[str, ...] = ()
     for attempt in range(max_regenerations + 1):
         draft = generator.generate(question, evidence, history)
-        validation = validate_citations(draft, evidence)
+        validation = validate_citations(
+            draft,
+            evidence,
+            required_need_ids=required_need_ids,
+        )
         if validation.valid:
             return GroundedAnswer(
                 status="success",

@@ -20,6 +20,10 @@ from enterprise_knowledge_rag.models import (
 )
 from enterprise_knowledge_rag.refusal import build_refusal
 from enterprise_knowledge_rag.retrieval import (
+    HierarchicalRetrievalResult,
+    HierarchicalRetrievalService,
+    PlannedRetrieval,
+    RetrievalPlanner,
     RetrievalResult,
     RetrievalService,
     RetrievalStatus,
@@ -48,6 +52,8 @@ class WorkflowState(TypedDict):
     in_scope: bool
     rewritten_query: str
     retrieval: RetrievalResult | None
+    planned_retrieval: PlannedRetrieval | None
+    hierarchical_retrieval: HierarchicalRetrievalResult | None
     evidence: list[RetrievalEvidence]
     grounded: GroundedAnswer | None
     result: ChatResult | None
@@ -60,6 +66,8 @@ class WorkflowDependencies:
     rewriter: QueryRewriter
     retrieval: RetrievalService
     generator: AnswerGenerator
+    planner: RetrievalPlanner | None = None
+    hierarchical: HierarchicalRetrievalService | None = None
     min_reranker_score: float = 0.0
     retrieval_strategy: RetrievalStrategy = RetrievalStrategy.HYBRID_RRF_RERANKER
 
@@ -71,6 +79,10 @@ class WorkflowRun:
     in_scope: bool = False
     retrieval_candidates: tuple = ()
     model_calls: int = 0
+    retrieval_hops: int = 0
+    routed_document_keys: tuple[tuple[str, str], ...] = ()
+    required_need_ids: tuple[str, ...] = ()
+    covered_need_ids: tuple[str, ...] = ()
 
 
 def build_workflow(dependencies: WorkflowDependencies):
@@ -119,6 +131,79 @@ def build_workflow(dependencies: WorkflowDependencies):
             ],
         }
 
+    def retrieval_plan_node(state: WorkflowState) -> dict:
+        timer = StageTimer("retrieval_plan")
+        planned = dependencies.planner.plan(
+            state["rewritten_query"],
+            state["history"],
+        )
+        return {
+            "planned_retrieval": planned,
+            "trace": [
+                *state["trace"],
+                timer.event(
+                    planned.status,
+                    need_count=len(planned.plan.evidence_needs),
+                ),
+            ],
+        }
+
+    def hierarchical_retrieve_node(state: WorkflowState) -> dict:
+        planned = state["planned_retrieval"]
+        hierarchical = dependencies.hierarchical.retrieve(
+            planned.plan,
+            state["user"],
+            state["as_of"],
+            strategy=dependencies.retrieval_strategy,
+        )
+        route_timer = StageTimer("document_route")
+        section_timer = StageTimer("section_retrieve")
+        coverage_timer = StageTimer("evidence_coverage")
+        trace = [
+            *state["trace"],
+            route_timer.event(
+                "success" if hierarchical.routes else "empty",
+                route_count=len(hierarchical.routes),
+            ),
+            section_timer.event(
+                hierarchical.status.value,
+                candidate_count=len(hierarchical.evidence_candidates),
+                hop_count=hierarchical.hop_count,
+            ),
+            coverage_timer.event(
+                (
+                    "complete"
+                    if not hierarchical.coverage.missing_required_need_ids
+                    else "incomplete"
+                ),
+                need_count=len(hierarchical.coverage.covered_need_ids),
+            ),
+        ]
+        if hierarchical.hop_count == 2:
+            trace.append(
+                StageTimer("supplemental_retrieve").event(
+                    hierarchical.status.value,
+                    candidate_count=sum(
+                        item.retrieval_hop == 2
+                        for item in hierarchical.evidence_candidates
+                    ),
+                    hop_count=2,
+                )
+            )
+        retrieval = RetrievalResult(
+            status=hierarchical.status,
+            candidates=hierarchical.evidence_candidates,
+            authorized_document_keys=frozenset(
+                (route.document_id, route.version)
+                for route in hierarchical.routes
+            ),
+        )
+        return {
+            "hierarchical_retrieval": hierarchical,
+            "retrieval": retrieval,
+            "trace": trace,
+        }
+
     def reject_retrieval(state: WorkflowState) -> dict:
         timer = StageTimer("refusal")
         retrieval = state["retrieval"]
@@ -164,6 +249,15 @@ def build_workflow(dependencies: WorkflowDependencies):
             question=state["request"].question,
             evidence=state["evidence"],
             history=state["history"],
+            required_need_ids=frozenset(
+                need.need_id
+                for need in (
+                    state["planned_retrieval"].plan.evidence_needs
+                    if state["planned_retrieval"] is not None
+                    else []
+                )
+                if need.required
+            ),
         )
         return {
             "grounded": grounded,
@@ -190,6 +284,9 @@ def build_workflow(dependencies: WorkflowDependencies):
     graph.add_node("reject_out_of_scope", reject_out_of_scope)
     graph.add_node("rewrite", rewrite_node)
     graph.add_node("retrieve", retrieve_node)
+    if dependencies.planner is not None and dependencies.hierarchical is not None:
+        graph.add_node("retrieval_plan", retrieval_plan_node)
+        graph.add_node("hierarchical_retrieve", hierarchical_retrieve_node)
     graph.add_node("reject_retrieval", reject_retrieval)
     graph.add_node("evidence", evidence_node)
     graph.add_node("reject_empty_evidence", reject_empty_evidence)
@@ -201,9 +298,15 @@ def build_workflow(dependencies: WorkflowDependencies):
         lambda state: "rewrite" if state["in_scope"] else "reject_out_of_scope",
     )
     graph.add_edge("reject_out_of_scope", END)
-    graph.add_edge("rewrite", "retrieve")
+    if dependencies.planner is not None and dependencies.hierarchical is not None:
+        graph.add_edge("rewrite", "retrieval_plan")
+        graph.add_edge("retrieval_plan", "hierarchical_retrieve")
+        retrieval_source = "hierarchical_retrieve"
+    else:
+        graph.add_edge("rewrite", "retrieve")
+        retrieval_source = "retrieve"
     graph.add_conditional_edges(
-        "retrieve",
+        retrieval_source,
         lambda state: (
             "evidence"
             if state["retrieval"].status is RetrievalStatus.READY
@@ -237,6 +340,8 @@ def run_chat(
         "in_scope": False,
         "rewritten_query": request.question,
         "retrieval": None,
+        "planned_retrieval": None,
+        "hierarchical_retrieval": None,
         "evidence": [],
         "grounded": None,
         "result": None,
@@ -245,6 +350,8 @@ def run_chat(
     final = graph.invoke(initial)
     retrieval = final.get("retrieval")
     grounded = final.get("grounded")
+    planned = final.get("planned_retrieval")
+    hierarchical = final.get("hierarchical_retrieval")
     return WorkflowRun(
         result=final["result"],
         trace=tuple(final["trace"]),
@@ -252,5 +359,31 @@ def run_chat(
         retrieval_candidates=(
             tuple(retrieval.candidates) if retrieval is not None else ()
         ),
-        model_calls=grounded.retry_count + 1 if grounded is not None else 0,
+        model_calls=(
+            (planned.model_call_count if planned is not None else 0)
+            + (grounded.retry_count + 1 if grounded is not None else 0)
+        ),
+        retrieval_hops=(hierarchical.hop_count if hierarchical is not None else 0),
+        routed_document_keys=(
+            tuple(
+                (route.document_id, route.version)
+                for route in hierarchical.routes
+            )
+            if hierarchical is not None
+            else ()
+        ),
+        required_need_ids=(
+            tuple(
+                need.need_id
+                for need in planned.plan.evidence_needs
+                if need.required
+            )
+            if planned is not None
+            else ()
+        ),
+        covered_need_ids=(
+            tuple(sorted(hierarchical.coverage.covered_need_ids))
+            if hierarchical is not None
+            else ()
+        ),
     )
