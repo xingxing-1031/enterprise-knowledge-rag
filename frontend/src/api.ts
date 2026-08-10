@@ -3,6 +3,8 @@ import type {
   ChatResult,
   DocumentOverview,
   EvaluationOverview,
+  ImportMetadata,
+  KnowledgeImport,
   ProgressEvent,
   SessionInfo,
 } from "./types";
@@ -14,7 +16,8 @@ const API_BASE = import.meta.env.DEV ? "/api" : "";
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, init);
   if (!response.ok) {
-    throw new Error(`服务请求失败（${response.status}）`);
+    const payload = await response.json().catch(() => null) as { detail?: string } | null;
+    throw new Error(payload?.detail ?? `服务请求失败（${response.status}）`);
   }
   return response.json() as Promise<T>;
 }
@@ -32,6 +35,34 @@ export function fetchDocuments(): Promise<DocumentOverview[]> {
 
 export function fetchLatestEvaluation(): Promise<EvaluationOverview> {
   return requestJson<EvaluationOverview>("/evaluations/latest");
+}
+
+export function fetchKnowledgeImports(): Promise<KnowledgeImport[]> {
+  return requestJson<KnowledgeImport[]>("/knowledge/imports");
+}
+
+export function uploadKnowledgeDocument(
+  file: File,
+  metadata: ImportMetadata,
+): Promise<KnowledgeImport> {
+  const body = new FormData();
+  body.append("file", file);
+  body.append("metadata", JSON.stringify(metadata));
+  return requestJson<KnowledgeImport>("/knowledge/imports", {
+    method: "POST",
+    body,
+  });
+}
+
+export function approveKnowledgeImport(
+  importId: string,
+  metadata: ImportMetadata,
+): Promise<KnowledgeImport> {
+  return requestJson<KnowledgeImport>(`/knowledge/imports/${importId}/approve`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(metadata),
+  });
 }
 
 

@@ -126,6 +126,11 @@ export default function App() {
     }
   };
 
+  const refreshDocuments = async () => {
+    const refreshed = await fetchDocuments();
+    setDocuments(refreshed);
+  };
+
   return (
     <div className="app-shell">
       <Navigation active={activeView} onChange={setActiveView} session={session} />
@@ -152,7 +157,7 @@ export default function App() {
             {evidenceOpen ? <button className="drawer-scrim" type="button" aria-label="关闭引用" onClick={() => setEvidenceOpen(false)} /> : null}
           </div>
         ) : null}
-        {activeView === "knowledge" ? <KnowledgeView documents={documents} loading={metadataLoading} /> : null}
+        {activeView === "knowledge" ? <KnowledgeView documents={documents} loading={metadataLoading} session={session} onDocumentsChanged={refreshDocuments} /> : null}
         {activeView === "evaluation" ? <EvaluationView evaluation={evaluation} /> : null}
       </section>
     </div>

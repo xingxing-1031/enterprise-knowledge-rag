@@ -1,6 +1,8 @@
 import { BookOpenText, LockKeyhole } from "lucide-react";
 
 import type { DocumentOverview } from "../types";
+import type { SessionInfo } from "../types";
+import { KnowledgeImportWorkspace } from "./KnowledgeImportWorkspace";
 
 
 const STATUS_LABELS: Record<string, string> = {
@@ -22,10 +24,12 @@ const DEPARTMENT_LABELS: Record<string, string> = {
 interface KnowledgeViewProps {
   documents: DocumentOverview[];
   loading: boolean;
+  session: SessionInfo | null;
+  onDocumentsChanged: () => Promise<void>;
 }
 
 
-export function KnowledgeView({ documents, loading }: KnowledgeViewProps) {
+export function KnowledgeView({ documents, loading, session, onDocumentsChanged }: KnowledgeViewProps) {
   return (
     <main className="page-view">
       <header className="page-heading">
@@ -39,6 +43,18 @@ export function KnowledgeView({ documents, loading }: KnowledgeViewProps) {
           <span>可见版本</span>
         </div>
       </header>
+
+      {session?.role === "knowledge_admin" ? (
+        <KnowledgeImportWorkspace onIndexed={onDocumentsChanged} />
+      ) : null}
+
+      <section className="visible-documents" aria-labelledby="visible-documents-heading">
+        <div className="section-heading-row compact-heading">
+          <div>
+            <span className="panel-kicker">权限过滤后</span>
+            <h2 id="visible-documents-heading">我可访问的文档</h2>
+          </div>
+        </div>
 
       {loading ? (
         <div className="table-loading" aria-label="正在加载知识库">
@@ -90,6 +106,7 @@ export function KnowledgeView({ documents, loading }: KnowledgeViewProps) {
           </table>
         </div>
       )}
+      </section>
     </main>
   );
 }

@@ -58,6 +58,64 @@ export interface DocumentOverview {
   effective_to: string | null;
 }
 
+export type IngestionStatus =
+  | "uploaded"
+  | "parsed"
+  | "needs_review"
+  | "approved"
+  | "indexed"
+  | "quarantined"
+  | "failed";
+
+export interface ImportMetadata {
+  document_id: string;
+  title: string;
+  document_type: "policy" | "process" | "handbook" | "faq";
+  department: string;
+  visibility: "public" | "department" | "restricted";
+  allowed_roles: SessionInfo["role"][];
+  version: string;
+  effective_from: string;
+  effective_to?: string | null;
+  supersedes_id?: string | null;
+  topic_tags: string[];
+}
+
+export interface CleaningIssue {
+  code: string;
+  severity: "info" | "warning" | "blocking";
+  message: string;
+  block_orders: number[];
+}
+
+export interface CleaningReport {
+  characters_before: number;
+  characters_after: number;
+  blocks_before: number;
+  blocks_after: number;
+  table_count: number;
+  content_hash: string;
+  issues: CleaningIssue[];
+  has_blocking_issues: boolean;
+}
+
+export interface KnowledgeImport {
+  import_id: string;
+  original_filename: string;
+  source_hash: string;
+  media_type: string;
+  size_bytes: number;
+  page_count: number | null;
+  status: IngestionStatus;
+  metadata: ImportMetadata | null;
+  cleaning_report: CleaningReport | null;
+  normalized_preview: string;
+  failure_type: string | null;
+  created_at: string;
+  updated_at: string;
+  can_approve: boolean;
+}
+
 export interface EvaluationOverview {
   status?: string;
   strategy?: string;
