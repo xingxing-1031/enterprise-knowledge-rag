@@ -50,3 +50,26 @@ def test_gold_evidence_versions_and_facts_exist_in_corpus() -> None:
             )
             for fact in case.required_answer_facts:
                 assert normalize(fact) in gold_text, (case.case_id, fact)
+
+
+def test_development_covers_controlled_hierarchical_scenarios() -> None:
+    dataset = load_dataset(PROJECT_ROOT / "evaluation" / "development.json")
+    cases = {case.case_id: case for case in dataset.cases}
+
+    expected = {
+        "dev-hr-leave-emergency-two-hop",
+        "dev-procurement-supplier-two-hop",
+        "dev-finance-deadline-single-hop",
+        "dev-hr-missing-exception-refusal",
+        "dev-finance-restricted-supplement-no-leak",
+    }
+    assert expected <= cases.keys()
+    assert cases["dev-hr-leave-emergency-two-hop"].expected_retrieval_hops == 2
+    assert cases["dev-procurement-supplier-two-hop"].expected_retrieval_hops == 2
+    assert cases["dev-finance-deadline-single-hop"].expected_retrieval_hops == 1
+    assert cases["dev-hr-missing-exception-refusal"].expected_outcome.value == (
+        "refusal"
+    )
+    assert cases[
+        "dev-finance-restricted-supplement-no-leak"
+    ].forbidden_document_ids == {"finance-payment-approval"}

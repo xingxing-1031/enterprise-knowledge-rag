@@ -41,6 +41,8 @@ class EvaluationCase(StrictModel):
     expected_versions: dict[str, str] = Field(default_factory=dict)
     forbidden_document_ids: set[str] = Field(default_factory=set)
     required_answer_facts: list[str] = Field(default_factory=list)
+    required_need_ids: set[str] = Field(default_factory=set)
+    expected_retrieval_hops: int = Field(default=1, ge=1, le=2)
 
     @model_validator(mode="after")
     def validate_expected_outcome(self) -> "EvaluationCase":
@@ -82,6 +84,10 @@ class EvaluationObservation(StrictModel):
     answer: str = ""
     latency_ms: float = Field(ge=0.0)
     model_calls: int = Field(ge=0)
+    routed_document_keys: list[str] = Field(default_factory=list)
+    retrieval_hops: int = Field(default=0, ge=0, le=2)
+    required_need_ids: set[str] = Field(default_factory=set)
+    covered_need_ids: set[str] = Field(default_factory=set)
 
 
 class ExperimentMetadata(StrictModel):
@@ -110,6 +116,15 @@ class CaseMetrics(StrictModel):
     correct_refusal: float | None = Field(default=None, ge=0.0, le=1.0)
     false_refusal: float = Field(ge=0.0, le=1.0)
     automated_answer_score: float | None = Field(default=None, ge=0.0, le=1.0)
+    document_route_recall: float | None = Field(default=None, ge=0.0, le=1.0)
+    evidence_need_coverage: float | None = Field(default=None, ge=0.0, le=1.0)
+    second_hop_trigger_accuracy: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+    )
+    second_hop_success: float | None = Field(default=None, ge=0.0, le=1.0)
+    irrelevant_evidence_ratio: float = Field(default=0.0, ge=0.0, le=1.0)
     core_pass: bool
 
 
@@ -134,6 +149,19 @@ class AggregateMetrics(StrictModel):
     correct_refusal_rate: float | None = Field(default=None, ge=0.0, le=1.0)
     false_refusal_rate: float | None = Field(default=None, ge=0.0, le=1.0)
     automated_answer_score: float | None = Field(default=None, ge=0.0, le=1.0)
+    document_route_recall: float | None = Field(default=None, ge=0.0, le=1.0)
+    evidence_need_coverage: float | None = Field(default=None, ge=0.0, le=1.0)
+    second_hop_trigger_accuracy: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+    )
+    second_hop_success: float | None = Field(default=None, ge=0.0, le=1.0)
+    irrelevant_evidence_ratio: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+    )
     p50_latency_ms: float | None = Field(default=None, ge=0.0)
     p95_latency_ms: float | None = Field(default=None, ge=0.0)
     total_model_calls: int = Field(ge=0)

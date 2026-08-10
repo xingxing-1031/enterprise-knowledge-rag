@@ -87,4 +87,11 @@ class WorkflowEvaluationExecutor:
             answer=workflow_run.result.answer,
             latency_ms=(perf_counter() - started) * 1000,
             model_calls=workflow_run.model_calls,
+            routed_document_keys=[
+                f"{document_id}@{version}"
+                for document_id, version in workflow_run.routed_document_keys
+            ],
+            retrieval_hops=workflow_run.retrieval_hops,
+            required_need_ids=set(workflow_run.required_need_ids),
+            covered_need_ids=set(workflow_run.covered_need_ids),
         )

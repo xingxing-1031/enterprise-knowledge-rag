@@ -59,6 +59,7 @@ class DocumentRecord(StrictModel):
     content_hash: str = Field(min_length=64, max_length=64)
     source_path: str = Field(min_length=1)
     indexed_at: datetime
+    synthetic: bool = False
 
     @field_validator("content_hash")
     @classmethod

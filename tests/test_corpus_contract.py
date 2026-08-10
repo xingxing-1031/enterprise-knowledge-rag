@@ -41,9 +41,15 @@ def test_documents_satisfy_metadata_contract() -> None:
         DocumentRecord.model_validate(read_front_matter(CORPUS_DIR / item))
         for item in manifest["documents"]
     ]
-    assert len(records) == 10
+    assert len(records) == 12
     assert {record.status.value for record in records} >= {"active", "expired", "draft"}
     assert any(record.visibility.value == "restricted" for record in records)
+    assert {
+        record.document_id for record in records if record.synthetic
+    } == {
+        "hr-medical-certificate-process",
+        "procurement-supplier-onboarding-process",
+    }
 
 
 def test_active_versions_are_not_duplicated_for_same_as_of_date() -> None:

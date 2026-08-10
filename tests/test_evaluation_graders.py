@@ -147,3 +147,90 @@ def test_refusing_an_answerable_case_is_a_false_refusal() -> None:
     assert score.correct_refusal is None
     assert score.false_refusal == 1.0
     assert score.core_pass is False
+
+
+def test_two_hop_case_grades_route_and_evidence_need_metrics() -> None:
+    case = make_case(
+        case_id="dev-multihop-001",
+        gold_evidence_keys={
+            "hr-leave-policy@2.0#materials",
+            "hr-medical-process@1.0#emergency",
+        },
+        required_need_ids={"material", "exception"},
+        expected_retrieval_hops=2,
+        expected_versions={
+            "hr-leave-policy": "2.0",
+            "hr-medical-process": "1.0",
+        },
+    )
+    observation = EvaluationObservation(
+        in_scope=True,
+        retrieved=[
+            ObservedEvidence(
+                evidence_key="hr-leave-policy@2.0#materials",
+                document_id="hr-leave-policy",
+                version="2.0",
+            ),
+            ObservedEvidence(
+                evidence_key="hr-medical-process@1.0#emergency",
+                document_id="hr-medical-process",
+                version="1.0",
+            ),
+        ],
+        citations={
+            "hr-leave-policy@2.0#materials",
+            "hr-medical-process@1.0#emergency",
+        },
+        status="success",
+        answer="完整事实",
+        latency_ms=100.0,
+        model_calls=3,
+        routed_document_keys=["hr-leave-policy@2.0", "hr-medical-process@1.0"],
+        retrieval_hops=2,
+        required_need_ids={"material", "exception"},
+        covered_need_ids={"material", "exception"},
+    )
+
+    score = grade_case(case, observation, k=5)
+
+    assert score.document_route_recall == 1.0
+    assert score.evidence_need_coverage == 1.0
+    assert score.second_hop_trigger_accuracy == 1.0
+    assert score.second_hop_success == 1.0
+    assert score.irrelevant_evidence_ratio == 0.0
+    assert score.core_pass is True
+
+
+def test_two_hop_case_fails_core_when_second_hop_does_not_trigger() -> None:
+    case = make_case(
+        case_id="dev-multihop-missed",
+        gold_evidence_keys={"hr-leave-policy@2.0#materials"},
+        expected_versions={},
+        required_need_ids={"material"},
+        expected_retrieval_hops=2,
+    )
+    observation = EvaluationObservation(
+        in_scope=True,
+        retrieved=[
+            ObservedEvidence(
+                evidence_key="hr-leave-policy@2.0#materials",
+                document_id="hr-leave-policy",
+                version="2.0",
+            )
+        ],
+        citations={"hr-leave-policy@2.0#materials"},
+        status="success",
+        answer="完整事实",
+        latency_ms=100.0,
+        model_calls=2,
+        routed_document_keys=["hr-leave-policy@2.0"],
+        retrieval_hops=1,
+        required_need_ids={"material"},
+        covered_need_ids={"material"},
+    )
+
+    score = grade_case(case, observation, k=5)
+
+    assert score.second_hop_trigger_accuracy == 0.0
+    assert score.second_hop_success == 0.0
+    assert score.core_pass is False

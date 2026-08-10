@@ -57,6 +57,12 @@ def test_executor_preserves_retrieval_and_citation_keys() -> None:
             in_scope=True,
             retrieval_candidates=(candidate,),
             model_calls=1,
+            retrieval_hops=2,
+            routed_document_keys=(
+                ("finance-expense-policy", "2.0"),
+            ),
+            required_need_ids=("deadline",),
+            covered_need_ids=("deadline",),
         )
     )
     user = UserContext(user_id="eval-user", role=UserRole.EMPLOYEE)
@@ -82,4 +88,8 @@ def test_executor_preserves_retrieval_and_citation_keys() -> None:
         "finance-expense-policy@1.0#办理规则"
     )
     assert observation.citations == {"finance-expense-policy@2.0#报销期限"}
+    assert observation.routed_document_keys == ["finance-expense-policy@2.0"]
+    assert observation.retrieval_hops == 2
+    assert observation.required_need_ids == {"deadline"}
+    assert observation.covered_need_ids == {"deadline"}
     assert service.cleared == [("eval-user", "evaluation:dev-001")]

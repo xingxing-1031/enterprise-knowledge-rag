@@ -86,6 +86,39 @@ def _grade_answer_facts(
     return matched / len(case.required_answer_facts)
 
 
+def _gold_document_ids(case: EvaluationCase) -> set[str]:
+    return {key.split("@", 1)[0] for key in case.gold_evidence_keys}
+
+
+def _grade_route_recall(
+    case: EvaluationCase,
+    observation: EvaluationObservation,
+) -> float | None:
+    gold = _gold_document_ids(case)
+    if not gold:
+        return None
+    if not observation.routed_document_keys and not case.required_need_ids:
+        return None
+    routed = {key.split("@", 1)[0] for key in observation.routed_document_keys}
+    return len(gold & routed) / len(gold)
+
+
+def _grade_need_metrics(
+    case: EvaluationCase,
+    observation: EvaluationObservation,
+) -> tuple[float | None, float | None, float | None]:
+    if not case.required_need_ids:
+        return None, None, None
+    coverage = len(case.required_need_ids & observation.covered_need_ids) / len(
+        case.required_need_ids
+    )
+    expected_two = case.expected_retrieval_hops == 2
+    triggered = observation.retrieval_hops == 2
+    trigger_accuracy = float(triggered is expected_two)
+    second_success = float(coverage == 1.0 and triggered) if expected_two else None
+    return coverage, trigger_accuracy, second_success
+
+
 def grade_case(
     case: EvaluationCase,
     observation: EvaluationObservation,
@@ -113,9 +146,29 @@ def grade_case(
         case.expected_outcome is ExpectedOutcome.ANSWER
         and observation.status == "refused"
     )
+    route_recall = _grade_route_recall(case, observation)
+    need_coverage, trigger_accuracy, second_success = _grade_need_metrics(
+        case,
+        observation,
+    )
+    relevant_documents = _gold_document_ids(case)
+    irrelevant_ratio = (
+        sum(
+            item.document_id not in relevant_documents
+            for item in observation.retrieved
+        )
+        / len(observation.retrieved)
+        if observation.retrieved
+        else 0.0
+    )
     domain_accuracy = float(observation.in_scope is case.expected_in_scope)
     if case.expected_outcome is ExpectedOutcome.REFUSAL:
-        core_pass = domain_accuracy == 1.0 and not leaked and correct_refusal == 1.0
+        core_pass = (
+            domain_accuracy == 1.0
+            and not leaked
+            and correct_refusal == 1.0
+            and trigger_accuracy in (None, 1.0)
+        )
     else:
         core_pass = (
             domain_accuracy == 1.0
@@ -125,6 +178,10 @@ def grade_case(
             and ranking.recall_at_k == 1.0
             and version_accuracy in (None, 1.0)
             and citation_accuracy == 1.0
+            and route_recall in (None, 1.0)
+            and need_coverage in (None, 1.0)
+            and trigger_accuracy in (None, 1.0)
+            and second_success in (None, 1.0)
         )
     return CaseMetrics(
         domain_accuracy=domain_accuracy,
@@ -135,5 +192,10 @@ def grade_case(
         correct_refusal=correct_refusal,
         false_refusal=false_refusal,
         automated_answer_score=_grade_answer_facts(case, observation),
+        document_route_recall=route_recall,
+        evidence_need_coverage=need_coverage,
+        second_hop_trigger_accuracy=trigger_accuracy,
+        second_hop_success=second_success,
+        irrelevant_evidence_ratio=irrelevant_ratio,
         core_pass=core_pass,
     )

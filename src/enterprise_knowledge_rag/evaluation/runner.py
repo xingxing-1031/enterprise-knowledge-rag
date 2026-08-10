@@ -93,6 +93,19 @@ def _aggregate(results: Sequence[CaseEvaluation]) -> AggregateMetrics:
         correct_refusal_rate=_mean(_metric_values(results, "correct_refusal")),
         false_refusal_rate=_mean(_metric_values(results, "false_refusal")),
         automated_answer_score=_mean(_metric_values(results, "automated_answer_score")),
+        document_route_recall=_mean(
+            _metric_values(results, "document_route_recall")
+        ),
+        evidence_need_coverage=_mean(
+            _metric_values(results, "evidence_need_coverage")
+        ),
+        second_hop_trigger_accuracy=_mean(
+            _metric_values(results, "second_hop_trigger_accuracy")
+        ),
+        second_hop_success=_mean(_metric_values(results, "second_hop_success")),
+        irrelevant_evidence_ratio=_mean(
+            _metric_values(results, "irrelevant_evidence_ratio")
+        ),
         p50_latency_ms=median(latencies) if latencies else None,
         p95_latency_ms=(
             _nearest_rank_percentile(latencies, 0.95) if latencies else None
