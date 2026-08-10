@@ -67,6 +67,33 @@ def test_ingestion_migration_adds_import_jobs_and_parent_vectors() -> None:
     assert "storage_path TEXT NOT NULL" in sql
 
 
+def test_delivery_smoke_invokes_retrieval_script_as_module() -> None:
+    workflow_path = Path(__file__).parents[1] / ".github" / "workflows" / "ci.yml"
+
+    workflow = workflow_path.read_text(encoding="utf-8")
+
+    assert "python -m scripts.retrieval_smoke" in workflow
+
+
+def test_container_prepares_writable_model_cache_for_non_root_user() -> None:
+    dockerfile_path = Path(__file__).parents[1] / "Dockerfile"
+
+    dockerfile = dockerfile_path.read_text(encoding="utf-8")
+
+    assert "/home/appuser/.cache/huggingface" in dockerfile
+
+
+def test_container_build_allows_debian_mirror_overrides() -> None:
+    project_root = Path(__file__).parents[1]
+    dockerfile = (project_root / "Dockerfile").read_text(encoding="utf-8")
+    compose = (project_root / "compose.yaml").read_text(encoding="utf-8")
+
+    assert "ARG DEBIAN_MIRROR=" in dockerfile
+    assert "ARG DEBIAN_SECURITY_MIRROR=" in dockerfile
+    assert "DEBIAN_MIRROR: ${DEBIAN_MIRROR:-" in compose
+    assert "DEBIAN_SECURITY_MIRROR: ${DEBIAN_SECURITY_MIRROR:-" in compose
+
+
 def test_deterministic_embeddings_are_stable_and_ci_only(monkeypatch) -> None:
     provider = DeterministicTestEmbeddings(8)
     first = provider.embed_query("报销期限")

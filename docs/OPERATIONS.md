@@ -39,6 +39,13 @@ PostgreSQL 健康 -> migrate 完成 -> index 完成 -> API /ready 通过
 
 镜像显式安装 CPU 版 Torch，避免把 GPU 运行库带入演示镜像。首次索引会下载 bge-m3，首次问答会加载 bge-reranker-v2-m3；耗时取决于网络和机器配置，模型缓存保存在 `model_cache` 数据卷中。建议为双模型本地运行准备至少 8 GB 内存，资源不足时应改用远程模型服务，而不是忽略内存边界。后续内容和向量模型均未变化的文档会跳过；更换 `EMBEDDING_MODEL` 会触发重建。
 
+如果构建时访问 `deb.debian.org` 返回 502，可在本地 `.env` 覆盖 Debian 镜像，不要修改并提交全局默认值。例如：
+
+```dotenv
+DEBIAN_MIRROR=https://mirrors.aliyun.com/debian
+DEBIAN_SECURITY_MIRROR=https://mirrors.aliyun.com/debian-security
+```
+
 ## 4. 单独执行迁移和索引
 
 本机虚拟环境：

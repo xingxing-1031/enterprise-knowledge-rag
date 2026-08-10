@@ -101,7 +101,7 @@ jobs:
       - name: Verify API readiness and pgvector retrieval
         run: |
           curl --fail --silent http://127.0.0.1:58010/ready
-          docker compose exec -T api python scripts/retrieval_smoke.py
+          docker compose exec -T api python -m scripts.retrieval_smoke
       - name: Verify migration and indexing records
         run: >-
           docker compose exec -T postgres

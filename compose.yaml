@@ -35,6 +35,9 @@ x-app-image: &app-image
   build:
     context: .
     dockerfile: Dockerfile
+    args:
+      DEBIAN_MIRROR: ${DEBIAN_MIRROR:-http://deb.debian.org/debian}
+      DEBIAN_SECURITY_MIRROR: ${DEBIAN_SECURITY_MIRROR:-http://deb.debian.org/debian-security}
 
 services:
   postgres:

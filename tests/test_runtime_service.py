@@ -155,3 +155,17 @@ def test_domain_classifier_accepts_enterprise_topics_and_rejects_general_chat() 
     assert classifier.is_in_scope("公司年终奖按几个月工资计算？") is True
     assert classifier.is_in_scope("采购到货以后怎么验收？") is True
     assert classifier.is_in_scope("红烧肉怎么做？") is False
+
+
+def test_domain_classifier_accepts_all_in_scope_development_questions() -> None:
+    dataset_path = Path(__file__).parents[1] / "evaluation" / "development.json"
+    dataset = json.loads(dataset_path.read_text(encoding="utf-8"))
+    classifier = EnterpriseDomainClassifier()
+
+    rejected = [
+        case["case_id"]
+        for case in dataset["cases"]
+        if case["expected_in_scope"] and not classifier.is_in_scope(case["question"])
+    ]
+
+    assert rejected == []

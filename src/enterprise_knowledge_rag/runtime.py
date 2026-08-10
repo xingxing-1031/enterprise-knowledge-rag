@@ -22,6 +22,11 @@ from enterprise_knowledge_rag.policy import can_access
 from enterprise_knowledge_rag.workflow import WorkflowRun, run_chat
 
 ENTERPRISE_TERMS = {
+    "expense",
+    "parental leave",
+    "payment approval",
+    "sick leave",
+    "supplier",
     "公司",
     "制度",
     "流程",
