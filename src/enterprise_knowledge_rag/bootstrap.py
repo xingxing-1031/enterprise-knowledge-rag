@@ -49,6 +49,13 @@ def _default_chat_client(settings: Settings):
     )
 
 
+def _resolve_retrieval_strategy(
+    settings: Settings,
+    override: RetrievalStrategy | None,
+) -> RetrievalStrategy:
+    return override or RetrievalStrategy(settings.retrieval_strategy)
+
+
 def build_runtime_service(
     settings: Settings,
     *,
@@ -56,8 +63,12 @@ def build_runtime_service(
     chat_client: Any | None = None,
     embeddings: Any | None = None,
     reranker_scores: Any | None = None,
-    retrieval_strategy: RetrievalStrategy = RetrievalStrategy.HYBRID_RRF_RERANKER,
+    retrieval_strategy: RetrievalStrategy | None = None,
 ) -> RuntimeChatService:
+    resolved_retrieval_strategy = _resolve_retrieval_strategy(
+        settings,
+        retrieval_strategy,
+    )
     connection_factory = connection_factory or _default_connection_factory(
         settings.database_url
     )
@@ -106,7 +117,7 @@ def build_runtime_service(
             planner=planner,
             hierarchical=hierarchical,
             min_reranker_score=settings.reranker_min_score,
-            retrieval_strategy=retrieval_strategy,
+            retrieval_strategy=resolved_retrieval_strategy,
         )
     )
     indexing = IndexingService(repository, embeddings, settings)

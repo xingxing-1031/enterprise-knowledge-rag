@@ -1,7 +1,11 @@
 from pathlib import Path
 
-from enterprise_knowledge_rag.bootstrap import build_runtime_service
+from enterprise_knowledge_rag.bootstrap import (
+    _resolve_retrieval_strategy,
+    build_runtime_service,
+)
 from enterprise_knowledge_rag.config import Settings
+from enterprise_knowledge_rag.retrieval import RetrievalStrategy
 from enterprise_knowledge_rag.runtime import RuntimeChatService
 
 
@@ -42,3 +46,19 @@ def test_bootstrap_wires_runtime_without_eager_external_calls(tmp_path: Path) ->
     )
 
     assert isinstance(service, RuntimeChatService)
+
+
+def test_bootstrap_resolves_configured_strategy_and_explicit_override() -> None:
+    settings = Settings(_env_file=None, retrieval_strategy="vector_baseline")
+
+    assert (
+        _resolve_retrieval_strategy(settings, None)
+        is RetrievalStrategy.VECTOR_BASELINE
+    )
+    assert (
+        _resolve_retrieval_strategy(
+            settings,
+            RetrievalStrategy.HYBRID_RRF_RERANKER,
+        )
+        is RetrievalStrategy.HYBRID_RRF_RERANKER
+    )

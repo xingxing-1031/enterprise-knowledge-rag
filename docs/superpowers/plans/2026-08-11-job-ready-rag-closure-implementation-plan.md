@@ -351,7 +351,7 @@ git commit -m "test: align development evidence need contract"
 - Consumes: `Settings.retrieval_strategy` string validated to one of the three `RetrievalStrategy` values.
 - Produces: `_resolve_retrieval_strategy(settings, override) -> RetrievalStrategy`; explicit evaluation overrides remain unchanged.
 
-- [ ] **Step 1: Write failing settings and bootstrap tests**
+- [x] **Step 1: Write failing settings and bootstrap tests**
 
 ```python
 def test_settings_default_to_hybrid_rrf_without_local_env() -> None:
@@ -368,7 +368,7 @@ def test_bootstrap_resolves_configured_strategy_and_explicit_override() -> None:
     )
 ```
 
-- [ ] **Step 2: Run focused tests and confirm RED**
+- [x] **Step 2: Run focused tests and confirm RED**
 
 Run:
 
@@ -378,7 +378,7 @@ Run:
 
 Expected: missing field and helper failures.
 
-- [ ] **Step 3: Implement configuration and resolver**
+- [x] **Step 3: Implement configuration and resolver**
 
 Add to `Settings`:
 
@@ -402,7 +402,7 @@ def _resolve_retrieval_strategy(
 
 Change `build_runtime_service(... retrieval_strategy=None)` and pass the resolved enum into `WorkflowDependencies`.
 
-- [ ] **Step 4: Expose the environment setting**
+- [x] **Step 4: Expose the environment setting**
 
 Add `RETRIEVAL_STRATEGY=hybrid_rrf` to `.env.example` and this Compose mapping:
 
@@ -412,7 +412,7 @@ RETRIEVAL_STRATEGY: ${RETRIEVAL_STRATEGY:-hybrid_rrf}
 
 Do not modify the ignored local `.env` during this task.
 
-- [ ] **Step 5: Run bootstrap, runtime, and configuration tests**
+- [x] **Step 5: Run bootstrap, runtime, and configuration tests**
 
 Run:
 
@@ -422,7 +422,7 @@ Run:
 
 Expected: all pass.
 
-- [ ] **Step 6: Commit Task 4**
+- [x] **Step 6: Commit Task 4**
 
 ```powershell
 git add src/enterprise_knowledge_rag/config.py src/enterprise_knowledge_rag/bootstrap.py .env.example compose.yaml tests/test_bootstrap.py tests/test_models.py

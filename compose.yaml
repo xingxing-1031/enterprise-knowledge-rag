@@ -13,6 +13,7 @@ x-app-environment: &app-environment
   EMBEDDING_DIMENSION: ${EMBEDDING_DIMENSION:-1024}
   RERANKER_MODEL: ${RERANKER_MODEL:-BAAI/bge-reranker-v2-m3}
   RERANKER_MIN_SCORE: ${RERANKER_MIN_SCORE:-0.0}
+  RETRIEVAL_STRATEGY: ${RETRIEVAL_STRATEGY:-hybrid_rrf}
   KNOWLEDGE_DIR: /app/knowledge
   MIGRATIONS_DIR: /app/db/migrations
   FRONTEND_DIST_DIR: /app/frontend/dist

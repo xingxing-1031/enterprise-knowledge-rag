@@ -1,5 +1,6 @@
 from functools import lru_cache
 from pathlib import Path
+from typing import Literal
 
 from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -25,6 +26,11 @@ class Settings(BaseSettings):
     embedding_dimension: int = Field(default=1024, ge=1, le=4096)
     reranker_model: str = "BAAI/bge-reranker-v2-m3"
     reranker_min_score: float = 0.0
+    retrieval_strategy: Literal[
+        "vector_baseline",
+        "hybrid_rrf",
+        "hybrid_rrf_reranker",
+    ] = "hybrid_rrf"
     model_timeout_seconds: float = Field(default=30.0, gt=0.0, le=120.0)
     knowledge_dir: Path = Path("knowledge")
     migrations_dir: Path = Path("db/migrations")
