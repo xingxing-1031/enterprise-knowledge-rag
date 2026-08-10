@@ -140,9 +140,10 @@ class ExtractedDocument(StrictModel):
     original_filename: str = Field(min_length=1, max_length=255)
     source_hash: str = Field(min_length=64, max_length=64)
     media_type: str = Field(min_length=1, max_length=120)
-    blocks: list[ExtractedBlock] = Field(min_length=1)
+    blocks: list[ExtractedBlock] = Field(default_factory=list)
     page_count: int | None = Field(default=None, ge=1)
     title_hint: str | None = Field(default=None, max_length=200)
+    issues: list[CleaningIssue] = Field(default_factory=list)
 
 
 class CleaningIssue(StrictModel):
@@ -170,8 +171,8 @@ class CleaningReport(StrictModel):
 class CleanedDocument(StrictModel):
     original_filename: str = Field(min_length=1, max_length=255)
     source_hash: str = Field(min_length=64, max_length=64)
-    normalized_markdown: str = Field(min_length=1)
-    blocks: list[ExtractedBlock] = Field(min_length=1)
+    normalized_markdown: str = ""
+    blocks: list[ExtractedBlock] = Field(default_factory=list)
     report: CleaningReport
 
 
