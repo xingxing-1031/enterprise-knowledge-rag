@@ -1,0 +1,493 @@
+{
+  "dataset_id": "enterprise-rag-frozen-holdout-v1",
+  "dataset_version": "1.0",
+  "split": "frozen_holdout",
+  "strategy": "hybrid_rrf",
+  "corpus_snapshot": "sha256:810fac5143fd89480857f7f04db6b1781487bf872d1d4ba32b014c86592ada65",
+  "ranking_k": 5,
+  "experiment": {
+    "code_commit": "f31a2e2",
+    "embedding_model": "BAAI/bge-m3",
+    "reranker_model": null,
+    "llm_model": "qwen-plus",
+    "prompt_version": "generation-v1",
+    "temperature": 0.0,
+    "repetition": 1,
+    "environment": "development"
+  },
+  "started_at": "2026-08-10T23:45:59.831439Z",
+  "completed_at": "2026-08-10T23:47:26.539256Z",
+  "holdout_consumed_at": "2026-08-10T23:45:59.831439Z",
+  "metrics": {
+    "case_count": 8,
+    "execution_success_rate": 0.75,
+    "core_pass_rate": 0.625,
+    "domain_accuracy": 1.0,
+    "recall_at_k": 1.0,
+    "reciprocal_rank": 1.0,
+    "ndcg_at_k": 1.0,
+    "access_leakage_rate": 0.0,
+    "version_accuracy": 1.0,
+    "citation_accuracy": 0.85,
+    "correct_refusal_rate": 1.0,
+    "false_refusal_rate": 0.0,
+    "automated_answer_score": 0.9,
+    "document_route_recall": 1.0,
+    "evidence_need_coverage": null,
+    "second_hop_trigger_accuracy": null,
+    "second_hop_success": null,
+    "irrelevant_evidence_ratio": 0.31666666666666665,
+    "p50_latency_ms": 6930.444588000682,
+    "p95_latency_ms": 41449.74527600061,
+    "total_model_calls": 12
+  },
+  "cases": [
+    {
+      "case_id": "holdout-hr-leave-emergency",
+      "observation": {
+        "in_scope": true,
+        "retrieved": [
+          {
+            "evidence_key": "hr-leave-policy@2.0#例外处理",
+            "document_id": "hr-leave-policy",
+            "version": "2.0"
+          },
+          {
+            "evidence_key": "hr-leave-policy@2.0#申请与审批",
+            "document_id": "hr-leave-policy",
+            "version": "2.0"
+          },
+          {
+            "evidence_key": "hr-onboarding-process@1.2#办理时限",
+            "document_id": "hr-onboarding-process",
+            "version": "1.2"
+          },
+          {
+            "evidence_key": "hr-medical-certificate-process@1.0#Emergency submission",
+            "document_id": "hr-medical-certificate-process",
+            "version": "1.0"
+          },
+          {
+            "evidence_key": "admin-asset-management@1.0#异常处理",
+            "document_id": "admin-asset-management",
+            "version": "1.0"
+          },
+          {
+            "evidence_key": "hr-leave-policy@2.0#材料要求",
+            "document_id": "hr-leave-policy",
+            "version": "2.0"
+          }
+        ],
+        "citations": [
+          "hr-medical-certificate-process@1.0#Emergency submission",
+          "hr-onboarding-process@1.2#办理时限",
+          "hr-leave-policy@2.0#申请与审批",
+          "hr-leave-policy@2.0#例外处理"
+        ],
+        "status": "degraded",
+        "refusal_reason": null,
+        "answer": "回答生成未通过引用校验，以下为已验证的检索依据：\n- 员工请假管理制度（v2.0，员工请假管理制度 > 例外处理）：突发情况无法提前申请时，应在当日工作开始前向直属主管报备，并在恢复工作后补齐系统申请。\n- 员工请假管理制度（v2.0，员工请假管理制度 > 申请与审批）：员工应至少提前 1 个工作日在内部系统提交请假申请。连续请假不超过 2 个工作日，由直属主管审批；超过 2 个工作日还需部门负责人审批。\n- 新员工入职办理流程（v1.2，新员工入职办理流程 > 办理时限）：正常情况下，入职材料核验应在到岗当天完成；因材料缺失无法完成的，应记录缺失项和补交期限。\n- Medical Certificate and Emergency Submission Process（v1.0，Medical Certificate and Emergency Submission Process > Emergency submission）：When an emergency prevents advance submission, notify the direct manager before the workday starts. Submit the system request and supporting certificate within two working days after returning.",
+        "latency_ms": 41449.74527600061,
+        "model_calls": 3,
+        "routed_document_keys": [
+          "hr-leave-policy@2.0",
+          "hr-onboarding-process@1.2",
+          "admin-asset-management@1.0",
+          "hr-medical-certificate-process@1.0"
+        ],
+        "retrieval_hops": 2,
+        "required_need_ids": [
+          "deadline",
+          "exception",
+          "procedure"
+        ],
+        "covered_need_ids": [
+          "deadline",
+          "exception",
+          "procedure"
+        ]
+      },
+      "metrics": {
+        "domain_accuracy": 1.0,
+        "ranking": {
+          "recall_at_k": 1.0,
+          "reciprocal_rank": 1.0,
+          "ndcg_at_k": 1.0
+        },
+        "access_leakage": 0.0,
+        "version_accuracy": 1.0,
+        "citation_accuracy": 0.25,
+        "correct_refusal": null,
+        "false_refusal": 0.0,
+        "automated_answer_score": 1.0,
+        "document_route_recall": 1.0,
+        "evidence_need_coverage": null,
+        "second_hop_trigger_accuracy": null,
+        "second_hop_success": null,
+        "irrelevant_evidence_ratio": 0.5,
+        "core_pass": false
+      },
+      "error_type": null
+    },
+    {
+      "case_id": "holdout-finance-ticket-duplicate",
+      "observation": {
+        "in_scope": true,
+        "retrieved": [
+          {
+            "evidence_key": "finance-expense-policy@2.0#票据要求",
+            "document_id": "finance-expense-policy",
+            "version": "2.0"
+          },
+          {
+            "evidence_key": "finance-expense-policy@2.0#报销期限",
+            "document_id": "finance-expense-policy",
+            "version": "2.0"
+          },
+          {
+            "evidence_key": "admin-asset-management@1.0#异常处理",
+            "document_id": "admin-asset-management",
+            "version": "1.0"
+          },
+          {
+            "evidence_key": "hr-medical-certificate-process@1.0#Emergency submission",
+            "document_id": "hr-medical-certificate-process",
+            "version": "1.0"
+          },
+          {
+            "evidence_key": "hr-leave-policy@2.0#例外处理",
+            "document_id": "hr-leave-policy",
+            "version": "2.0"
+          },
+          {
+            "evidence_key": "finance-expense-policy@2.0#交通标准",
+            "document_id": "finance-expense-policy",
+            "version": "2.0"
+          }
+        ],
+        "citations": [
+          "finance-expense-policy@2.0#票据要求"
+        ],
+        "status": "success",
+        "refusal_reason": null,
+        "answer": "电子发票报销要求上传原始文件，且不得重复提交同一发票号码。",
+        "latency_ms": 8177.350275998833,
+        "model_calls": 2,
+        "routed_document_keys": [
+          "finance-expense-policy@2.0",
+          "admin-asset-management@1.0",
+          "hr-leave-policy@2.0",
+          "hr-medical-certificate-process@1.0"
+        ],
+        "retrieval_hops": 2,
+        "required_need_ids": [
+          "procedure",
+          "material",
+          "exception",
+          "rule"
+        ],
+        "covered_need_ids": [
+          "exception",
+          "material",
+          "procedure",
+          "rule"
+        ]
+      },
+      "metrics": {
+        "domain_accuracy": 1.0,
+        "ranking": {
+          "recall_at_k": 1.0,
+          "reciprocal_rank": 1.0,
+          "ndcg_at_k": 1.0
+        },
+        "access_leakage": 0.0,
+        "version_accuracy": 1.0,
+        "citation_accuracy": 1.0,
+        "correct_refusal": null,
+        "false_refusal": 0.0,
+        "automated_answer_score": 1.0,
+        "document_route_recall": 1.0,
+        "evidence_need_coverage": null,
+        "second_hop_trigger_accuracy": null,
+        "second_hop_success": null,
+        "irrelevant_evidence_ratio": 0.5,
+        "core_pass": true
+      },
+      "error_type": null
+    },
+    {
+      "case_id": "holdout-onboarding-timing",
+      "observation": {
+        "in_scope": true,
+        "retrieved": [
+          {
+            "evidence_key": "hr-onboarding-process@1.2#办理时限",
+            "document_id": "hr-onboarding-process",
+            "version": "1.2"
+          },
+          {
+            "evidence_key": "hr-onboarding-process@1.2#到岗办理",
+            "document_id": "hr-onboarding-process",
+            "version": "1.2"
+          },
+          {
+            "evidence_key": "hr-onboarding-process@1.2#入职前准备",
+            "document_id": "hr-onboarding-process",
+            "version": "1.2"
+          },
+          {
+            "evidence_key": "admin-asset-management@1.0#领用登记",
+            "document_id": "admin-asset-management",
+            "version": "1.0"
+          },
+          {
+            "evidence_key": "hr-medical-certificate-process@1.0#Emergency submission",
+            "document_id": "hr-medical-certificate-process",
+            "version": "1.0"
+          },
+          {
+            "evidence_key": "hr-leave-policy@2.0#材料要求",
+            "document_id": "hr-leave-policy",
+            "version": "2.0"
+          }
+        ],
+        "citations": [
+          "hr-onboarding-process@1.2#办理时限"
+        ],
+        "status": "success",
+        "refusal_reason": null,
+        "answer": "入职材料通常在到岗当天核验完；材料不全时应记录缺失项和补交期限。",
+        "latency_ms": 6973.6691630005225,
+        "model_calls": 2,
+        "routed_document_keys": [
+          "hr-onboarding-process@1.2",
+          "hr-medical-certificate-process@1.0",
+          "hr-leave-policy@2.0",
+          "admin-asset-management@1.0"
+        ],
+        "retrieval_hops": 2,
+        "required_need_ids": [
+          "deadline",
+          "procedure"
+        ],
+        "covered_need_ids": [
+          "deadline",
+          "procedure"
+        ]
+      },
+      "metrics": {
+        "domain_accuracy": 1.0,
+        "ranking": {
+          "recall_at_k": 1.0,
+          "reciprocal_rank": 1.0,
+          "ndcg_at_k": 1.0
+        },
+        "access_leakage": 0.0,
+        "version_accuracy": 1.0,
+        "citation_accuracy": 1.0,
+        "correct_refusal": null,
+        "false_refusal": 0.0,
+        "automated_answer_score": 0.5,
+        "document_route_recall": 1.0,
+        "evidence_need_coverage": null,
+        "second_hop_trigger_accuracy": null,
+        "second_hop_success": null,
+        "irrelevant_evidence_ratio": 0.5,
+        "core_pass": true
+      },
+      "error_type": null
+    },
+    {
+      "case_id": "holdout-procurement-acceptance",
+      "observation": {
+        "in_scope": true,
+        "retrieved": [
+          {
+            "evidence_key": "procurement-purchase-process@1.0#到货验收",
+            "document_id": "procurement-purchase-process",
+            "version": "1.0"
+          },
+          {
+            "evidence_key": "procurement-purchase-process@1.0#申请条件",
+            "document_id": "procurement-purchase-process",
+            "version": "1.0"
+          }
+        ],
+        "citations": [
+          "procurement-purchase-process@1.0#到货验收"
+        ],
+        "status": "success",
+        "refusal_reason": null,
+        "answer": "申请部门在到货后3个工作日内完成数量和质量验收，并在采购系统上传验收结果。",
+        "latency_ms": 6887.220013000842,
+        "model_calls": 2,
+        "routed_document_keys": [
+          "procurement-purchase-process@1.0",
+          "admin-asset-management@1.0",
+          "procurement-supplier-onboarding-process@1.0",
+          "hr-onboarding-process@1.2"
+        ],
+        "retrieval_hops": 1,
+        "required_need_ids": [
+          "deadline",
+          "procedure"
+        ],
+        "covered_need_ids": [
+          "deadline",
+          "procedure"
+        ]
+      },
+      "metrics": {
+        "domain_accuracy": 1.0,
+        "ranking": {
+          "recall_at_k": 1.0,
+          "reciprocal_rank": 1.0,
+          "ndcg_at_k": 1.0
+        },
+        "access_leakage": 0.0,
+        "version_accuracy": 1.0,
+        "citation_accuracy": 1.0,
+        "correct_refusal": null,
+        "false_refusal": 0.0,
+        "automated_answer_score": 1.0,
+        "document_route_recall": 1.0,
+        "evidence_need_coverage": null,
+        "second_hop_trigger_accuracy": null,
+        "second_hop_success": null,
+        "irrelevant_evidence_ratio": 0.0,
+        "core_pass": true
+      },
+      "error_type": null
+    },
+    {
+      "case_id": "holdout-security-incident",
+      "observation": null,
+      "metrics": null,
+      "error_type": "ModelProviderError"
+    },
+    {
+      "case_id": "holdout-admin-asset-return",
+      "observation": {
+        "in_scope": true,
+        "retrieved": [
+          {
+            "evidence_key": "admin-asset-management@1.0#归还检查",
+            "document_id": "admin-asset-management",
+            "version": "1.0"
+          },
+          {
+            "evidence_key": "admin-asset-management@1.0#领用登记",
+            "document_id": "admin-asset-management",
+            "version": "1.0"
+          },
+          {
+            "evidence_key": "admin-asset-management@1.0#异常处理",
+            "document_id": "admin-asset-management",
+            "version": "1.0"
+          },
+          {
+            "evidence_key": "finance-expense-policy@2.0#报销期限",
+            "document_id": "finance-expense-policy",
+            "version": "2.0"
+          },
+          {
+            "evidence_key": "hr-leave-policy@2.0#申请与审批",
+            "document_id": "hr-leave-policy",
+            "version": "2.0"
+          }
+        ],
+        "citations": [
+          "admin-asset-management@1.0#归还检查"
+        ],
+        "status": "success",
+        "refusal_reason": null,
+        "answer": "离职员工最晚应在最后工作日前归还电脑，之后由行政人员检查。",
+        "latency_ms": 6671.851989000061,
+        "model_calls": 2,
+        "routed_document_keys": [
+          "admin-asset-management@1.0",
+          "hr-leave-policy@2.0",
+          "hr-onboarding-process@1.2",
+          "finance-expense-policy@2.0"
+        ],
+        "retrieval_hops": 2,
+        "required_need_ids": [
+          "deadline",
+          "approver"
+        ],
+        "covered_need_ids": [
+          "deadline",
+          "approver"
+        ]
+      },
+      "metrics": {
+        "domain_accuracy": 1.0,
+        "ranking": {
+          "recall_at_k": 1.0,
+          "reciprocal_rank": 1.0,
+          "ndcg_at_k": 1.0
+        },
+        "access_leakage": 0.0,
+        "version_accuracy": 1.0,
+        "citation_accuracy": 1.0,
+        "correct_refusal": null,
+        "false_refusal": 0.0,
+        "automated_answer_score": 1.0,
+        "document_route_recall": 1.0,
+        "evidence_need_coverage": null,
+        "second_hop_trigger_accuracy": null,
+        "second_hop_success": null,
+        "irrelevant_evidence_ratio": 0.4,
+        "core_pass": true
+      },
+      "error_type": null
+    },
+    {
+      "case_id": "holdout-permission-payment-threshold",
+      "observation": null,
+      "metrics": null,
+      "error_type": "ModelProviderError"
+    },
+    {
+      "case_id": "holdout-insufficient-bonus",
+      "observation": {
+        "in_scope": true,
+        "retrieved": [],
+        "citations": [],
+        "status": "refused",
+        "refusal_reason": "insufficient_evidence",
+        "answer": "当前知识库中没有足够依据回答这个问题。",
+        "latency_ms": 2883.6186309999903,
+        "model_calls": 1,
+        "routed_document_keys": [
+          "hr-leave-policy@2.0",
+          "hr-onboarding-process@1.2",
+          "admin-asset-management@1.0",
+          "finance-expense-policy@2.0"
+        ],
+        "retrieval_hops": 1,
+        "required_need_ids": [
+          "rule"
+        ],
+        "covered_need_ids": []
+      },
+      "metrics": {
+        "domain_accuracy": 1.0,
+        "ranking": null,
+        "access_leakage": 0.0,
+        "version_accuracy": null,
+        "citation_accuracy": null,
+        "correct_refusal": 1.0,
+        "false_refusal": 0.0,
+        "automated_answer_score": null,
+        "document_route_recall": null,
+        "evidence_need_coverage": null,
+        "second_hop_trigger_accuracy": null,
+        "second_hop_success": null,
+        "irrelevant_evidence_ratio": 0.0,
+        "core_pass": true
+      },
+      "error_type": null
+    }
+  ]
+}

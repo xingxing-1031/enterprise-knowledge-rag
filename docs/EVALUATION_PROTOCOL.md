@@ -80,7 +80,7 @@
 - 已保存本地 `qwen3:4b` 单次基线，以及百炼 `qwen-plus` 三策略各 3 次的原始 development 报告和 `development-summary.json`。
 - 三次结果中 Hybrid RRF 的证据覆盖率/二跳成功率均值为 73.33%/66.67%，P50/P95 均值为 6.04s/15.50s；核心通过率均值为 49.02%，与其他策略相同。
 - 9 份 `qwen-plus` 报告的权限泄漏率均为 0。Reranker 没有提高核心通过率且增加稳态延迟，因此固定演示默认策略为 `hybrid_rrf`。
-- frozen holdout 未提交给 Agent。
+- frozen holdout 已在 development 结论提交后一次性消费，报告为 `evaluation/reports/final-holdout.json`；禁止重跑或据此调参后继续称为未见集。
 
 ## 8. 分层与多跳指标
 
@@ -88,11 +88,11 @@ Development 题集额外记录父文档路由召回、必需证据需求覆盖�
 
 ## 9. 一次性冻结验收入口
 
-只有 Task 7 的三次 development 结论已经提交、工作区干净且冻结文件哈希核对无误后，才允许执行以下命令。此前禁止运行：
+以下命令已在提交 `f31a2e2` 上执行一次，仅作为历史审计记录，不得再次运行：
 
 ```powershell
 $env:FROZEN_HOLDOUT_CONFIRM = "CONSUME_ONCE"
 .\.venv\Scripts\python.exe scripts\run_final_holdout.py
 ```
 
-入口会拒绝错误确认串，也不会覆盖已有的 `evaluation/reports/final-holdout.json`。冻结集一旦提交给 Agent，无论结果如何都视为已经消费，不能根据单题结果调参后重跑并继续宣称为未见集。
+入口会拒绝错误确认串，也不会覆盖已有的 `evaluation/reports/final-holdout.json`。本次结果为：8 条、执行成功率 75.00%、核心通过率 62.50%、Recall@5 100.00%、引用准确率 85.00%、权限泄漏率 0%、P50/P95 6.93s/41.45s。两条远程模型异常保留在分母中；验收后没有根据单题结果修改代码、Prompt、阈值或数据。

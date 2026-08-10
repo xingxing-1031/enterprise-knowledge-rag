@@ -26,7 +26,7 @@
 | `frontend` | React + Vite 企业知识工作台 |
 | `knowledge` | 版本化合成语料和 manifest |
 | `evaluation/development.json` | 开发集，可用于调试和迭代 |
-| `evaluation/frozen_holdout.json` | 冻结集，最终验收前禁止运行 |
+| `evaluation/frozen_holdout.json` | 已一次性消费的冻结集，不得重跑或据此调参 |
 | `db/migrations` | 带 SHA-256 校验的增量迁移 |
 | `scripts/migrate.py` | 应用迁移 |
 | `scripts/index_knowledge.py` | 解析、切分、写入向量索引 |
@@ -69,7 +69,8 @@
 - 纯向量、Hybrid RRF、Hybrid + Reranker 的核心通过率均值都为 49.02%；执行成功率均值分别为 100%、98.04% 和 100%。
 - Hybrid RRF 相比纯向量将证据覆盖率从 66.67% 提高到 73.33%、二跳成功率从 58.33% 提高到 66.67%，P95 均值从 18.54s 降到 15.50s，因此固定为演示默认策略。
 - 9 份重复报告的权限泄漏率均为 0。Reranker 只把 Recall@5 提高 1.52 个百分点，没有提高核心通过率，且 P50/P95 均值升至 8.30s/20.40s。
-- `frozen_holdout.json` 仍锁定且未运行，development 数字不能表述成最终泛化结果。
+- 8 条 frozen holdout 已在提交 `f31a2e2` 上一次性运行：执行成功率 75.00%、核心通过率 62.50%、Recall@5 100.00%、引用准确率 85.00%、权限泄漏率 0%、P50/P95 6.93s/41.45s。
+- frozen 中两条远程 `ModelProviderError` 计为失败，病假紧急流程题因引用不完整未通过；报告已归档为 `evaluation/reports/final-holdout.json`，禁止调参后重跑。
 - README、简历和验收材料只能引用 `evaluation/reports/` 可追溯的指标，不能填写用户数或生产指标。
 
 ## 5. 下一次运行顺序
@@ -93,7 +94,7 @@ Windows 本地若无法创建临时文件，应设置可写的 `TEMP`/`TMP` 后�
 3. 确认 `/ready` 通过，先运行少量 development smoke。
 4. 设置 `EVAL_REPETITIONS`，运行 `python scripts/run_development.py`。
 5. 对三种策略分别保存报告，比较核心结果、拒答正确率、引用准确率、延迟和模型调用次数。
-6. 只有在开发集策略和配置定版后，才允许一次性运行 frozen holdout，并将报告归档为最终验收证据。
+6. frozen holdout 已经消费并归档；后续只读最终报告，不再运行。
 
 ## 6. 运行安全边界
 
@@ -105,4 +106,4 @@ Windows 本地若无法创建临时文件，应设置可写的 `TEMP`/`TMP` 后�
 
 ## 7. 建议的后续拆分
 
-按优先级依次完成：真实 development 评测、冻结集最终验收、正式认证与多租户隔离、备份恢复演练、限流和连接池压测、监控告警、自动发布回滚。前四项完成后已经足以作为可解释的秋招项目演示，后续内容应标为边界或迭代计划。
+按优先级依次完成：正式认证与多租户隔离、备份恢复演练、限流和连接池压测、监控告警、自动发布回滚。受控 development 与冻结集最终验收已经完成；后续内容应标为边界或迭代计划。

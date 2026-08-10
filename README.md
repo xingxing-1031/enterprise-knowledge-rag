@@ -40,6 +40,8 @@ docker compose up -d --build --wait
 
 全部 9 次策略运行的权限泄漏率均为 0。相较纯向量，Hybrid RRF 的证据覆盖率提高 6.67 个百分点、二跳成功率提高 8.33 个百分点、P95 均值降低 16.38%，但核心通过率没有提升；Reranker 仅将 Recall@5 从 71.21% 提高到 72.73%，同时增加延迟。因此默认选择 Hybrid RRF。完整均值、范围与总体标准差见 [`evaluation/reports/development-summary.json`](evaluation/reports/development-summary.json)，指标定义与限制见 [`docs/EVALUATION_PROTOCOL.md`](docs/EVALUATION_PROTOCOL.md)。
 
+固定配置后一次性消费了 8 条合成 frozen holdout：执行成功率 75.00%、核心通过率 62.50%、Recall@5 100.00%、引用准确率 85.00%、权限泄漏率 0%、P50/P95 6.93s/41.45s。两条远程 `ModelProviderError` 保留在分母中，验收后未根据结果调参或重跑。原始证据见 [`evaluation/reports/final-holdout.json`](evaluation/reports/final-holdout.json)。
+
 ## 诚实边界
 
 这是个人独立项目和受限演示，不代表真实企业上线、团队协作、客户使用或多租户生产系统。简历数字只使用 `evaluation/reports/` 中的实际报告。

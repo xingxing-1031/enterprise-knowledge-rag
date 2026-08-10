@@ -740,7 +740,7 @@ git add evaluation/reports README.md docs/INTERVIEW_GUIDE.md docs/EVALUATION_PRO
 git commit -m "test: record repeated RAG development evidence"
 ```
 
-- [ ] **Step 7: Verify the frozen gate preconditions**
+- [x] **Step 7: Verify the frozen gate preconditions**
 
 Confirm:
 
@@ -752,7 +752,7 @@ Test-Path evaluation\reports\final-holdout.json
 
 Expected: clean tree, expected hash, and `False` for the final output.
 
-- [ ] **Step 8: Consume frozen exactly once through Docker**
+- [x] **Step 8: Consume frozen exactly once through Docker**
 
 Run the final script in the same image, mounted committed source, model cache, and database network. Do not retry a completed report or tune from individual failures:
 
@@ -768,7 +768,7 @@ docker compose -p enterprise-rag-dev run -T --rm --no-deps `
   api python scripts/run_final_holdout.py
 ```
 
-- [ ] **Step 9: Validate and commit final acceptance evidence**
+- [x] **Step 9: Validate and commit final acceptance evidence**
 
 Assert the report split is `frozen_holdout`, case count is 8, `holdout_consumed_at` is set, model/strategy/commit metadata is correct, and the API Key is absent. Update docs with exact results and commit:
 
