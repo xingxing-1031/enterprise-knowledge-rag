@@ -109,8 +109,11 @@ jobs:
           -U rag_user
           -d enterprise_rag
           -c "SELECT COUNT(*) AS migrations FROM schema_migrations;"
+          -c "SELECT 1 / CASE WHEN EXISTS (SELECT 1 FROM schema_migrations WHERE version = '004_ingestion_and_document_routing') THEN 1 ELSE 0 END AS migration_004_applied;"
           -c "SELECT COUNT(*) AS documents FROM knowledge_documents;"
           -c "SELECT COUNT(*) AS chunks FROM knowledge_chunks;"
+          -c "SELECT COUNT(*) AS parent_vectors FROM knowledge_documents WHERE document_embedding IS NOT NULL;"
+          -c "SELECT 1 / CASE WHEN COUNT(*) > 0 AND COUNT(*) = COUNT(*) FILTER (WHERE d.document_embedding_model = 'ci-deterministic-1024' AND d.document_embedding IS NOT NULL AND EXISTS (SELECT 1 FROM knowledge_chunks c WHERE c.document_id = d.document_id AND c.document_version = d.version AND c.embedding_model = 'ci-deterministic-1024')) THEN 1 ELSE 0 END AS all_active_documents_indexed FROM knowledge_documents d WHERE d.status = 'active';"
       - name: Show service logs after failure
         if: failure()
         run: docker compose logs

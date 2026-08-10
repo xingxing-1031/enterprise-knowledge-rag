@@ -115,12 +115,16 @@ class HierarchicalRetrievalService:
         section_retrieval: RetrievalService,
         coverage: EvidenceCoverageService,
         route_limit: int = 4,
+        evidence_max_items: int = 6,
+        evidence_max_tokens: int = 1200,
     ) -> None:
         self._corpus = corpus
         self._router = router
         self._section_retrieval = section_retrieval
         self._coverage = coverage
         self._route_limit = route_limit
+        self._evidence_max_items = evidence_max_items
+        self._evidence_max_tokens = evidence_max_tokens
 
     def _authorized_keys(
         self,
@@ -247,6 +251,8 @@ class HierarchicalRetrievalService:
         allocated = _allocate_evidence(
             final_coverage.annotated_candidates,
             plan,
+            max_items=self._evidence_max_items,
+            max_tokens=self._evidence_max_tokens,
         )
         status = (
             RetrievalStatus.READY

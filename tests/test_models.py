@@ -88,6 +88,8 @@ def test_settings_have_portable_defaults(monkeypatch: pytest.MonkeyPatch) -> Non
     assert settings.upload_max_bytes == 15 * 1024 * 1024
     assert settings.pdf_max_pages == 200
     assert settings.document_route_limit == 4
+    assert settings.evidence_max_items == 6
+    assert settings.evidence_max_tokens == 1200
 
 
 def test_retrieval_evidence_has_backward_compatible_need_defaults() -> None:

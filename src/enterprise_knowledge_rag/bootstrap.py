@@ -94,6 +94,8 @@ def build_runtime_service(
             min_reranker_score=settings.reranker_min_score
         ),
         route_limit=settings.document_route_limit,
+        evidence_max_items=settings.evidence_max_items,
+        evidence_max_tokens=settings.evidence_max_tokens,
     )
     graph = build_workflow(
         WorkflowDependencies(

@@ -8,7 +8,7 @@
 
 ## 2. 数据隔离
 
-- `evaluation/development.json`：12 条，可用于调试、错误分析和策略优化。
+- `evaluation/development.json`：17 条，可用于调试、错误分析和策略优化，其中包含跨文档、单跳、两跳不足和权限隔离场景。
 - `evaluation/frozen_holdout.json`：8 条，已冻结，默认运行器拒绝执行。
 - 冻结集只允许在代码、配置和 development 结论固定后，由最终验收入口显式解锁一次。
 - 只要根据 frozen 结果修改过代码、Prompt、阈值或数据，该题集立即降级为 development，不能继续称为未见集。
@@ -54,6 +54,11 @@
 - `correct_refusal_rate`：应拒答题是否按正确原因拒答。
 - `false_refusal_rate`：可回答题是否被错误拒绝。
 - `automated_answer_score`：关键事实的确定性覆盖率，仅作初筛。
+- `document_route_recall`：父文档路由覆盖 gold 文档的比例。
+- `evidence_need_coverage`：必需证据需求被最终证据覆盖的比例。
+- `second_hop_trigger_accuracy`：应触发/不应触发第二跳是否与标注一致。
+- `second_hop_success`：标注为两跳的问题是否在第二跳后覆盖全部必需需求。
+- `irrelevant_evidence_ratio`：最终候选中不属于 gold 文档的比例。
 - `core_pass_rate`：范围、召回、安全、版本、引用或拒答核心链路是否整体通过。
 - `execution_success_rate`：执行异常也进入分母，不能从报告中丢弃。
 - P50/P95 延迟与模型调用次数：衡量效果之外的成本。
@@ -69,8 +74,12 @@
 ## 7. 当前状态
 
 - 题集结构和 gold 证据契约已自动验证。
-- 评分器和冻结锁定已用确定性测试替身验证。
+- 评分器、路由/需求/hop 观测和冻结锁定已用确定性测试替身验证。
 - 三方案真实执行器、工作流观测转换和报告实验元数据已接入；`scripts/run_development.py` 只允许加载 development 数据集。
 - 当前机器仍未启动 PostgreSQL/pgvector，因此尚未执行真实数据库、Embedding、Reranker 和 LLM 评测。
 - 未运行三方案 development 实验。
 - frozen holdout 未提交给 Agent。
+
+## 8. 分层与多跳指标
+
+Development 题集额外记录父文档路由召回、必需证据需求覆盖、第二跳触发准确性、第二跳成功率和无关证据比例。异常题保留在执行成功率和核心通过率分母中；这些指标只描述当前报告，不代表生产效果。

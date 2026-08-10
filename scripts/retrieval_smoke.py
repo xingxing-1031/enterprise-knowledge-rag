@@ -20,16 +20,23 @@ def main() -> int:
             (document.document_id, document.version) for document in documents
         )
         query_vector = build_embedding_provider(settings).embed_query("报销期限")
-        candidates = repository.search_authorized(
+        routes = repository.search_documents(
             query_vector,
             document_keys=document_keys,
+            limit=settings.document_route_limit,
+        )
+        route_keys = frozenset((item.document_id, item.version) for item in routes)
+        candidates = repository.search_authorized(
+            query_vector,
+            document_keys=route_keys or document_keys,
             limit=3,
         )
-        if not repository.ready() or not candidates:
+        if not repository.ready() or not routes or not candidates:
             raise RuntimeError("indexed pgvector retrieval smoke failed")
         result = {
             "status": "passed",
             "document_count": len(documents),
+            "route_count": len(routes),
             "candidate_count": len(candidates),
             "top_chunk_id": candidates[0].chunk.chunk_id,
         }

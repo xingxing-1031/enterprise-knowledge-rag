@@ -1,6 +1,6 @@
 # Enterprise Knowledge RAG 项目交接
 
-> 更新时间：2026-08-10
+> 更新时间：2026-08-11
 > 当前版本：v0.1 演示与评测骨架
 
 ## 1. 项目定位
@@ -13,6 +13,8 @@
 - 最小充分证据、引用校验、拒答和降级
 - LangGraph 工作流、FastAPI、SSE 和 React 工作台
 - 可审计 trace、评测日志和可重复交付
+- 管理员复核后索引的 PDF/DOCX/Markdown/TXT 导入
+- 结构化证据需求、父文档路由和有界两跳补充检索
 
 项目是个人演示项目，不代表真实企业上线、团队协作、客户数量或生产 SLA。`E:\chongqing-wenlv-assistant` 和 `E:\qiuzhaoxiangmu\retail-analytics-agent` 不属于本项目，本次交接不应修改它们。
 
@@ -37,9 +39,9 @@
 
 ### 运行链路
 
-`ChatRequest -> domain -> rewrite -> retrieve -> evidence -> generate -> finalize`
+`ChatRequest -> domain -> rewrite -> retrieval_plan -> document_route -> section_retrieve -> evidence_coverage -> supplemental_retrieve? -> evidence -> generate -> finalize`
 
-工作流会在生成前完成权限预过滤和版本决议；无法获得可信证据时拒答，不让模型用常识补写制度。生成结果必须通过引用校验，失败时允许有限重生成，仍失败则降级或拒答。
+工作流会在每一跳生成候选前完成权限预过滤和版本决议；第二跳只能查询第一跳已经授权并路由的文档集合。无法覆盖必需证据需求时在生成前拒答，不让模型用常识补写制度。生成结果必须通过引用和需求完整性校验，失败时允许有限重生成，仍失败则降级或拒答。
 
 ### 三种检索方案
 
@@ -101,4 +103,3 @@ Windows 本地若无法创建临时文件，应设置可写的 `TEMP`/`TMP` 后�
 ## 7. 建议的后续拆分
 
 按优先级依次完成：真实 development 评测、冻结集最终验收、正式认证与多租户隔离、备份恢复演练、限流和连接池压测、监控告警、自动发布回滚。前四项完成后已经足以作为可解释的秋招项目演示，后续内容应标为边界或迭代计划。
-

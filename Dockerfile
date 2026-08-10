@@ -44,6 +44,7 @@ COPY --chown=appuser:appuser knowledge ./knowledge
 COPY --chown=appuser:appuser evaluation ./evaluation
 COPY --chown=appuser:appuser scripts ./scripts
 COPY --chown=appuser:appuser --from=frontend-builder /workspace/frontend/dist ./frontend/dist
+RUN install -d -o appuser -g appuser /app/data/uploads
 
 USER appuser
 

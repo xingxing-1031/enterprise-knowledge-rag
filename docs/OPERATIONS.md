@@ -15,6 +15,13 @@
 - `EMBEDDING_MODEL`：写入和读取向量时共同使用的模型标识。
 - `MODEL_BASE_URL` / `MODEL_NAME` / `MODEL_API_KEY`：OpenAI 兼容的 Qwen 服务。
 - `DEMO_ROLE` / `DEMO_DEPARTMENTS`：服务器注入的演示身份，客户端不能覆盖。
+- `UPLOAD_STORAGE_DIR` / `UPLOAD_MAX_BYTES` / `PDF_MAX_PAGES`：上传目录、15 MiB 文件上限和 200 页 PDF 上限。
+- `DOCUMENT_ROUTE_LIMIT`：单次父文档路由上限，默认 4。
+- `EVIDENCE_MAX_ITEMS` / `EVIDENCE_MAX_TOKENS`：最终证据条数和近似 token 预算，默认 6 / 1200。
+
+### 安全导入流程
+
+只有服务端解析出的 `knowledge_admin` 身份可以上传和确认。上传后依次执行格式签名校验、解析、确定性清洗和预览；管理员确认部门、可见性、角色、版本及生效时间后才允许索引。原文件保存在独立 `enterprise_rag_uploads` 数据卷，API 以非 root 用户写入。隔离状态不能被确认，也不会产生父文档或章节向量。
 
 ## 3. Docker Compose 启动
 
@@ -53,13 +60,13 @@ docker compose run --rm index
 ## 5. 健康检查
 
 - `/health`：进程可以响应。
-- `/ready`：数据库表存在、知识文档非空，并且每份文档都有当前 `EMBEDDING_MODEL` 的向量片段。
+- `/ready`：数据库表存在、知识文档非空，并且每份文档都有当前 `EMBEDDING_MODEL` 的父文档向量和章节向量。
 
 因此 PostgreSQL 只完成端口监听时，API 仍不会被标记为业务就绪。
 
 ## 6. CI 中的确定性测试向量
 
-GitHub Actions 在空数据卷验证迁移、全量语料索引、pgvector 检索和 `/ready`。为了不在每次基础设施测试中下载大型模型，只有 `APP_ENV=ci` 且 `DETERMINISTIC_TEST_EMBEDDINGS=true` 时才允许使用确定性测试向量。
+GitHub Actions 在空数据卷验证 004 迁移、全量合成语料索引、父文档路由、受路由文档约束的章节检索和 `/ready`。为了不在每次基础设施测试中下载大型模型，只有 `APP_ENV=ci` 且 `DETERMINISTIC_TEST_EMBEDDINGS=true` 时才允许使用确定性测试向量。
 
 该模式只能证明数据库和索引链路可运行，不能用于 RAG 效果评测，也不能写成 bge-m3 的准确率。真实检索质量必须使用 bge-m3、Reranker 和受控数据集另行评测。
 
@@ -75,6 +82,8 @@ npm --prefix frontend run test:e2e
 ```
 
 浏览器检查覆盖 360、390 和 1440 像素宽度，并断言页面没有横向溢出。
+
+`/ready` 同时要求每份文档存在当前 Embedding 模型的父文档向量和章节向量。CI 的空卷 smoke 还会执行一次父文档路由，再将路由键显式转发给章节检索。
 
 ## 8. 清理与数据保护
 

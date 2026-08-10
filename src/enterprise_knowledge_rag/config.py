@@ -34,6 +34,8 @@ class Settings(BaseSettings):
     upload_max_bytes: int = Field(default=15 * 1024 * 1024, ge=1)
     pdf_max_pages: int = Field(default=200, ge=1, le=2_000)
     document_route_limit: int = Field(default=4, ge=1, le=20)
+    evidence_max_items: int = Field(default=6, ge=1, le=20)
+    evidence_max_tokens: int = Field(default=1200, ge=64, le=10_000)
     history_max_messages: int = Field(default=8, ge=2, le=20)
     public_demo_mode: bool = True
     public_demo_max_rows: int = Field(default=20, ge=1, le=100)

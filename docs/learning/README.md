@@ -24,3 +24,7 @@
 ## 下一步
 ```
 
+## W8
+
+- `W8-1-document-ingestion.md`：受控文档导入、隔离与管理员确认。
+- `W8-2-hierarchical-multihop-rag.md`：父文档路由、章节检索与有界第二跳。

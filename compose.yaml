@@ -23,6 +23,12 @@ x-app-environment: &app-environment
   DEMO_DEPARTMENTS: ${DEMO_DEPARTMENTS:-hr,finance,admin}
   ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://127.0.0.1:8010,http://localhost:8010}
   DETERMINISTIC_TEST_EMBEDDINGS: ${DETERMINISTIC_TEST_EMBEDDINGS:-false}
+  UPLOAD_STORAGE_DIR: /app/data/uploads
+  UPLOAD_MAX_BYTES: ${UPLOAD_MAX_BYTES:-15728640}
+  PDF_MAX_PAGES: ${PDF_MAX_PAGES:-200}
+  DOCUMENT_ROUTE_LIMIT: ${DOCUMENT_ROUTE_LIMIT:-4}
+  EVIDENCE_MAX_ITEMS: ${EVIDENCE_MAX_ITEMS:-6}
+  EVIDENCE_MAX_TOKENS: ${EVIDENCE_MAX_TOKENS:-1200}
 
 x-app-image: &app-image
   image: enterprise-knowledge-rag:${IMAGE_TAG:-local}
@@ -63,6 +69,7 @@ services:
     environment: *app-environment
     volumes:
       - model_cache:/home/appuser/.cache/huggingface
+      - enterprise_rag_uploads:/app/data/uploads
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -79,6 +86,7 @@ services:
       - "host.docker.internal:host-gateway"
     volumes:
       - model_cache:/home/appuser/.cache/huggingface
+      - enterprise_rag_uploads:/app/data/uploads
     depends_on:
       index:
         condition: service_completed_successfully
@@ -98,3 +106,4 @@ services:
 volumes:
   enterprise_rag_pgdata:
   model_cache:
+  enterprise_rag_uploads:
