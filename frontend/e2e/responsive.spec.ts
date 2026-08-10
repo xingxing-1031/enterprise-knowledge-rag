@@ -43,4 +43,28 @@ for (const viewport of viewports) {
       await expect(page.getByRole("heading", { name: "引用台账" })).toBeVisible();
     }
   });
+
+  test(`${viewport.name} keeps the administrator import workspace responsive`, async ({ page }) => {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await page.route("**/session", (route) => route.fulfill({ json: {
+      user_id: "knowledge-admin-1",
+      role: "knowledge_admin",
+      departments: [],
+      public_demo_mode: false,
+    } }));
+    await page.route("**/documents", (route) => route.fulfill({ json: [] }));
+    await page.route("**/evaluations/latest", (route) =>
+      route.fulfill({ json: { status: "not_run" } }),
+    );
+    await page.route("**/knowledge/imports", (route) => route.fulfill({ json: [] }));
+
+    await page.goto("/");
+    await page.getByRole("button", { name: "知识库" }).click();
+    await expect(page.getByRole("heading", { name: "文档入库工作台" })).toBeVisible();
+    await expect(page.getByText("选择 PDF、Word、Markdown 或 TXT")).toBeVisible();
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    expect(overflow).toBeLessThanOrEqual(0);
+  });
 }
