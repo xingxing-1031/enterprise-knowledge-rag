@@ -55,6 +55,30 @@ def test_planner_decomposes_material_and_exception_needs() -> None:
     assert planned.model_call_count == 1
 
 
+def test_planner_prompt_distinguishes_exception_from_routine_procedure() -> None:
+    provider = FakeStructuredProvider(
+        {
+            "primary_query": "emergency submission",
+            "topic": "leave",
+            "evidence_needs": [
+                {
+                    "need_id": "exception",
+                    "kind": "exception",
+                    "query": "emergency submission",
+                }
+            ],
+            "requires_multi_hop": False,
+            "max_hops": 1,
+        }
+    )
+
+    RetrievalPlanner(provider).plan("What is the emergency process?", [])
+
+    prompt = provider.calls[0][0]
+    assert "常规步骤使用 procedure" in prompt
+    assert "紧急、例外或无法遵循常规流程的路径使用 exception" in prompt
+
+
 def test_planner_normalizes_provider_need_ids_and_enables_two_hops() -> None:
     provider = FakeStructuredProvider(
         {

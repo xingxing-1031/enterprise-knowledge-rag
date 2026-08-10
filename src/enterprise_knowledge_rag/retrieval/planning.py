@@ -90,6 +90,7 @@ class RetrievalPlanner:
 - kind 只能是 rule、procedure、material、exception、approver、deadline、scope。
 - need_id 只需在当前计划内唯一；服务端会根据 kind 重新生成最终 ID。
 - 金额门槛和适用条件使用 rule；登记证件和提交材料使用 material。
+- 常规步骤使用 procedure；紧急、例外或无法遵循常规流程的路径使用 exception。
 - 只有问题确实需要不同制度段落共同回答时，requires_multi_hop 才为 true。
 - requires_multi_hop 为 true 时 max_hops 必须为 2，否则必须为 1。
 - departments 只是语义提示，不是权限过滤条件。
