@@ -42,7 +42,7 @@ jobs:
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
           VPS_USER: ${{ secrets.VPS_USER }}
-          RELEASE_REF: ${{ inputs.ref }}
+          RELEASE_REF: ${{ inputs.ref || github.ref_name }}
         run: |
           set -euo pipefail
           scp -i ~/.ssh/vps_key -o ServerAliveInterval=30 -o ServerAliveCountMax=120 ops/vps_release.sh \
