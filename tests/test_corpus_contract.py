@@ -41,7 +41,7 @@ def test_documents_satisfy_metadata_contract() -> None:
         DocumentRecord.model_validate(read_front_matter(CORPUS_DIR / item))
         for item in manifest["documents"]
     ]
-    assert len(records) == 12
+    assert len(records) == 20
     assert {record.status.value for record in records} >= {"active", "expired", "draft"}
     assert any(record.visibility.value == "restricted" for record in records)
     assert {
