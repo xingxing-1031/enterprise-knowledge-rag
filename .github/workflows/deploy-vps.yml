@@ -45,7 +45,7 @@ jobs:
           RELEASE_REF: ${{ inputs.ref }}
         run: |
           set -euo pipefail
-          scp -i ~/.ssh/vps_key ops/vps_release.sh \
+          scp -i ~/.ssh/vps_key -o ServerAliveInterval=30 -o ServerAliveCountMax=120 ops/vps_release.sh \
             "$VPS_USER@$VPS_HOST:/tmp/enterprise-rag-vps-release.sh"
-          ssh -i ~/.ssh/vps_key "$VPS_USER@$VPS_HOST" \
+          ssh -i ~/.ssh/vps_key -o ServerAliveInterval=30 -o ServerAliveCountMax=120 "$VPS_USER@$VPS_HOST" \
             "PROJECT_DIR=/home/ubuntu/enterprise-knowledge-rag bash /tmp/enterprise-rag-vps-release.sh '$RELEASE_REF'"
