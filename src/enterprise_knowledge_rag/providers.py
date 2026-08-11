@@ -239,7 +239,7 @@ class RemoteRerankerProvider:
                     "documents": values,
                     "top_n": len(values),
                 },
-                timeout=self._timeout_seconds,
+                cast_to=object,
             )
             payload = response.json() if hasattr(response, "json") else response
         except Exception as exc:

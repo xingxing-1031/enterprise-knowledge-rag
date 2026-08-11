@@ -61,15 +61,6 @@ def _default_embedding_client(settings: Settings):
     )
 
 
-def _default_embedding_client(settings: Settings):
-    from openai import OpenAI
-
-    return OpenAI(
-        api_key=settings.embedding_api_key or settings.model_api_key,
-        base_url=settings.embedding_base_url or settings.model_base_url,
-    )
-
-
 def _default_embedding_provider(settings: Settings):
     if settings.embedding_provider == "openai_compatible":
         return OpenAICompatibleEmbeddingProvider(
@@ -93,6 +84,7 @@ def _default_reranker_client(settings: Settings):
     return OpenAI(
         api_key=settings.reranker_api_key or settings.model_api_key,
         base_url=settings.reranker_base_url or settings.model_base_url,
+        timeout=settings.model_timeout_seconds,
     )
 
 
