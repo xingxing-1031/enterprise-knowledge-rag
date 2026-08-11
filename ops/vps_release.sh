@@ -33,7 +33,9 @@ git checkout --detach "$TARGET_REFERENCE"
 docker compose --env-file "$ENV_FILE" -p enterprise-knowledge-rag-vps \
   -f compose.vps.yaml --profile tools run --rm --build migrate
 docker compose --env-file "$ENV_FILE" -p enterprise-knowledge-rag-vps \
-  -f compose.vps.yaml up -d --build api caddy
+  -f compose.vps.yaml --profile tools run --rm --build index
+docker compose --env-file "$ENV_FILE" -p enterprise-knowledge-rag-vps \
+  -f compose.vps.yaml --profile tools up -d --build api caddy
 
 HTTP_PORT="$(grep -E '^HTTP_PORT=' "$ENV_FILE" | tail -n 1 | cut -d= -f2- | tr -d "'\"")"
 HTTP_PORT="${HTTP_PORT:-8010}"

@@ -1,8 +1,11 @@
 # VPS deployment
 
-The VPS deployment uses remote Qwen generation and remote embeddings. The
-default `hybrid_rrf` strategy does not load the local reranker, so the server
-only runs PostgreSQL, FastAPI, React, and Caddy.
+The VPS deployment uses remote Qwen generation, remote embeddings
+(`text-embedding-v3`), and a remote reranker (`qwen3-rerank`) over the
+DashScope OpenAI-compatible endpoints, so every feature behaves as in local
+development. The default retrieval strategy is `hybrid_rrf_reranker`. The
+server only runs PostgreSQL, FastAPI, React, and Caddy — no local models are
+loaded.
 
 The deployment is isolated from the retail project:
 
@@ -32,7 +35,9 @@ Create a `production` environment in the repository and add these secrets:
 - `VPS_KNOWN_HOSTS`
 
 The workflow is manual and deploys the selected branch or commit. It runs the
-migration, starts the API and Caddy, then verifies `/ready` on port `8010`.
+migration, rebuilds the vector index with the remote embedding model, then
+starts the API and Caddy and verifies `/ready` on port `8010`. The first
+index on a fresh volume calls the remote embedding API for every chunk.
 
 ## First smoke test
 

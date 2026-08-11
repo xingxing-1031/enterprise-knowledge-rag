@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import pytest
+
 from enterprise_knowledge_rag.bootstrap import (
     _resolve_retrieval_strategy,
     build_runtime_service,
@@ -62,3 +64,22 @@ def test_bootstrap_resolves_configured_strategy_and_explicit_override() -> None:
         )
         is RetrievalStrategy.HYBRID_RRF_RERANKER
     )
+
+
+def test_settings_reject_none_reranker_with_reranker_strategy() -> None:
+    with pytest.raises(ValueError, match="reranker"):
+        Settings(
+            _env_file=None,
+            reranker_provider="none",
+            retrieval_strategy="hybrid_rrf_reranker",
+        )
+
+
+def test_settings_allow_none_reranker_without_reranker_strategy() -> None:
+    settings = Settings(
+        _env_file=None,
+        reranker_provider="none",
+        retrieval_strategy="hybrid_rrf",
+    )
+
+    assert settings.reranker_provider == "none"

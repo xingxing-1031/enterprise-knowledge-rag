@@ -30,6 +30,20 @@ def _as_vectors(raw: Any) -> list[list[float]]:
         raise ModelProviderError("model returned invalid embedding vectors") from exc
 
 
+def _validate_vectors(
+    vectors: list[list[float]],
+    texts: Sequence[str],
+    expected_dimension: int,
+) -> list[list[float]]:
+    if len(vectors) != len(texts):
+        raise ModelProviderError("embedding result count does not match input")
+    if any(len(vector) != expected_dimension for vector in vectors):
+        raise ModelProviderError("embedding vector dimension does not match schema")
+    if any(not isfinite(value) for vector in vectors for value in vector):
+        raise ModelProviderError("embedding vectors must contain finite values")
+    return vectors
+
+
 class SentenceTransformerEmbeddingProvider:
     def __init__(
         self,
@@ -65,13 +79,7 @@ class SentenceTransformerEmbeddingProvider:
             raise
         except Exception as exc:
             raise ModelProviderError("embedding model request failed") from exc
-        if len(vectors) != len(input_texts):
-            raise ModelProviderError("embedding result count does not match input")
-        if any(len(vector) != self.expected_dimension for vector in vectors):
-            raise ModelProviderError("embedding vector dimension does not match schema")
-        if any(not isfinite(value) for vector in vectors for value in vector):
-            raise ModelProviderError("embedding vectors must contain finite values")
-        return vectors
+        return _validate_vectors(vectors, input_texts, self.expected_dimension)
 
     def embed_documents(self, texts: Sequence[str]) -> list[list[float]]:
         return self._embed(texts)
@@ -89,11 +97,13 @@ class OpenAICompatibleEmbeddingProvider:
         *,
         model: str,
         expected_dimension: int = 1024,
+        batch_size: int = 20,
         timeout_seconds: float = 30.0,
     ) -> None:
         self._client = client
         self._model = model
         self._expected_dimension = expected_dimension
+        self._batch_size = batch_size
         self._timeout_seconds = timeout_seconds
 
     def _embed(self, texts: Sequence[str]) -> list[list[float]]:
@@ -102,25 +112,23 @@ class OpenAICompatibleEmbeddingProvider:
             return []
         if any(not text.strip() for text in input_texts):
             raise ModelProviderError("embedding input must not be empty")
+        vectors: list[list[float]] = []
         try:
-            response = self._client.embeddings.create(
-                model=self._model,
-                input=input_texts,
-                timeout=self._timeout_seconds,
-            )
-            data = sorted(response.data, key=lambda item: item.index)
-            vectors = _as_vectors([item.embedding for item in data])
+            for start in range(0, len(input_texts), self._batch_size):
+                batch = input_texts[start : start + self._batch_size]
+                response = self._client.embeddings.create(
+                    model=self._model,
+                    input=batch,
+                    dimensions=self._expected_dimension,
+                    timeout=self._timeout_seconds,
+                )
+                data = sorted(response.data, key=lambda item: item.index)
+                vectors.extend(_as_vectors([item.embedding for item in data]))
         except ModelProviderError:
             raise
         except Exception as exc:
             raise ModelProviderError("embedding API request failed") from exc
-        if len(vectors) != len(input_texts):
-            raise ModelProviderError("embedding result count does not match input")
-        if any(len(vector) != self._expected_dimension for vector in vectors):
-            raise ModelProviderError("embedding vector dimension does not match schema")
-        if any(not isfinite(value) for vector in vectors for value in vector):
-            raise ModelProviderError("embedding vectors must contain finite values")
-        return vectors
+        return _validate_vectors(vectors, input_texts, self._expected_dimension)
 
     def embed_documents(self, texts: Sequence[str]) -> list[list[float]]:
         return self._embed(texts)
@@ -202,3 +210,58 @@ class OpenAICompatibleStructuredProvider:
             raise ModelProviderError(
                 "model returned an invalid structured response"
             ) from exc
+
+
+class RemoteRerankerProvider:
+    """Rerank provider backed by an OpenAI-compatible /reranks endpoint."""
+
+    def __init__(
+        self,
+        client: Any,
+        *,
+        model: str,
+        timeout_seconds: float = 30.0,
+    ) -> None:
+        self._client = client
+        self._model = model
+        self._timeout_seconds = timeout_seconds
+
+    def score(self, query: str, passages: Sequence[str]) -> list[float]:
+        values = list(passages)
+        if not values:
+            return []
+        try:
+            response = self._client.post(
+                "/reranks",
+                body={
+                    "model": self._model,
+                    "query": query,
+                    "documents": values,
+                    "top_n": len(values),
+                },
+                timeout=self._timeout_seconds,
+            )
+            payload = response.json() if hasattr(response, "json") else response
+        except Exception as exc:
+            raise ModelProviderError("reranker model request failed") from exc
+        results = payload.get("results") if isinstance(payload, dict) else None
+        if results is None:
+            raise ModelProviderError("reranker returned no results")
+        by_index: dict[int, float] = {}
+        for item in results:
+            if not isinstance(item, dict):
+                continue
+            index = item.get("index")
+            if isinstance(index, int):
+                by_index[index] = float(item.get("relevance_score", 0.0))
+        scores = [by_index.get(index, 0.0) for index in range(len(values))]
+        if len(scores) != len(values) or any(not isfinite(score) for score in scores):
+            raise ModelProviderError("reranker returned invalid scores")
+        return scores
+
+
+class NullRerankerProvider:
+    """Fail-fast placeholder when reranking is disabled; never called on hybrid_rrf."""
+
+    def score(self, query: str, passages: Sequence[str]) -> list[float]:
+        raise ModelProviderError("reranker is disabled")

@@ -7,13 +7,13 @@ from typing import Any
 
 from openai import OpenAI
 
-from enterprise_knowledge_rag.bootstrap import build_runtime_service
+from enterprise_knowledge_rag.bootstrap import (
+    _default_embedding_provider,
+    _default_reranker_provider,
+    build_runtime_service,
+)
 from enterprise_knowledge_rag.config import Settings
 from enterprise_knowledge_rag.evaluation import EvaluationStrategy
-from enterprise_knowledge_rag.providers import (
-    CrossEncoderRerankerProvider,
-    SentenceTransformerEmbeddingProvider,
-)
 from enterprise_knowledge_rag.retrieval import RetrievalStrategy
 from enterprise_knowledge_rag.runtime import RuntimeChatService
 
@@ -50,11 +50,8 @@ def build_live_services(
         api_key=settings.model_api_key,
         base_url=settings.model_base_url,
     )
-    embeddings = SentenceTransformerEmbeddingProvider(
-        settings.embedding_model,
-        expected_dimension=settings.embedding_dimension,
-    )
-    reranker = CrossEncoderRerankerProvider(settings.reranker_model)
+    embeddings = _default_embedding_provider(settings)
+    reranker = _default_reranker_provider(settings)
     strategies = {
         EvaluationStrategy.VECTOR_BASELINE: RetrievalStrategy.VECTOR_BASELINE,
         EvaluationStrategy.HYBRID_RRF: RetrievalStrategy.HYBRID_RRF,

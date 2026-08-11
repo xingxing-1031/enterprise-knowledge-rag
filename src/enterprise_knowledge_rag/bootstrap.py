@@ -13,8 +13,10 @@ from enterprise_knowledge_rag.documents.repository import KnowledgeRepository
 from enterprise_knowledge_rag.generation import AnswerGenerator
 from enterprise_knowledge_rag.providers import (
     CrossEncoderRerankerProvider,
+    NullRerankerProvider,
     OpenAICompatibleEmbeddingProvider,
     OpenAICompatibleStructuredProvider,
+    RemoteRerankerProvider,
     SentenceTransformerEmbeddingProvider,
 )
 from enterprise_knowledge_rag.retrieval import (
@@ -59,12 +61,22 @@ def _default_embedding_client(settings: Settings):
     )
 
 
+def _default_embedding_client(settings: Settings):
+    from openai import OpenAI
+
+    return OpenAI(
+        api_key=settings.embedding_api_key or settings.model_api_key,
+        base_url=settings.embedding_base_url or settings.model_base_url,
+    )
+
+
 def _default_embedding_provider(settings: Settings):
     if settings.embedding_provider == "openai_compatible":
         return OpenAICompatibleEmbeddingProvider(
             _default_embedding_client(settings),
             model=settings.embedding_model,
             expected_dimension=settings.embedding_dimension,
+            batch_size=settings.embedding_batch_size,
             timeout_seconds=settings.model_timeout_seconds,
         )
     if settings.embedding_provider == "local":
@@ -73,6 +85,29 @@ def _default_embedding_provider(settings: Settings):
             expected_dimension=settings.embedding_dimension,
         )
     raise ValueError(f"unsupported embedding provider: {settings.embedding_provider}")
+
+
+def _default_reranker_client(settings: Settings):
+    from openai import OpenAI
+
+    return OpenAI(
+        api_key=settings.reranker_api_key or settings.model_api_key,
+        base_url=settings.reranker_base_url or settings.model_base_url,
+    )
+
+
+def _default_reranker_provider(settings: Settings):
+    if settings.reranker_provider == "openai_compatible":
+        return RemoteRerankerProvider(
+            _default_reranker_client(settings),
+            model=settings.reranker_model,
+            timeout_seconds=settings.model_timeout_seconds,
+        )
+    if settings.reranker_provider == "none":
+        return NullRerankerProvider()
+    if settings.reranker_provider == "local":
+        return CrossEncoderRerankerProvider(settings.reranker_model)
+    raise ValueError(f"unsupported reranker provider: {settings.reranker_provider}")
 
 
 def _resolve_retrieval_strategy(
@@ -100,9 +135,7 @@ def build_runtime_service(
     )
     chat_client = chat_client or _default_chat_client(settings)
     embeddings = embeddings or _default_embedding_provider(settings)
-    reranker_scores = reranker_scores or CrossEncoderRerankerProvider(
-        settings.reranker_model
-    )
+    reranker_scores = reranker_scores or _default_reranker_provider(settings)
     repository = KnowledgeRepository(
         connection_factory,
         embedding_model=settings.embedding_model,

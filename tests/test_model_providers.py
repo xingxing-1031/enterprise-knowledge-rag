@@ -7,8 +7,10 @@ from enterprise_knowledge_rag.generation import DraftAnswer
 from enterprise_knowledge_rag.providers import (
     CrossEncoderRerankerProvider,
     ModelProviderError,
+    NullRerankerProvider,
     OpenAICompatibleEmbeddingProvider,
     OpenAICompatibleStructuredProvider,
+    RemoteRerankerProvider,
     SentenceTransformerEmbeddingProvider,
 )
 
@@ -72,6 +74,102 @@ def test_openai_compatible_embedding_provider_orders_and_validates_results() -> 
         [1.0, 0.0],
         [0.0, 1.0],
     ]
+
+
+def test_openai_compatible_embedding_provider_batches_oversized_inputs() -> None:
+    calls = []
+
+    class FakeEmbeddings:
+        def __init__(self):
+            self.global_offset = 0
+
+        def create(self, **kwargs):
+            calls.append(kwargs)
+            batch = kwargs["input"]
+            assert 1 <= len(batch) <= 2
+            assert kwargs["dimensions"] == 2
+            data = []
+            for index in range(len(batch)):
+                value = float(self.global_offset + index + 1)
+                data.append(SimpleNamespace(index=index, embedding=[value, value]))
+            self.global_offset += len(batch)
+            return SimpleNamespace(data=data)
+
+    provider = OpenAICompatibleEmbeddingProvider(
+        SimpleNamespace(embeddings=FakeEmbeddings()),
+        model="text-embedding-v3",
+        expected_dimension=2,
+        batch_size=2,
+    )
+
+    vectors = provider.embed_documents(["a", "b", "c", "d", "e"])
+
+    assert len(calls) == 3
+    assert [call["input"] for call in calls] == [
+        ["a", "b"],
+        ["c", "d"],
+        ["e"],
+    ]
+    assert len(vectors) == 5
+    assert vectors[0] == [1.0, 1.0]
+    assert vectors[2] == [3.0, 3.0]
+    assert vectors[4] == [5.0, 5.0]
+
+
+def test_remote_reranker_provider_maps_results_by_index() -> None:
+    class FakeClient:
+        def __init__(self):
+            self.calls = []
+
+        def post(self, path, **kwargs):
+            self.calls.append((path, kwargs))
+            return SimpleNamespace(
+                json=lambda: {
+                    "results": [
+                        {"index": 0, "relevance_score": 0.9},
+                        {"index": 2, "relevance_score": 0.7},
+                    ]
+                }
+            )
+
+    provider = RemoteRerankerProvider(FakeClient(), model="qwen3-rerank")
+
+    scores = provider.score("报销", ["a", "b", "c"])
+
+    assert scores == [0.9, 0.0, 0.7]
+    path, kwargs = provider._client.calls[0]
+    assert path == "/reranks"
+    assert kwargs["body"]["model"] == "qwen3-rerank"
+    assert kwargs["body"]["documents"] == ["a", "b", "c"]
+
+
+def test_remote_reranker_provider_wraps_request_errors() -> None:
+    class FailingClient:
+        def post(self, path, **kwargs):
+            raise OSError("network down")
+
+    provider = RemoteRerankerProvider(FailingClient(), model="qwen3-rerank")
+
+    with pytest.raises(ModelProviderError, match="reranker"):
+        provider.score("报销", ["a"])
+
+
+def test_remote_reranker_provider_rejects_missing_results() -> None:
+    class NoResultsClient:
+        def post(self, path, **kwargs):
+            return SimpleNamespace(json=lambda: {"message": "oops"})
+
+    provider = RemoteRerankerProvider(NoResultsClient(), model="qwen3-rerank")
+
+    with pytest.raises(ModelProviderError, match="no results"):
+        provider.score("报销", ["a"])
+
+
+def test_null_reranker_provider_raises_when_called() -> None:
+    provider = NullRerankerProvider()
+
+    with pytest.raises(ModelProviderError, match="disabled"):
+        provider.score("报销", ["a"])
 
 
 class FakeCrossEncoder:
