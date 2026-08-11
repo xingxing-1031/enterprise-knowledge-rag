@@ -129,6 +129,11 @@ class Citation(StrictModel):
     label: str = Field(min_length=1)
 
 
+class LoginRequest(StrictModel):
+    username: str = Field(min_length=1, max_length=128)
+    password: str = Field(min_length=1, max_length=256)
+
+
 class ChatRequest(StrictModel):
     question: str = Field(min_length=1, max_length=2000)
     session_id: str | None = Field(default=None, max_length=128)

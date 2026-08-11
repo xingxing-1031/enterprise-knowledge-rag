@@ -1,19 +1,19 @@
 :root {
   font-family: "Microsoft YaHei UI", "PingFang SC", "Noto Sans SC", sans-serif;
-  color: #17221f;
-  background: #f4f7f5;
+  color: #232a31;
+  background: #f5f6f8;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   letter-spacing: 0;
-  --ink: #17221f;
-  --muted: #66736e;
-  --line: #d8dfdc;
-  --soft-line: #e8ecea;
+  --ink: #232a31;
+  --muted: #69737c;
+  --line: #dde1e6;
+  --soft-line: #eceff2;
   --paper: #ffffff;
-  --ground: #f4f7f5;
-  --green: #126b58;
-  --green-dark: #0b4f41;
-  --green-soft: #e6f2ee;
+  --ground: #f5f6f8;
+  --brand: #2f4a62;
+  --brand-dark: #1f3448;
+  --brand-soft: #e9eef4;
   --amber: #b7791f;
   --amber-soft: #fff6dd;
   --red: #b9433d;
@@ -56,7 +56,7 @@ button:focus-visible,
 textarea:focus-visible,
 input:focus-visible,
 select:focus-visible {
-  outline: 3px solid rgba(18, 107, 88, 0.22);
+  outline: 3px solid rgba(47, 74, 98, 0.22);
   outline-offset: 2px;
 }
 
@@ -74,7 +74,7 @@ select:focus-visible {
   height: 100vh;
   padding: 22px 14px 18px;
   color: #eaf3f0;
-  background: #18352f;
+  background: #1f2a33;
   border-right: 1px solid #25483f;
   z-index: 30;
 }
@@ -92,7 +92,7 @@ select:focus-visible {
   place-items: center;
   width: 36px;
   height: 36px;
-  color: #18352f;
+  color: #1f2a33;
   background: #f3c866;
   border-radius: 4px;
 }
@@ -107,7 +107,7 @@ select:focus-visible {
 .brand-block span:not(.brand-mark) {
   display: block;
   margin-top: 3px;
-  color: #a9bdb7;
+  color: #9fb1bf;
   font-size: 11px;
 }
 
@@ -124,7 +124,7 @@ select:focus-visible {
   min-height: 42px;
   gap: 11px;
   padding: 0 12px;
-  color: #b9cac5;
+  color: #aebdc8;
   background: transparent;
   border: 1px solid transparent;
   border-radius: 5px;
@@ -134,13 +134,13 @@ select:focus-visible {
 
 .nav-item:hover {
   color: #ffffff;
-  background: #21443b;
+  background: #26394b;
 }
 
 .nav-item.is-active {
   color: #ffffff;
-  background: #285147;
-  border-color: #39645a;
+  background: #2d4256;
+  border-color: #3d5468;
 }
 
 .identity-block {
@@ -149,17 +149,17 @@ select:focus-visible {
   gap: 10px;
   margin-top: auto;
   padding: 14px 9px 2px;
-  border-top: 1px solid #315148;
+  border-top: 1px solid #35495c;
 }
 
 .identity-dot {
   width: 9px;
   height: 9px;
   flex: 0 0 auto;
-  background: #66d4a9;
-  border: 2px solid #21443b;
+  background: #7fa8cc;
+  border: 2px solid #26394b;
   border-radius: 50%;
-  box-shadow: 0 0 0 2px #66d4a9;
+  box-shadow: 0 0 0 2px #7fa8cc;
 }
 
 .identity-block strong,
@@ -214,7 +214,7 @@ select:focus-visible {
 .panel-kicker {
   display: block;
   margin-bottom: 4px;
-  color: var(--green);
+  color: var(--brand);
   font-size: 10px;
   font-weight: 700;
 }
@@ -239,7 +239,7 @@ select:focus-visible {
   align-items: center;
   justify-content: center;
   gap: 7px;
-  color: var(--green);
+  color: var(--brand);
   background: transparent;
   border: 0;
   cursor: pointer;
@@ -253,7 +253,7 @@ select:focus-visible {
 
 .text-button:hover,
 .citation-link:hover {
-  color: var(--green-dark);
+  color: var(--brand-dark);
   text-decoration: underline;
 }
 
@@ -280,7 +280,7 @@ select:focus-visible {
 
 .chat-empty > svg {
   margin-bottom: 16px;
-  color: var(--green);
+  color: var(--brand);
 }
 
 .chat-empty h2 {
@@ -311,7 +311,7 @@ select:focus-visible {
 
 .example-list button:hover {
   border-color: #91aea5;
-  background: var(--green-soft);
+  background: var(--brand-soft);
 }
 
 .message {
@@ -334,7 +334,7 @@ select:focus-visible {
 
 .message-assistant .message-body {
   padding-left: 18px;
-  border-left: 3px solid var(--green);
+  border-left: 3px solid var(--brand);
 }
 
 .message-body p {
@@ -350,8 +350,8 @@ select:focus-visible {
   min-height: 22px;
   margin-bottom: 9px;
   padding: 0 7px;
-  color: var(--green-dark);
-  background: var(--green-soft);
+  color: var(--brand-dark);
+  background: var(--brand-soft);
   border-radius: 3px;
   font-size: 10px;
   font-weight: 700;
@@ -400,7 +400,7 @@ select:focus-visible {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: var(--green-dark);
+  color: var(--brand-dark);
   font-size: 12px;
 }
 
@@ -478,8 +478,8 @@ select:focus-visible {
 }
 
 .composer-row:focus-within {
-  border-color: var(--green);
-  box-shadow: 0 0 0 3px rgba(18, 107, 88, 0.1);
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(47, 74, 98, 0.12);
 }
 
 .composer textarea {
@@ -513,12 +513,12 @@ select:focus-visible {
   width: 38px;
   height: 38px;
   color: #ffffff;
-  background: var(--green);
+  background: var(--brand);
   border: 0;
 }
 
 .send-button:hover:not(:disabled) {
-  background: var(--green-dark);
+  background: var(--brand-dark);
 }
 
 .send-button:disabled {
@@ -578,7 +578,7 @@ select:focus-visible {
 .evidence-empty svg,
 .page-empty svg {
   margin-bottom: 13px;
-  color: #7f9990;
+  color: #8a949e;
 }
 
 .evidence-empty strong,
@@ -647,7 +647,7 @@ select:focus-visible {
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  color: var(--green);
+  color: var(--brand);
 }
 
 .evidence-title-row svg {
@@ -739,7 +739,7 @@ select:focus-visible {
 }
 
 .page-count strong {
-  color: var(--green);
+  color: var(--brand);
   font-family: "Cascadia Code", Consolas, monospace;
   font-size: 31px;
 }
@@ -807,8 +807,8 @@ select:focus-visible {
 
 .status-active,
 .report-state.is-ready {
-  color: var(--green-dark);
-  background: var(--green-soft);
+  color: var(--brand-dark);
+  background: var(--brand-soft);
 }
 
 .status-expired,
@@ -901,7 +901,7 @@ select:focus-visible {
   min-height: 92px;
   gap: 10px;
   padding: 14px;
-  color: var(--green-dark);
+  color: var(--brand-dark);
   background: var(--paper);
   border: 1px dashed #91aaa2;
   border-radius: 4px;
@@ -952,7 +952,7 @@ select:focus-visible {
   gap: 7px;
   padding: 0 14px;
   color: #fff;
-  background: var(--green);
+  background: var(--brand);
   border: 0;
   border-radius: 4px;
   cursor: pointer;
@@ -961,7 +961,7 @@ select:focus-visible {
 }
 
 .primary-command:hover:not(:disabled) {
-  background: var(--green-dark);
+  background: var(--brand-dark);
 }
 
 .primary-command:disabled {
@@ -1012,7 +1012,7 @@ select:focus-visible {
 
 .import-task:hover,
 .import-task.is-selected {
-  color: var(--green-dark);
+  color: var(--brand-dark);
   background: var(--paper);
   border-color: #c8d4d0;
 }
@@ -1055,8 +1055,8 @@ select:focus-visible {
 }
 
 .status-indexed {
-  color: var(--green-dark);
-  background: var(--green-soft);
+  color: var(--brand-dark);
+  background: var(--brand-soft);
 }
 
 .status-quarantined,
@@ -1155,8 +1155,8 @@ select:focus-visible {
 
 .cleaning-ok {
   margin-top: 14px;
-  color: var(--green-dark);
-  background: var(--green-soft);
+  color: var(--brand-dark);
+  background: var(--brand-soft);
 }
 
 .normalized-preview {
@@ -1340,8 +1340,8 @@ select:focus-visible {
 
   .nav-item:hover,
   .nav-item.is-active {
-    color: var(--green);
-    background: var(--green-soft);
+    color: var(--brand);
+    background: var(--brand-soft);
   }
 
   .workspace {
@@ -1560,4 +1560,237 @@ select:focus-visible {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ---------- 登录页 ---------- */
+.login-page {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 24px;
+  background:
+    radial-gradient(1000px 500px at 85% -10%, #e9eef4 0%, transparent 60%),
+    var(--ground);
+}
+
+.login-card {
+  width: min(420px, 100%);
+  padding: 34px 34px 26px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 18px 48px rgba(35, 42, 49, 0.08);
+}
+
+.login-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.login-brand h1 {
+  margin: 0;
+  font-family: "Noto Serif SC", "Songti SC", serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.logo-mark.large {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  color: #ffffff;
+  background: var(--brand);
+  border-radius: 10px;
+}
+
+.login-subtitle {
+  margin: 0 0 22px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.demo-account-list {
+  display: grid;
+  gap: 9px;
+  margin-bottom: 22px;
+}
+
+.demo-account {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  color: var(--ink);
+  background: #fafbfc;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 150ms ease, background 150ms ease;
+}
+
+.demo-account:hover {
+  background: var(--brand-soft);
+  border-color: var(--brand);
+}
+
+.demo-account strong,
+.demo-account small {
+  display: block;
+}
+
+.demo-account strong {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.demo-account small {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.demo-account code {
+  flex: 0 0 auto;
+  color: var(--brand-dark);
+  font-size: 11px;
+  text-align: right;
+}
+
+.login-card label {
+  display: block;
+  margin: 14px 0 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.input-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 12px;
+  color: var(--muted);
+  background: #fafbfc;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.input-with-icon:focus-within {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(47, 74, 98, 0.12);
+}
+
+.input-with-icon input {
+  width: 100%;
+  height: 40px;
+  padding: 0;
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  outline: 0;
+}
+
+.form-error {
+  margin: 12px 0 0;
+  color: var(--red);
+  font-size: 12px;
+}
+
+.primary-button {
+  width: 100%;
+  height: 42px;
+  margin-top: 18px;
+  color: #ffffff;
+  background: var(--brand);
+  border: 0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+
+.primary-button:hover:not(:disabled) {
+  background: var(--brand-dark);
+}
+
+.primary-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.login-notice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 18px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.service-dot.online {
+  width: 8px;
+  height: 8px;
+  background: #7fa8cc;
+  border-radius: 50%;
+}
+
+/* ---------- 侧边栏退出按钮 ---------- */
+.logout-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: auto;
+  padding: 5px 8px;
+  color: #aebdc8;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.logout-button:hover {
+  color: #ffffff;
+  background: #2d4256;
+  border-color: #3d5468;
+}
+
+/* ---------- 引用定位高亮 ---------- */
+.evidence-item.is-highlight {
+  background: var(--brand-soft);
+  border: 1px solid var(--brand);
+  border-radius: 8px;
+  animation: evidence-flash 1.8s ease;
+}
+
+@keyframes evidence-flash {
+  0% {
+    box-shadow: 0 0 0 0 rgba(47, 74, 98, 0.35);
+  }
+  60% {
+    box-shadow: 0 0 0 8px rgba(47, 74, 98, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(47, 74, 98, 0);
+  }
+}
+
+/* ---------- 引用角标列表 ---------- */
+.citation-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 14px;
+}
+
+.citation-list .citation-link {
+  margin-top: 0;
 }

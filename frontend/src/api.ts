@@ -14,10 +14,15 @@ const API_BASE = import.meta.env.DEV ? "/api" : "";
 
 
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE}${path}`, init);
+  const response = await fetch(`${API_BASE}${path}`, {
+    credentials: "same-origin",
+    ...init,
+  });
   if (!response.ok) {
     const payload = await response.json().catch(() => null) as { detail?: string } | null;
-    throw new Error(payload?.detail ?? `服务请求失败（${response.status}）`);
+    const error = new Error(payload?.detail ?? `服务请求失败（${response.status}）`);
+    (error as Error & { status?: number }).status = response.status;
+    throw error;
   }
   return response.json() as Promise<T>;
 }
@@ -66,9 +71,27 @@ export function approveKnowledgeImport(
 }
 
 
+export function login(username: string, password: string): Promise<SessionInfo> {
+  return requestJson<SessionInfo>("/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password }),
+  });
+}
+
+
+export async function logout(): Promise<void> {
+  await fetch(`${API_BASE}/auth/logout`, {
+    method: "POST",
+    credentials: "same-origin",
+  });
+}
+
+
 export async function clearChat(request: ChatRequest): Promise<void> {
   const response = await fetch(`${API_BASE}/chat/clear`, {
     method: "POST",
+    credentials: "same-origin",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(request),
   });
@@ -100,6 +123,7 @@ export async function streamChat(
 ): Promise<ChatResult> {
   const response = await fetch(`${API_BASE}/chat/stream`, {
     method: "POST",
+    credentials: "same-origin",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(request),
     signal,

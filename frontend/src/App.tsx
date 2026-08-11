@@ -5,6 +5,7 @@ import {
   fetchDocuments,
   fetchLatestEvaluation,
   fetchSession,
+  logout,
   streamChat,
 } from "./api";
 import { ChatView } from "./components/ChatView";
@@ -12,6 +13,7 @@ import { EvaluationView } from "./components/EvaluationView";
 import { EvidencePanel } from "./components/EvidencePanel";
 import { KnowledgeView } from "./components/KnowledgeView";
 import { Navigation } from "./components/Navigation";
+import LoginPage from "./LoginPage";
 import type {
   AppView,
   ChatMessage,
@@ -30,6 +32,7 @@ const SESSION_ID = "public-demo-session";
 export default function App() {
   const [activeView, setActiveView] = useState<AppView>("chat");
   const [session, setSession] = useState<SessionInfo | null>(null);
+  const [needsLogin, setNeedsLogin] = useState(false);
   const [documents, setDocuments] = useState<DocumentOverview[]>([]);
   const [evaluation, setEvaluation] = useState<EvaluationOverview>({ status: "not_run" });
   const [metadataLoading, setMetadataLoading] = useState(true);
@@ -38,15 +41,25 @@ export default function App() {
   const [progress, setProgress] = useState<ProgressEvent[]>([]);
   const [evidence, setEvidence] = useState<RetrievalEvidence[]>([]);
   const [evidenceOpen, setEvidenceOpen] = useState(false);
+  const [activeEvidenceId, setActiveEvidenceId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const requestAbort = useRef<AbortController | null>(null);
+  const evidenceFlashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     let mounted = true;
     Promise.allSettled([fetchSession(), fetchDocuments(), fetchLatestEvaluation()])
       .then(([sessionResult, documentResult, evaluationResult]) => {
         if (!mounted) return;
+        if (sessionResult.status === "rejected") {
+          const status = (sessionResult.reason as { status?: number } | undefined)?.status;
+          if (status === 401) {
+            setNeedsLogin(true);
+            setMetadataLoading(false);
+            return;
+          }
+        }
         if (sessionResult.status === "fulfilled") setSession(sessionResult.value);
         if (documentResult.status === "fulfilled") setDocuments(documentResult.value);
         if (evaluationResult.status === "fulfilled") setEvaluation(evaluationResult.value);
@@ -67,6 +80,7 @@ export default function App() {
     return () => {
       mounted = false;
       requestAbort.current?.abort();
+      if (evidenceFlashTimer.current) clearTimeout(evidenceFlashTimer.current);
     };
   }, []);
 
@@ -131,9 +145,58 @@ export default function App() {
     setDocuments(refreshed);
   };
 
+  const handleOpenEvidence = (index: number) => {
+    const target = evidence[index];
+    setEvidenceOpen(true);
+    if (!target) return;
+    setActiveEvidenceId(target.evidence_id);
+    if (evidenceFlashTimer.current) clearTimeout(evidenceFlashTimer.current);
+    evidenceFlashTimer.current = setTimeout(() => setActiveEvidenceId(null), 2500);
+  };
+
+  const handleLogin = async (loginSession: SessionInfo) => {
+    setSession(loginSession);
+    setNeedsLogin(false);
+    setError(null);
+    setMessages([]);
+    setEvidence([]);
+    const [documentResult, evaluationResult] = await Promise.allSettled([
+      fetchDocuments(),
+      fetchLatestEvaluation(),
+    ]);
+    if (documentResult.status === "fulfilled") setDocuments(documentResult.value);
+    if (evaluationResult.status === "fulfilled") setEvaluation(evaluationResult.value);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (logoutError) {
+      // 会话可能已过期，忽略后仍回到登录页
+    }
+    setSession(null);
+    setNeedsLogin(true);
+    setActiveView("chat");
+    setMessages([]);
+    setEvidence([]);
+    setDocuments([]);
+    setEvaluation({ status: "not_run" });
+    setProgress([]);
+    setError(null);
+  };
+
+  if (needsLogin) {
+    return <LoginPage onLogin={handleLogin} />;
+  }
+
   return (
     <div className="app-shell">
-      <Navigation active={activeView} onChange={setActiveView} session={session} />
+      <Navigation
+        active={activeView}
+        onChange={setActiveView}
+        session={session}
+        onLogout={() => void handleLogout()}
+      />
       <section className="workspace">
         {activeView === "chat" ? (
           <div className="chat-layout">
@@ -151,9 +214,9 @@ export default function App() {
               loading={loading}
               error={error}
               evidence={evidence}
-              onOpenEvidence={() => setEvidenceOpen(true)}
+              onOpenEvidence={handleOpenEvidence}
             />
-            <EvidencePanel evidence={evidence} mobileOpen={evidenceOpen} onClose={() => setEvidenceOpen(false)} />
+            <EvidencePanel evidence={evidence} mobileOpen={evidenceOpen} activeId={activeEvidenceId} onClose={() => setEvidenceOpen(false)} />
             {evidenceOpen ? <button className="drawer-scrim" type="button" aria-label="关闭引用" onClick={() => setEvidenceOpen(false)} /> : null}
           </div>
         ) : null}

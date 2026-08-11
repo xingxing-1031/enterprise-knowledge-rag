@@ -18,6 +18,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
+from enterprise_knowledge_rag.auth import (
+    AuthSessionResolver,
+    issue_session,
+    verify_password,
+)
 from enterprise_knowledge_rag.config import Settings, get_settings
 from enterprise_knowledge_rag.documents.ingestion import (
     ImportNotApprovableError,
@@ -31,6 +36,7 @@ from enterprise_knowledge_rag.documents.source_models import (
 from enterprise_knowledge_rag.models import (
     ChatRequest,
     ChatResult,
+    LoginRequest,
     UserContext,
     UserRole,
 )
@@ -121,6 +127,34 @@ def _public_progress(trace: Sequence[TraceEvent]):
         )
 
 
+def _demo_accounts(
+    settings: Settings,
+) -> tuple[tuple[str, str, UserRole, str, str], ...]:
+    return (
+        (
+            settings.auth_employee_username,
+            settings.auth_employee_user_id,
+            UserRole.EMPLOYEE,
+            settings.auth_employee_departments,
+            settings.auth_employee_password_hash,
+        ),
+        (
+            settings.auth_department_admin_username,
+            settings.auth_department_admin_user_id,
+            UserRole.DEPARTMENT_ADMIN,
+            settings.auth_department_admin_departments,
+            settings.auth_department_admin_password_hash,
+        ),
+        (
+            settings.auth_knowledge_admin_username,
+            settings.auth_knowledge_admin_user_id,
+            UserRole.KNOWLEDGE_ADMIN,
+            settings.auth_knowledge_admin_departments,
+            settings.auth_knowledge_admin_password_hash,
+        ),
+    )
+
+
 def create_app(
     service: ChatApiService,
     *,
@@ -130,7 +164,7 @@ def create_app(
     static_dir: Path | None = None,
 ) -> FastAPI:
     settings = settings or get_settings()
-    resolver = session_resolver or ConfiguredSessionResolver(settings)
+    resolver = session_resolver or AuthSessionResolver(settings)
     app = FastAPI(
         title="企业制度与流程知识库助手 API",
         version="0.1.0",
@@ -193,6 +227,45 @@ def create_app(
         if not service.ready():
             raise HTTPException(status_code=503, detail="知识库尚未准备完成")
         return {"status": "ready"}
+
+    @app.post("/auth/login")
+    def login(login_request: LoginRequest, response: Response) -> dict[str, Any]:
+        for username, user_id, role, departments, password_hash in _demo_accounts(
+            settings
+        ):
+            if login_request.username != username:
+                continue
+            if not verify_password(login_request.password, password_hash):
+                raise HTTPException(status_code=401, detail="用户名或密码错误。")
+            token = issue_session(
+                user_id=user_id,
+                role=role,
+                departments=departments.split(","),
+                secret=settings.auth_session_secret,
+                ttl_seconds=settings.auth_session_ttl_seconds,
+            )
+            response.set_cookie(
+                key=settings.auth_cookie_name,
+                value=token,
+                max_age=settings.auth_session_ttl_seconds,
+                httponly=True,
+                samesite="lax",
+                secure=settings.auth_cookie_secure,
+                path="/",
+            )
+            return {
+                "user_id": user_id,
+                "role": role.value,
+                "departments": [item for item in departments.split(",") if item],
+                "public_demo_mode": settings.public_demo_mode,
+            }
+        raise HTTPException(status_code=401, detail="用户名或密码错误。")
+
+    @app.post("/auth/logout")
+    def logout() -> Response:
+        response = Response(status_code=status.HTTP_204_NO_CONTENT)
+        response.delete_cookie(settings.auth_cookie_name, path="/")
+        return response
 
     @app.get("/session")
     def session(user: UserContext = Depends(current_user)) -> dict[str, Any]:

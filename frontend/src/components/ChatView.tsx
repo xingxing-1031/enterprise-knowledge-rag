@@ -29,7 +29,7 @@ interface ChatViewProps {
   loading: boolean;
   error: string | null;
   evidence: RetrievalEvidence[];
-  onOpenEvidence: () => void;
+  onOpenEvidence: (index: number) => void;
 }
 
 
@@ -97,10 +97,19 @@ export function ChatView({
                   <p className="degradation-note">{message.result.degradation_reason}</p>
                 ) : null}
                 {message.result && message.result.citations.length > 0 ? (
-                  <button className="citation-link" type="button" onClick={onOpenEvidence}>
-                    <BookOpenCheck size={15} />
-                    查看 {message.result.citations.length} 条引用
-                  </button>
+                  <div className="citation-list">
+                    {message.result.citations.map((citation, index) => (
+                      <button
+                        className="citation-link"
+                        type="button"
+                        key={citation.evidence_id}
+                        onClick={() => onOpenEvidence(index)}
+                      >
+                        <BookOpenCheck size={15} />
+                        [{index + 1}] {citation.label}
+                      </button>
+                    ))}
+                  </div>
                 ) : null}
               </div>
             </article>
@@ -156,7 +165,7 @@ export function ChatView({
         </div>
         <div className="composer-footer">
           <span>答案仅使用已授权且生效的制度依据</span>
-          <button className="mobile-evidence-button" type="button" onClick={onOpenEvidence} disabled={evidence.length === 0}>
+          <button className="mobile-evidence-button" type="button" onClick={() => onOpenEvidence(0)} disabled={evidence.length === 0}>
             引用 {evidence.length}
           </button>
         </div>

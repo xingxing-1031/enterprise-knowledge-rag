@@ -17,6 +17,8 @@ vi.mock("./api", async () => {
     uploadKnowledgeDocument: vi.fn(),
     approveKnowledgeImport: vi.fn(),
     streamChat: vi.fn(),
+    login: vi.fn(),
+    logout: vi.fn(),
   };
 });
 
@@ -35,6 +37,13 @@ describe("enterprise knowledge workbench", () => {
     vi.mocked(api.fetchDocuments).mockResolvedValue([]);
     vi.mocked(api.fetchLatestEvaluation).mockResolvedValue({ status: "not_run" });
     vi.mocked(api.fetchKnowledgeImports).mockResolvedValue([]);
+    vi.mocked(api.login).mockResolvedValue({
+      user_id: "demo-knowledge-admin",
+      role: "knowledge_admin",
+      departments: ["hr", "finance", "admin", "procurement", "security"],
+      public_demo_mode: true,
+    });
+    vi.mocked(api.logout).mockResolvedValue();
     vi.mocked(api.streamChat).mockImplementation(async (_request, onProgress) => {
       onProgress({ stage: "retrieve", label: "检索企业知识", status: "ready" });
       return {
@@ -138,5 +147,30 @@ describe("enterprise knowledge workbench", () => {
     expect(await screen.findByText("文档入库工作台")).toBeInTheDocument();
     expect(await screen.findByText("发现重复页眉，请核对清洗结果。")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "确认并建立索引" })).toBeEnabled();
+  });
+
+  it("shows the login page when the session request is unauthorized", async () => {
+    vi.mocked(api.fetchSession).mockRejectedValueOnce(
+      Object.assign(new Error("请先登录。"), { status: 401 }),
+    );
+
+    render(<App />);
+
+    expect(await screen.findByRole("heading", { name: "制度智查" })).toBeInTheDocument();
+    expect(screen.queryByText("开始一次制度查询")).not.toBeInTheDocument();
+  });
+
+  it("enters the workbench after signing in with a demo account", async () => {
+    vi.mocked(api.fetchSession).mockRejectedValueOnce(
+      Object.assign(new Error("请先登录。"), { status: 401 }),
+    );
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(await screen.findByRole("button", { name: /知识库管理员/ }));
+    await user.click(screen.getByRole("button", { name: "登录" }));
+
+    expect(api.login).toHaveBeenCalledWith("knowledge-admin-demo", "KnowledgeAdmin2026!");
+    expect(await screen.findByText("开始一次制度查询")).toBeInTheDocument();
   });
 });

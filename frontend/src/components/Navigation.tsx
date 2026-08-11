@@ -1,6 +1,7 @@
 import {
   BookOpenText,
   ChartNoAxesCombined,
+  LogOut,
   MessageSquareText,
   ShieldCheck,
 } from "lucide-react";
@@ -19,6 +20,7 @@ interface NavigationProps {
   active: AppView;
   onChange: (view: AppView) => void;
   session: SessionInfo | null;
+  onLogout: () => void;
 }
 
 
@@ -29,7 +31,7 @@ const ROLE_LABELS: Record<SessionInfo["role"], string> = {
 };
 
 
-export function Navigation({ active, onChange, session }: NavigationProps) {
+export function Navigation({ active, onChange, session, onLogout }: NavigationProps) {
   return (
     <aside className="navigation" aria-label="主导航">
       <div className="brand-block">
@@ -66,6 +68,12 @@ export function Navigation({ active, onChange, session }: NavigationProps) {
           <strong>{session ? ROLE_LABELS[session.role] : "正在识别身份"}</strong>
           <span>{session?.public_demo_mode ? "公开演示身份" : "可信会话"}</span>
         </div>
+        {session ? (
+          <button className="logout-button" type="button" onClick={onLogout} title="退出登录">
+            <LogOut size={16} />
+            <span>退出</span>
+          </button>
+        ) : null}
       </div>
     </aside>
   );

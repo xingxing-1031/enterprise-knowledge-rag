@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { FileText, Layers3, X } from "lucide-react";
 
 import type { RetrievalEvidence } from "../types";
@@ -6,6 +7,7 @@ import type { RetrievalEvidence } from "../types";
 interface EvidencePanelProps {
   evidence: RetrievalEvidence[];
   mobileOpen: boolean;
+  activeId: string | null;
   onClose: () => void;
 }
 
@@ -20,7 +22,15 @@ function formatDate(value: string) {
 }
 
 
-export function EvidencePanel({ evidence, mobileOpen, onClose }: EvidencePanelProps) {
+export function EvidencePanel({ evidence, mobileOpen, activeId, onClose }: EvidencePanelProps) {
+  const itemRefs = useRef<Record<string, HTMLLIElement | null>>({});
+
+  useEffect(() => {
+    if (!activeId) return;
+    const target = itemRefs.current[activeId];
+    if (target) target.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [activeId]);
+
   return (
     <aside className={mobileOpen ? "evidence-panel is-open" : "evidence-panel"}>
       <div className="panel-heading">
@@ -42,7 +52,13 @@ export function EvidencePanel({ evidence, mobileOpen, onClose }: EvidencePanelPr
       ) : (
         <ol className="evidence-list">
           {evidence.map((item, index) => (
-            <li key={item.evidence_id} className="evidence-item">
+            <li
+              key={item.evidence_id}
+              className={activeId === item.evidence_id ? "evidence-item is-highlight" : "evidence-item"}
+              ref={(node) => {
+                itemRefs.current[item.evidence_id] = node;
+              }}
+            >
               <span className="evidence-index">{String(index + 1).padStart(2, "0")}</span>
               <div className="evidence-content">
                 <div className="evidence-title-row">
