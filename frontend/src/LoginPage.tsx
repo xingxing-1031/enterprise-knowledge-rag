@@ -57,6 +57,10 @@ export default function LoginPage({
           <h1>制度智查</h1>
         </div>
         <p className="login-subtitle">企业制度知识库工作台 · 请选择演示身份登录</p>
+        <p className="login-intro">
+          用自然语言直接问制度与流程问题，例如「出差报销期限」「育儿假天数」「加班怎么算」。
+          答案只引用已授权且生效的制度文档，并按登录身份做权限过滤。
+        </p>
 
         <div className="demo-account-list" aria-label="公开演示账号">
           {demoAccounts.map((account) => (

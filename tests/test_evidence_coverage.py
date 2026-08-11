@@ -33,7 +33,7 @@ def test_coverage_reports_missing_required_need_ids() -> None:
     assert result.annotated_candidates[0].supports_need_ids == {"material"}
 
 
-def test_coverage_preserves_explicit_support_from_need_scoped_retrieval() -> None:
+def test_coverage_ignores_explicit_support_without_token_overlap() -> None:
     exception = make_candidate(
         "leave:exception",
         title="员工请假制度",
@@ -42,8 +42,11 @@ def test_coverage_preserves_explicit_support_from_need_scoped_retrieval() -> Non
 
     result = EvidenceCoverageService().cover(PLAN, [exception])
 
-    assert result.covered_need_ids == frozenset({"exception"})
-    assert result.annotated_candidates[0].retrieval_hop == 2
+    # 候选自带/上一跳标注的 supports_need_ids 不再被直接信任：
+    # 覆盖必须由 token 重叠重新验证，避免无关文档被假标记为已覆盖。
+    assert result.covered_need_ids == frozenset()
+    assert result.missing_required_need_ids == frozenset({"material", "exception"})
+    assert result.annotated_candidates == ()
 
 
 def test_low_reranker_score_does_not_count_as_coverage() -> None:

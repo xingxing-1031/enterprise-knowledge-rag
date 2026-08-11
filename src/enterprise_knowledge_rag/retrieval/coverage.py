@@ -21,14 +21,18 @@ class EvidenceCoverageService:
         self,
         *,
         min_reranker_score: float = 0.0,
-        min_query_token_overlap: float = 0.5,
+        min_query_token_overlap: float = 0.65,
+        min_hit_tokens: int = 2,
     ) -> None:
         if min_reranker_score < 0:
             raise ValueError("min_reranker_score must not be negative")
         if not 0 <= min_query_token_overlap <= 1:
             raise ValueError("min_query_token_overlap must be between 0 and 1")
+        if min_hit_tokens < 1:
+            raise ValueError("min_hit_tokens must be positive")
         self._min_reranker_score = min_reranker_score
         self._min_query_token_overlap = min_query_token_overlap
+        self._min_hit_tokens = min_hit_tokens
 
     def cover(
         self,
@@ -44,20 +48,25 @@ class EvidenceCoverageService:
                 continue
             if score is not None and score < self._min_reranker_score:
                 continue
-            explicit = candidate.supports_need_ids & needs.keys()
             haystack = " ".join(
                 [" ".join(candidate.chunk.section_path), candidate.chunk.content]
             )
             haystack_tokens = set(tokenize(haystack))
-            matched = set(explicit)
+            # 覆盖必须由 token 重叠验证：不采纳候选自带/此前轮次标注的
+            # supports_need_ids（explicit），避免无关文档被上一跳标注后一直假覆盖。
+            matched: set[str] = set()
             for need in needs.values():
                 query_tokens = {
                     token for token in tokenize(need.query) if len(token) >= 2
                 }
                 if not query_tokens:
                     continue
-                overlap = len(query_tokens & haystack_tokens) / len(query_tokens)
-                if overlap >= self._min_query_token_overlap:
+                hits = query_tokens & haystack_tokens
+                overlap = len(hits) / len(query_tokens)
+                if (
+                    len(hits) >= self._min_hit_tokens
+                    and overlap >= self._min_query_token_overlap
+                ):
                     matched.add(need.need_id)
             if not matched:
                 continue

@@ -143,6 +143,11 @@ select:focus-visible {
   border-color: #3d5468;
 }
 
+/* 移动端底部栏专属登出口；桌面端登出在 identity-block，隐藏避免重复 */
+.nav-logout {
+  display: none;
+}
+
 .identity-block {
   display: flex;
   align-items: center;
@@ -1302,7 +1307,7 @@ select:focus-visible {
     bottom: 0;
     left: 0;
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     width: 100%;
     height: 60px;
     padding: 5px max(8px, env(safe-area-inset-right)) max(5px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
@@ -1336,6 +1341,10 @@ select:focus-visible {
   .nav-item span {
     display: block;
     font-size: 9px;
+  }
+
+  .nav-logout {
+    display: flex;
   }
 
   .nav-item:hover,
@@ -1608,9 +1617,20 @@ select:focus-visible {
 }
 
 .login-subtitle {
-  margin: 0 0 22px;
+  margin: 0 0 10px;
   color: var(--muted);
   font-size: 13px;
+}
+
+.login-intro {
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.7;
+  background: var(--paper);
+  border: 1px dashed var(--line);
+  border-radius: 8px;
 }
 
 .demo-account-list {

@@ -233,13 +233,10 @@ class HierarchicalRetrievalService:
                     document_keys=route_keys,
                     strategy=strategy,
                 )
+                # 补充检索候选不强制绑定 need：命中与否由最终 coverage 重新做
+                # overlap 语义验证，避免无关文档被假标记为已覆盖。
                 supplemental.extend(
-                    item.model_copy(
-                        update={
-                            "retrieval_hop": 2,
-                            "supports_need_ids": {need_id},
-                        }
-                    )
+                    item.model_copy(update={"retrieval_hop": 2})
                     for item in result.candidates
                     if (item.document.document_id, item.document.version)
                     in route_keys

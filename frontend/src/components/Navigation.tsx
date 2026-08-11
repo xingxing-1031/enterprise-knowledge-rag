@@ -60,6 +60,12 @@ export function Navigation({ active, onChange, session, onLogout }: NavigationPr
             </button>
           );
         })}
+        {session ? (
+          <button className="nav-item nav-logout" type="button" onClick={onLogout} title="退出登录">
+            <LogOut size={18} strokeWidth={1.8} />
+            <span>退出</span>
+          </button>
+        ) : null}
       </nav>
 
       <div className="identity-block">
