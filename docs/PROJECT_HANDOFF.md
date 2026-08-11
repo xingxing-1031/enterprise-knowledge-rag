@@ -62,15 +62,14 @@
 
 ## 4. 当前验证状态
 
-当前机器已通过 Docker 运行 PostgreSQL/pgvector，并完成真实 `bge-m3`、`bge-reranker-v2-m3` 与 Qwen 的三方案 development 评测：
+当前 production 容器已通过 Docker 运行 PostgreSQL/pgvector，并完成远程模型（`text-embedding-v3` / `qwen3-rerank` / `qwen-plus`）的三方案 development 评测（当前 20 份文档语料快照 `sha256:2fdece…`）：
 
-- `evaluation/reports/development-*-qwen3-4b-local-r1.json` 保留本地 `qwen3:4b` 单次基线。
-- `evaluation/reports/development-*-r1..r3.json` 保存百炼 `qwen-plus` 三策略各 3 次对比，`development-summary.json` 保存均值、范围和总体标准差；`latest-development.json` 指向默认 Hybrid RRF 的第 3 次报告。
-- 纯向量、Hybrid RRF、Hybrid + Reranker 的核心通过率均值都为 49.02%；执行成功率均值分别为 100%、98.04% 和 100%。
-- Hybrid RRF 相比纯向量将证据覆盖率从 66.67% 提高到 73.33%、二跳成功率从 58.33% 提高到 66.67%，P95 均值从 18.54s 降到 15.50s，因此固定为演示默认策略。
-- 9 份重复报告的权限泄漏率均为 0。Reranker 只把 Recall@5 提高 1.52 个百分点，没有提高核心通过率，且 P50/P95 均值升至 8.30s/20.40s。
-- 8 条 frozen holdout 已在提交 `f31a2e2` 上一次性运行：执行成功率 75.00%、核心通过率 62.50%、Recall@5 100.00%、引用准确率 85.00%、权限泄漏率 0%、P50/P95 6.93s/41.45s。
-- frozen 中两条远程 `ModelProviderError` 计为失败，病假紧急流程题因引用不完整未通过；报告已归档为 `evaluation/reports/final-holdout.json`，禁止调参后重跑。
+- `evaluation/reports/development-*-r1..r3.json` 保存百炼 `qwen-plus` 三策略各 3 次对比，`development-summary.json` 保存均值、范围和总体标准差；`latest-development.json` 指向生产默认 `hybrid_rrf_reranker` 的第 3 次报告。容器内无 git 元数据，`code_commit` 记为 `unknown0`。
+- 纯向量、Hybrid RRF、Hybrid + Reranker 的核心通过率均值分别为 45.10%、49.02%、49.02%；执行成功率均值均为 100%。
+- Hybrid RRF 相比纯向量将核心通过率提高 3.92 个百分点、引用准确率提高 5.30 个百分点，P95 均值从 13.13s 降到 11.78s。Reranker 只把二跳触发准确率提高到 93.33%、二跳成功率提高到 91.67%，未带来核心通过率收益，P50/P95 均值升至 7.53s/14.37s，因此生产默认 `hybrid_rrf_reranker` 是链路展示而非"更准"的结论。
+- 9 份重复报告的权限泄漏率均为 0。
+- 8 条 frozen holdout 已在提交 `f31a2e2` 上一次性运行（本地 `bge-m3`、12 份文档语料快照 `sha256:810fac…`）：执行成功率 75.00%、核心通过率 62.50%、Recall@5 100.00%、引用准确率 85.00%、权限泄漏率 0%、P50/P95 6.93s/41.45s。
+- frozen 中两条远程 `ModelProviderError` 计为失败，病假紧急流程题因引用不完整未通过；报告已归档为 `evaluation/reports/final-holdout.json`，禁止调参后重跑，数字只代表当时快照。
 - README、简历和验收材料只能引用 `evaluation/reports/` 可追溯的指标，不能填写用户数或生产指标。
 
 ## 5. 下一次运行顺序

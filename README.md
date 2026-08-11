@@ -6,7 +6,7 @@
 
 项目已完成版本化合成语料、受控文档导入、标题感知切分、父文档/子章节双层索引、权限与版本过滤、BM25 + 向量 + RRF + Reranker、最多两跳的证据补全、引用校验、拒答、LangGraph、FastAPI/SSE 和受控评测框架。
 
-真实运行适配器、连接池、增量迁移与索引命令、启动入口和 React 企业知识工作台已经接通。Docker Compose 按 PostgreSQL、迁移、索引、API 的顺序启动，并由 FastAPI 同源提供前端。当前环境已完成 PostgreSQL/pgvector、本地 `bge-m3`、可选 `bge-reranker-v2-m3` 与百炼 `qwen-plus` 的端到端验收，演示默认使用 `hybrid_rrf`。
+真实运行适配器、连接池、增量迁移与索引命令、启动入口和 React 企业知识工作台已经接通。Docker Compose 按 PostgreSQL、迁移、索引、API 的顺序启动，并由 FastAPI 同源提供前端。公网演示已部署 PostgreSQL/pgvector，Embedding、Reranker 与生成均走百炼远程模型（`text-embedding-v3` / `qwen3-rerank` / `qwen-plus`），演示默认使用 `hybrid_rrf_reranker`。
 
 ## 快速启动
 
@@ -30,17 +30,17 @@ docker compose up -d --build --wait
 
 ## Development 评测
 
-在 17 条合成 development 用例上，固定提交 `2bd6b4b`、语料快照、`qwen-plus`、Prompt 和运行环境，对三种检索策略各重复 3 次：
+在 17 条合成 development 用例上，固定 20 份文档语料快照（`sha256:2fdece…`）、百炼远程模型（Embedding `text-embedding-v3` / Reranker `qwen3-rerank` / 生成 `qwen-plus`）、Prompt 和运行环境，对三种检索策略各重复 3 次。报告由生产容器重跑，容器内无 git 元数据，`code_commit` 记为 `unknown0`，可复现条件以语料快照与模型标识为准：
 
-| 策略 | 执行成功率均值 | 核心通过率均值 | 证据覆盖率均值 | 二跳成功率均值 | P50 / P95 均值 |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| 纯向量 | 100.00% | 49.02% | 66.67% | 58.33% | 6.46s / 18.54s |
-| Hybrid RRF | 98.04% | 49.02% | 73.33% | 66.67% | 6.04s / 15.50s |
-| Hybrid + Reranker | 100.00% | 49.02% | 73.33% | 66.67% | 8.30s / 20.40s |
+| 策略 | 执行成功率均值 | 核心通过率均值（范围） | Recall@5 均值 | 引用准确率均值 | 证据覆盖 / 二跳成功 | P50 / P95 均值 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 纯向量 | 100.00% | 45.10%（41.18%–47.06%） | 72.22% | 73.48% | 80.00% / 83.33% | 6.66s / 13.13s |
+| Hybrid RRF | 100.00% | 49.02%（47.06%–52.94%） | 72.22% | 78.79% | 80.00% / 83.33% | 6.63s / 11.78s |
+| Hybrid + Reranker | 100.00% | 49.02%（41.18%–52.94%） | 70.20% | 77.27% | 80.00% / 91.67% | 7.53s / 14.37s |
 
-全部 9 次策略运行的权限泄漏率均为 0。相较纯向量，Hybrid RRF 的证据覆盖率提高 6.67 个百分点、二跳成功率提高 8.33 个百分点、P95 均值降低 16.38%，但核心通过率没有提升；Reranker 仅将 Recall@5 从 71.21% 提高到 72.73%，同时增加延迟。因此默认选择 Hybrid RRF。完整均值、范围与总体标准差见 [`evaluation/reports/development-summary.json`](evaluation/reports/development-summary.json)，指标定义与限制见 [`docs/EVALUATION_PROTOCOL.md`](docs/EVALUATION_PROTOCOL.md)。
+全部 9 次策略运行的权限泄漏率均为 0。相较纯向量，Hybrid RRF 核心通过率提高 3.92 个百分点、引用准确率提高 5.30 个百分点、P95 均值降低约 10.3%，但证据覆盖与二跳成功率持平（80.00% / 83.33%）。Reranker 相对 Hybrid RRF 核心通过率持平（同为 49.02%）、二跳成功率提高 8.34 个百分点，但 Recall@5 降低 2.02 个百分点、P95 均值增加约 22%，因此不能宣称 Reranker 提高端到端正确率；演示默认使用 `hybrid_rrf_reranker` 是为展示完整链路，是否采用仍要看冻结集与成本。完整均值、范围与总体标准差见 [`evaluation/reports/development-summary.json`](evaluation/reports/development-summary.json)，指标定义与限制见 [`docs/EVALUATION_PROTOCOL.md`](docs/EVALUATION_PROTOCOL.md)。
 
-固定配置后一次性消费了 8 条合成 frozen holdout：执行成功率 75.00%、核心通过率 62.50%、Recall@5 100.00%、引用准确率 85.00%、权限泄漏率 0%、P50/P95 6.93s/41.45s。两条远程 `ModelProviderError` 保留在分母中，验收后未根据结果调参或重跑。原始证据见 [`evaluation/reports/final-holdout.json`](evaluation/reports/final-holdout.json)。
+固定配置后一次性消费了 8 条合成 frozen holdout（提交 `f31a2e2`、默认 Hybrid RRF、本地 `bge-m3`、`qwen-plus`、12 份文档语料快照 `sha256:810fac…`）：执行成功率 75.00%、核心通过率 62.50%、Recall@5 100.00%、引用准确率 85.00%、权限泄漏率 0%、P50/P95 6.93s/41.45s。两条远程 `ModelProviderError` 保留在分母中，验收后未根据结果调参或重跑。该冻结集的语料与模型配置早于当前生产部署，且已一次性消费，数字只代表当时快照，不代表当前生产策略。原始证据见 [`evaluation/reports/final-holdout.json`](evaluation/reports/final-holdout.json)。
 
 ## 诚实边界
 

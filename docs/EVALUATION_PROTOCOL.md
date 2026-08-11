@@ -77,9 +77,9 @@
 - 评分器、路由/需求/hop 观测和冻结锁定已用确定性测试替身验证。
 - 三方案真实执行器、工作流观测转换和报告实验元数据已接入；`scripts/run_development.py` 只允许加载 development 数据集。
 - 当前机器已通过 Docker 启动 PostgreSQL/pgvector，并完成本地 Embedding、可选 Reranker 与真实 Qwen 的端到端评测。
-- 已保存本地 `qwen3:4b` 单次基线，以及百炼 `qwen-plus` 三策略各 3 次的原始 development 报告和 `development-summary.json`。
-- 三次结果中 Hybrid RRF 的证据覆盖率/二跳成功率均值为 73.33%/66.67%，P50/P95 均值为 6.04s/15.50s；核心通过率均值为 49.02%，与其他策略相同。
-- 9 份 `qwen-plus` 报告的权限泄漏率均为 0。Reranker 没有提高核心通过率且增加稳态延迟，因此固定演示默认策略为 `hybrid_rrf`。
+- 已保存百炼 `qwen-plus` 三策略各 3 次的原始 development 报告和 `development-summary.json`（当前 20 份文档语料快照 `sha256:2fdece…`，生产容器内重跑，容器无 git 元数据故 `code_commit` 记为 `unknown0`）。
+- 三次结果中纯向量核心通过率均值为 45.10%，Hybrid RRF 与 Reranker 同为 49.02%；证据覆盖率均为 80.00%，二跳成功率分别为 83.33% / 83.33% / 91.67%；P50/P95 均值分别为 6.66s/13.13s、6.63s/11.78s、7.53s/14.37s。
+- 9 份 `qwen-plus` 报告的权限泄漏率均为 0。Reranker 没有提高核心通过率且延迟更高，当前生产演示默认策略为 `hybrid_rrf_reranker`，这是为展示完整检索链路而非"更准"的结论；评测结论是它与 Hybrid RRF 核心持平、延迟更高，选择取决于冻结集验证与成本。
 - frozen holdout 已在 development 结论提交后一次性消费，报告为 `evaluation/reports/final-holdout.json`；禁止重跑或据此调参后继续称为未见集。
 
 ## 8. 分层与多跳指标
