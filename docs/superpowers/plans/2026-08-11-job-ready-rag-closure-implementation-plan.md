@@ -777,7 +777,7 @@ git add evaluation/reports/final-holdout.json README.md docs/INTERVIEW_GUIDE.md 
 git commit -m "test: record final RAG holdout evidence"
 ```
 
-- [ ] **Step 10: Run final verification**
+- [x] **Step 10: Run final verification**
 
 Run fresh full pytest, Ruff, frontend tests/lint/build, Docker readiness, and a standard chat smoke. Confirm `git status --short` is empty and relay the final commits and report-derived interview claims.
 
