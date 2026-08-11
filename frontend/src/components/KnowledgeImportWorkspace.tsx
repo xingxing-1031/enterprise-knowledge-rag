@@ -63,6 +63,20 @@ function toApiMetadata(metadata: ImportMetadata): ImportMetadata {
   };
 }
 
+function deriveDocumentId(filename: string): string {
+  const base = filename
+    .replace(/\.[^.]+$/, "")
+    .normalize("NFKD")
+    .replace(/[^\x00-\x7F]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 119);
+  if (!base) return "import-document";
+  if (/^[a-z0-9]/.test(base)) return base;
+  return `doc-${base}`;
+}
+
 
 export function KnowledgeImportWorkspace({ onIndexed }: KnowledgeImportWorkspaceProps) {
   const [imports, setImports] = useState<KnowledgeImport[]>([]);
@@ -162,7 +176,18 @@ export function KnowledgeImportWorkspace({ onIndexed }: KnowledgeImportWorkspace
           <input
             type="file"
             accept=".pdf,.docx,.md,.txt"
-            onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+            onChange={(event) => {
+              const next = event.target.files?.[0] ?? null;
+              setFile(next);
+              if (next) {
+                const baseTitle = next.name.replace(/\.[^.]+$/, "");
+                setMetadata((current) => ({
+                  ...current,
+                  title: current.title || baseTitle,
+                  document_id: current.document_id || deriveDocumentId(next.name),
+                }));
+              }
+            }}
           />
         </label>
         <div className="metadata-grid">
@@ -170,7 +195,16 @@ export function KnowledgeImportWorkspace({ onIndexed }: KnowledgeImportWorkspace
           <label>文档标题<input required value={metadata.title} onChange={(event) => updateMetadata("title", event.target.value)} placeholder="员工请假管理制度" /></label>
           <label>文档类型<select value={metadata.document_type} onChange={(event) => updateMetadata("document_type", event.target.value as ImportMetadata["document_type"])}><option value="policy">制度</option><option value="process">流程</option><option value="handbook">手册</option><option value="faq">常见问题</option></select></label>
           <label>所属部门<select value={metadata.department} onChange={(event) => updateMetadata("department", event.target.value)}><option value="hr">人力资源</option><option value="finance">财务</option><option value="procurement">采购</option><option value="security">信息安全</option><option value="admin">行政</option></select></label>
-          <label>可见范围<select value={metadata.visibility} onChange={(event) => updateMetadata("visibility", event.target.value as ImportMetadata["visibility"])}><option value="restricted">指定角色</option><option value="department">本部门</option><option value="public">全员可见</option></select></label>
+          <label>可见范围<select value={metadata.visibility} onChange={(event) => {
+  const visibility = event.target.value as ImportMetadata["visibility"];
+  setMetadata((current) => {
+    if (visibility === "public") return { ...current, visibility, allowed_roles: [] };
+    if (visibility === "restricted" && current.allowed_roles.length === 0) {
+      return { ...current, visibility, allowed_roles: ["employee"] };
+    }
+    return { ...current, visibility };
+  });
+}}><option value="restricted">指定角色</option><option value="department">本部门</option><option value="public">全员可见</option></select></label>
           <label>版本号<input required value={metadata.version} onChange={(event) => updateMetadata("version", event.target.value)} placeholder="1.0" /></label>
           <label>生效日期<input required type="date" value={metadata.effective_from.slice(0, 10)} onChange={(event) => updateMetadata("effective_from", event.target.value)} /></label>
           <label>主题标签<input value={metadata.topic_tags.join("，")} onChange={(event) => updateMetadata("topic_tags", [event.target.value])} placeholder="请假，病假，审批" /></label>
