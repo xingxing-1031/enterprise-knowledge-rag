@@ -4,11 +4,13 @@ from collections.abc import Sequence
 from hashlib import sha256
 from math import sqrt
 
-from enterprise_knowledge_rag.bootstrap import build_runtime_service
+from enterprise_knowledge_rag.bootstrap import (
+    _default_embedding_provider,
+    build_runtime_service,
+)
 from enterprise_knowledge_rag.config import Settings, get_settings
 from enterprise_knowledge_rag.database import create_connection_pool
 from enterprise_knowledge_rag.models import UserContext, UserRole
-from enterprise_knowledge_rag.providers import SentenceTransformerEmbeddingProvider
 
 
 class DeterministicTestEmbeddings:
@@ -43,10 +45,7 @@ def _test_embeddings_enabled(settings: Settings) -> bool:
 def build_embedding_provider(settings: Settings):
     if _test_embeddings_enabled(settings):
         return DeterministicTestEmbeddings(settings.embedding_dimension)
-    return SentenceTransformerEmbeddingProvider(
-        settings.embedding_model,
-        expected_dimension=settings.embedding_dimension,
-    )
+    return _default_embedding_provider(settings)
 
 
 def main() -> int:

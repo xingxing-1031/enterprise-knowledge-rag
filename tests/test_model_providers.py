@@ -7,6 +7,7 @@ from enterprise_knowledge_rag.generation import DraftAnswer
 from enterprise_knowledge_rag.providers import (
     CrossEncoderRerankerProvider,
     ModelProviderError,
+    OpenAICompatibleEmbeddingProvider,
     OpenAICompatibleStructuredProvider,
     SentenceTransformerEmbeddingProvider,
 )
@@ -47,6 +48,30 @@ def test_embedding_provider_rejects_wrong_vector_dimension() -> None:
 
     with pytest.raises(ModelProviderError, match="dimension"):
         provider.embed_query("请假")
+
+
+def test_openai_compatible_embedding_provider_orders_and_validates_results() -> None:
+    class FakeEmbeddings:
+        def create(self, **kwargs):
+            assert kwargs["model"] == "text-embedding-v4"
+            assert kwargs["input"] == ["first", "second"]
+            return SimpleNamespace(
+                data=[
+                    SimpleNamespace(index=1, embedding=[0.0, 1.0]),
+                    SimpleNamespace(index=0, embedding=[1.0, 0.0]),
+                ]
+            )
+
+    provider = OpenAICompatibleEmbeddingProvider(
+        SimpleNamespace(embeddings=FakeEmbeddings()),
+        model="text-embedding-v4",
+        expected_dimension=2,
+    )
+
+    assert provider.embed_documents(["first", "second"]) == [
+        [1.0, 0.0],
+        [0.0, 1.0],
+    ]
 
 
 class FakeCrossEncoder:

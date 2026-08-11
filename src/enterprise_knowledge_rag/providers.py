@@ -80,6 +80,55 @@ class SentenceTransformerEmbeddingProvider:
         return self._embed([query])[0]
 
 
+class OpenAICompatibleEmbeddingProvider:
+    """Embedding provider for OpenAI-compatible vendor APIs."""
+
+    def __init__(
+        self,
+        client: Any,
+        *,
+        model: str,
+        expected_dimension: int = 1024,
+        timeout_seconds: float = 30.0,
+    ) -> None:
+        self._client = client
+        self._model = model
+        self._expected_dimension = expected_dimension
+        self._timeout_seconds = timeout_seconds
+
+    def _embed(self, texts: Sequence[str]) -> list[list[float]]:
+        input_texts = list(texts)
+        if not input_texts:
+            return []
+        if any(not text.strip() for text in input_texts):
+            raise ModelProviderError("embedding input must not be empty")
+        try:
+            response = self._client.embeddings.create(
+                model=self._model,
+                input=input_texts,
+                timeout=self._timeout_seconds,
+            )
+            data = sorted(response.data, key=lambda item: item.index)
+            vectors = _as_vectors([item.embedding for item in data])
+        except ModelProviderError:
+            raise
+        except Exception as exc:
+            raise ModelProviderError("embedding API request failed") from exc
+        if len(vectors) != len(input_texts):
+            raise ModelProviderError("embedding result count does not match input")
+        if any(len(vector) != self._expected_dimension for vector in vectors):
+            raise ModelProviderError("embedding vector dimension does not match schema")
+        if any(not isfinite(value) for vector in vectors for value in vector):
+            raise ModelProviderError("embedding vectors must contain finite values")
+        return vectors
+
+    def embed_documents(self, texts: Sequence[str]) -> list[list[float]]:
+        return self._embed(texts)
+
+    def embed_query(self, query: str) -> list[float]:
+        return self._embed([query])[0]
+
+
 class CrossEncoderRerankerProvider:
     def __init__(
         self,

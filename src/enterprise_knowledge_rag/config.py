@@ -22,6 +22,9 @@ class Settings(BaseSettings):
     model_base_url: str = "http://127.0.0.1:11434/v1"
     model_name: str = "qwen3:4b"
     model_api_key: str = "ollama"
+    embedding_provider: str = "local"
+    embedding_base_url: str | None = None
+    embedding_api_key: str | None = None
     embedding_model: str = "BAAI/bge-m3"
     embedding_dimension: int = Field(default=1024, ge=1, le=4096)
     reranker_model: str = "BAAI/bge-reranker-v2-m3"
