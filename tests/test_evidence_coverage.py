@@ -96,6 +96,57 @@ def test_coverage_does_not_mark_a_need_from_one_generic_shared_token() -> None:
     assert result.missing_required_need_ids == frozenset({"material"})
 
 
+OVERTIME_PLAN = RetrievalPlan(
+    primary_query="公司有加班吗，加班费怎么算？",
+    topic="考勤加班",
+    evidence_needs=[
+        EvidenceNeed(
+            need_id="rule",
+            kind="rule",
+            query="加班报酬的计发基数与倍数标准",
+            required=True,
+        ),
+    ],
+    requires_multi_hop=True,
+    max_hops=2,
+)
+
+OVERTIME_CONTENT = (
+    "公司加班费按加班时长计算：工作日加班按 1.5 倍工资支付，"
+    "法定节假日按 3 倍。"
+)
+
+
+def test_primary_query_bridge_covers_need_with_lexical_gap() -> None:
+    candidate = make_candidate(
+        "attendance:overtime",
+        title="考勤与加班管理制度",
+        content=OVERTIME_CONTENT,
+    ).model_copy(update={"reranker_score": 0.8})
+
+    result = EvidenceCoverageService().cover(OVERTIME_PLAN, [candidate])
+
+    # 直接 token 重叠不足（"报酬/计发/基数" 与文档用词不符），但候选被
+    # reranker 认可与主查询强相关、且主查询 token 重叠充分，经语义桥接覆盖。
+    assert result.covered_need_ids == frozenset({"rule"})
+    assert result.missing_required_need_ids == frozenset()
+    assert result.annotated_candidates[0].supports_need_ids == {"rule"}
+
+
+def test_primary_query_bridge_requires_reranker_approval() -> None:
+    candidate = make_candidate(
+        "attendance:overtime",
+        title="考勤与加班管理制度",
+        content=OVERTIME_CONTENT,
+    ).model_copy(update={"reranker_score": 0.2})
+
+    result = EvidenceCoverageService().cover(OVERTIME_PLAN, [candidate])
+
+    # reranker 未认可强相关时禁止主查询桥接，避免任意共享词造成假覆盖。
+    assert result.covered_need_ids == frozenset()
+    assert result.missing_required_need_ids == frozenset({"rule"})
+
+
 @pytest.mark.parametrize("overlap", [-0.1, 1.1])
 def test_query_token_overlap_must_be_between_zero_and_one(overlap: float) -> None:
     with pytest.raises(ValueError, match="between 0 and 1"):

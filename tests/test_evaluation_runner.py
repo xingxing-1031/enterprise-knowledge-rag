@@ -210,6 +210,6 @@ def test_committed_datasets_validate_without_running_holdout() -> None:
     holdout = load_dataset(project_root / "evaluation" / "frozen_holdout.json")
 
     assert development.split is EvaluationSplit.DEVELOPMENT
-    assert len(development.cases) == 17
+    assert len(development.cases) == 18
     assert holdout.split is EvaluationSplit.FROZEN_HOLDOUT
     assert len(holdout.cases) == 8

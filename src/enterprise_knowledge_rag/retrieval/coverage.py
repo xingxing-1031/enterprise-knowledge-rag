@@ -21,8 +21,10 @@ class EvidenceCoverageService:
         self,
         *,
         min_reranker_score: float = 0.0,
-        min_query_token_overlap: float = 0.65,
+        min_query_token_overlap: float = 0.3,
         min_hit_tokens: int = 2,
+        min_primary_reranker_score: float = 0.5,
+        min_primary_overlap: float = 0.5,
     ) -> None:
         if min_reranker_score < 0:
             raise ValueError("min_reranker_score must not be negative")
@@ -30,9 +32,13 @@ class EvidenceCoverageService:
             raise ValueError("min_query_token_overlap must be between 0 and 1")
         if min_hit_tokens < 1:
             raise ValueError("min_hit_tokens must be positive")
+        if not 0 <= min_primary_overlap <= 1:
+            raise ValueError("min_primary_overlap must be between 0 and 1")
         self._min_reranker_score = min_reranker_score
         self._min_query_token_overlap = min_query_token_overlap
         self._min_hit_tokens = min_hit_tokens
+        self._min_primary_reranker_score = min_primary_reranker_score
+        self._min_primary_overlap = min_primary_overlap
 
     def cover(
         self,
@@ -40,6 +46,9 @@ class EvidenceCoverageService:
         candidates: Sequence[RetrievalCandidate],
     ) -> CoverageResult:
         needs = {need.need_id: need for need in plan.evidence_needs}
+        primary_tokens = {
+            token for token in tokenize(plan.primary_query) if len(token) >= 2
+        }
         annotated: list[RetrievalCandidate] = []
         covered: set[str] = set()
         for candidate in candidates:
@@ -68,6 +77,22 @@ class EvidenceCoverageService:
                     and overlap >= self._min_query_token_overlap
                 ):
                     matched.add(need.need_id)
+                    continue
+                # 主查询语义桥接：候选与用户原问题被 reranker 认可为强相关，
+                # 且与主查询 token 重叠充分，即使与 LLM 形式化的 need 查询字面差异
+                # 较大，也视为该 need 的依据（如"加班费"对"加班补偿"）。
+                if (
+                    score is not None
+                    and score >= self._min_primary_reranker_score
+                    and primary_tokens
+                ):
+                    primary_hits = primary_tokens & haystack_tokens
+                    primary_overlap = len(primary_hits) / len(primary_tokens)
+                    if (
+                        len(primary_hits) >= self._min_hit_tokens
+                        and primary_overlap >= self._min_primary_overlap
+                    ):
+                        matched.add(need.need_id)
             if not matched:
                 continue
             covered.update(matched)

@@ -136,9 +136,22 @@
       "required_answer_facts": []
     },
     {
-      "case_id": "dev-insufficient-parental-leave",
+      "case_id": "dev-hr-parental-leave-days",
       "split": "development",
       "question": "公司的育儿假每年有多少天？",
+      "as_of": "2026-08-10T10:00:00+08:00",
+      "user": {"user_id": "eval-employee", "role": "employee", "departments": ["hr"]},
+      "expected_in_scope": true,
+      "expected_outcome": "answer",
+      "gold_evidence_keys": ["hr-parental-leave@1.0#育儿假天数"],
+      "expected_versions": {"hr-parental-leave": "1.0"},
+      "forbidden_document_ids": [],
+      "required_answer_facts": ["5 天"]
+    },
+    {
+      "case_id": "dev-insufficient-uncovered-leave",
+      "split": "development",
+      "question": "员工的探亲假每年有几天？",
       "as_of": "2026-08-10T10:00:00+08:00",
       "user": {"user_id": "eval-employee", "role": "employee", "departments": ["hr"]},
       "expected_in_scope": true,
