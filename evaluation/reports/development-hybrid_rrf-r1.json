@@ -3,7 +3,7 @@
   "dataset_version": "1.0",
   "split": "development",
   "strategy": "hybrid_rrf",
-  "corpus_snapshot": "sha256:2fdece3513d1e650cfd2c17f5a69d559bf68e3da77ac19d932e18a6c319edece",
+  "corpus_snapshot": "sha256:d51487000f465c59e799b4ece4153bf43053df247d9571cd5f5dae9b59538b70",
   "ranking_k": 5,
   "experiment": {
     "code_commit": "unknown0",
@@ -15,31 +15,31 @@
     "repetition": 1,
     "environment": "production"
   },
-  "started_at": "2026-08-11T21:54:40.154830Z",
-  "completed_at": "2026-08-11T21:56:27.600753Z",
+  "started_at": "2026-08-12T14:20:49.206157Z",
+  "completed_at": "2026-08-12T14:22:22.564997Z",
   "holdout_consumed_at": null,
   "metrics": {
-    "case_count": 17,
+    "case_count": 18,
     "execution_success_rate": 1.0,
-    "core_pass_rate": 0.47058823529411764,
+    "core_pass_rate": 0.5555555555555556,
     "domain_accuracy": 1.0,
-    "recall_at_k": 0.712121212121212,
-    "reciprocal_rank": 0.8181818181818182,
-    "ndcg_at_k": 0.7347659926171104,
+    "recall_at_k": 0.7638888888888888,
+    "reciprocal_rank": 0.8333333333333334,
+    "ndcg_at_k": 0.7815423191461733,
     "access_leakage_rate": 0.0,
-    "version_accuracy": 0.6363636363636364,
-    "citation_accuracy": 0.7727272727272727,
-    "correct_refusal_rate": 0.3333333333333333,
-    "false_refusal_rate": 0.11764705882352941,
-    "automated_answer_score": 0.6212121212121212,
-    "document_route_recall": 0.9545454545454546,
-    "evidence_need_coverage": 0.8,
+    "version_accuracy": 0.6666666666666666,
+    "citation_accuracy": 0.6944444444444445,
+    "correct_refusal_rate": 0.5,
+    "false_refusal_rate": 0.16666666666666666,
+    "automated_answer_score": 0.611111111111111,
+    "document_route_recall": 0.875,
+    "evidence_need_coverage": 0.3,
     "second_hop_trigger_accuracy": 0.8,
-    "second_hop_success": 0.75,
-    "irrelevant_evidence_ratio": 0.4215686274509804,
-    "p50_latency_ms": 6365.05165399285,
-    "p95_latency_ms": 10384.274854965042,
-    "total_model_calls": 30
+    "second_hop_success": 0.0,
+    "irrelevant_evidence_ratio": 0.2314814814814815,
+    "p50_latency_ms": 4946.736801997758,
+    "p95_latency_ms": 8937.800010025967,
+    "total_model_calls": 27
   },
   "cases": [
     {
@@ -58,42 +58,89 @@
             "version": "1.0"
           },
           {
-            "evidence_key": "hr-leave-policy@2.0#材料要求",
-            "document_id": "hr-leave-policy",
-            "version": "2.0"
-          },
-          {
-            "evidence_key": "hr-leave-holidays@1.0#适用范围",
-            "document_id": "hr-leave-holidays",
-            "version": "1.0"
-          },
-          {
-            "evidence_key": "hr-leave-holidays@1.0#调休补班",
+            "evidence_key": "hr-leave-holidays@1.0#带薪年假",
             "document_id": "hr-leave-holidays",
             "version": "1.0"
           }
         ],
         "citations": [
+          "hr-leave-holidays@1.0#年假申请",
+          "hr-leave-holidays@1.0#带薪年假",
           "hr-leave-policy@2.0#申请与审批"
         ],
         "status": "success",
         "refusal_reason": null,
         "answer": "连续请假两天需要直属主管审批。",
-        "latency_ms": 6129.117644974031,
+        "latency_ms": 8937.800010025967,
         "model_calls": 2,
         "routed_document_keys": [
           "hr-leave-policy@2.0",
           "hr-leave-holidays@1.0",
-          "hr-resignation-process@1.0",
-          "hr-attendance-overtime@1.0"
+          "hr-bereavement-leave@1.0",
+          "hr-maternity-leave@1.0"
         ],
-        "retrieval_hops": 2,
+        "retrieval_hops": 1,
         "required_need_ids": [
           "approver",
           "rule"
         ],
         "covered_need_ids": [
           "approver",
+          "rule"
+        ]
+      },
+      "metrics": {
+        "domain_accuracy": 1.0,
+        "ranking": {
+          "recall_at_k": 1.0,
+          "reciprocal_rank": 1.0,
+          "ndcg_at_k": 1.0
+        },
+        "access_leakage": 0.0,
+        "version_accuracy": 1.0,
+        "citation_accuracy": 0.3333333333333333,
+        "correct_refusal": null,
+        "false_refusal": 0.0,
+        "automated_answer_score": 1.0,
+        "document_route_recall": 1.0,
+        "evidence_need_coverage": null,
+        "second_hop_trigger_accuracy": null,
+        "second_hop_success": null,
+        "irrelevant_evidence_ratio": 0.6666666666666666,
+        "core_pass": false
+      },
+      "error_type": null
+    },
+    {
+      "case_id": "dev-hr-leave-materials",
+      "observation": {
+        "in_scope": true,
+        "retrieved": [
+          {
+            "evidence_key": "hr-leave-policy@2.0#材料要求",
+            "document_id": "hr-leave-policy",
+            "version": "2.0"
+          }
+        ],
+        "citations": [
+          "hr-leave-policy@2.0#材料要求"
+        ],
+        "status": "success",
+        "refusal_reason": null,
+        "answer": "病假超过两天需提交医疗机构出具的证明；紧急就医可先电话报备，返岗后2个工作日内补交材料。",
+        "latency_ms": 7683.103871007916,
+        "model_calls": 2,
+        "routed_document_keys": [
+          "hr-leave-policy@2.0",
+          "hr-medical-certificate-process@1.0",
+          "hr-leave-holidays@1.0",
+          "hr-bereavement-leave@1.0"
+        ],
+        "retrieval_hops": 1,
+        "required_need_ids": [
+          "rule"
+        ],
+        "covered_need_ids": [
           "rule"
         ]
       },
@@ -114,86 +161,8 @@
         "evidence_need_coverage": null,
         "second_hop_trigger_accuracy": null,
         "second_hop_success": null,
-        "irrelevant_evidence_ratio": 0.6,
+        "irrelevant_evidence_ratio": 0.0,
         "core_pass": true
-      },
-      "error_type": null
-    },
-    {
-      "case_id": "dev-hr-leave-materials",
-      "observation": {
-        "in_scope": true,
-        "retrieved": [
-          {
-            "evidence_key": "hr-leave-policy@2.0#材料要求",
-            "document_id": "hr-leave-policy",
-            "version": "2.0"
-          },
-          {
-            "evidence_key": "hr-medical-certificate-process@1.0#Certificate requirements",
-            "document_id": "hr-medical-certificate-process",
-            "version": "1.0"
-          },
-          {
-            "evidence_key": "hr-leave-policy@2.0#申请与审批",
-            "document_id": "hr-leave-policy",
-            "version": "2.0"
-          },
-          {
-            "evidence_key": "hr-leave-policy@2.0#例外处理",
-            "document_id": "hr-leave-policy",
-            "version": "2.0"
-          },
-          {
-            "evidence_key": "hr-resignation-process@1.0#适用范围",
-            "document_id": "hr-resignation-process",
-            "version": "1.0"
-          }
-        ],
-        "citations": [
-          "hr-medical-certificate-process@1.0#Certificate requirements",
-          "hr-leave-policy@2.0#材料要求"
-        ],
-        "status": "success",
-        "refusal_reason": null,
-        "answer": "病假超过两个工作日需提交医疗机构出具的证明；紧急就医可先电话报备，返岗后2个工作日内补交材料。",
-        "latency_ms": 8175.121973035857,
-        "model_calls": 2,
-        "routed_document_keys": [
-          "hr-medical-certificate-process@1.0",
-          "hr-leave-policy@2.0",
-          "hr-leave-holidays@1.0",
-          "hr-resignation-process@1.0"
-        ],
-        "retrieval_hops": 2,
-        "required_need_ids": [
-          "material",
-          "exception"
-        ],
-        "covered_need_ids": [
-          "material",
-          "exception"
-        ]
-      },
-      "metrics": {
-        "domain_accuracy": 1.0,
-        "ranking": {
-          "recall_at_k": 1.0,
-          "reciprocal_rank": 1.0,
-          "ndcg_at_k": 1.0
-        },
-        "access_leakage": 0.0,
-        "version_accuracy": 1.0,
-        "citation_accuracy": 0.5,
-        "correct_refusal": null,
-        "false_refusal": 0.0,
-        "automated_answer_score": 1.0,
-        "document_route_recall": 1.0,
-        "evidence_need_coverage": null,
-        "second_hop_trigger_accuracy": null,
-        "second_hop_success": null,
-        "irrelevant_evidence_ratio": 0.4,
-        "core_pass": false
       },
       "error_type": null
     },
@@ -206,6 +175,11 @@
             "evidence_key": "finance-expense-policy@2.0#报销期限",
             "document_id": "finance-expense-policy",
             "version": "2.0"
+          },
+          {
+            "evidence_key": "finance-travel-allowance@1.0#例外审批",
+            "document_id": "finance-travel-allowance",
+            "version": "1.0"
           }
         ],
         "citations": [
@@ -214,7 +188,7 @@
         "status": "success",
         "refusal_reason": null,
         "answer": "出差结束后15个自然日内提交报销申请。",
-        "latency_ms": 4581.208924995735,
+        "latency_ms": 5848.044566984754,
         "model_calls": 2,
         "routed_document_keys": [
           "finance-expense-policy@2.0",
@@ -247,7 +221,7 @@
         "evidence_need_coverage": null,
         "second_hop_trigger_accuracy": null,
         "second_hop_success": null,
-        "irrelevant_evidence_ratio": 0.0,
+        "irrelevant_evidence_ratio": 0.5,
         "core_pass": true
       },
       "error_type": null
@@ -261,6 +235,11 @@
             "evidence_key": "finance-expense-policy@1.0#报销期限",
             "document_id": "finance-expense-policy",
             "version": "1.0"
+          },
+          {
+            "evidence_key": "finance-expense-policy@1.0#交通标准",
+            "document_id": "finance-expense-policy",
+            "version": "1.0"
           }
         ],
         "citations": [
@@ -268,8 +247,8 @@
         ],
         "status": "success",
         "refusal_reason": null,
-        "answer": "出差结束后10个自然日内提交报销申请，逾期需要说明原因。",
-        "latency_ms": 5261.158943001647,
+        "answer": "出差结束后10个自然日内提交报销申请。",
+        "latency_ms": 5925.515490991529,
         "model_calls": 2,
         "routed_document_keys": [
           "finance-expense-policy@1.0",
@@ -324,16 +303,6 @@
             "evidence_key": "hr-onboarding-process@1.2#办理时限",
             "document_id": "hr-onboarding-process",
             "version": "1.2"
-          },
-          {
-            "evidence_key": "hr-resignation-process@1.0#适用范围",
-            "document_id": "hr-resignation-process",
-            "version": "1.0"
-          },
-          {
-            "evidence_key": "hr-employee-benefits@1.0#适用范围",
-            "document_id": "hr-employee-benefits",
-            "version": "1.0"
           }
         ],
         "citations": [
@@ -342,7 +311,7 @@
         "status": "success",
         "refusal_reason": null,
         "answer": "新员工入职前应准备身份证明、学历证明和银行卡信息。",
-        "latency_ms": 6365.05165399285,
+        "latency_ms": 5431.32890103152,
         "model_calls": 2,
         "routed_document_keys": [
           "hr-onboarding-process@1.2",
@@ -350,13 +319,14 @@
           "hr-employee-benefits@1.0",
           "hr-leave-holidays@1.0"
         ],
-        "retrieval_hops": 2,
+        "retrieval_hops": 1,
         "required_need_ids": [
           "material",
-          "rule"
+          "material_2"
         ],
         "covered_need_ids": [
           "material",
+          "material_2",
           "rule"
         ]
       },
@@ -377,7 +347,7 @@
         "evidence_need_coverage": null,
         "second_hop_trigger_accuracy": null,
         "second_hop_success": null,
-        "irrelevant_evidence_ratio": 0.4,
+        "irrelevant_evidence_ratio": 0.0,
         "core_pass": true
       },
       "error_type": null
@@ -396,26 +366,6 @@
             "evidence_key": "procurement-purchase-process@1.0#申请条件",
             "document_id": "procurement-purchase-process",
             "version": "1.0"
-          },
-          {
-            "evidence_key": "hr-attendance-overtime@1.0#考勤记录",
-            "document_id": "hr-attendance-overtime",
-            "version": "1.0"
-          },
-          {
-            "evidence_key": "procurement-purchase-process@1.0#到货验收",
-            "document_id": "procurement-purchase-process",
-            "version": "1.0"
-          },
-          {
-            "evidence_key": "procurement-supplier-onboarding-process@1.0#Review and activation",
-            "document_id": "procurement-supplier-onboarding-process",
-            "version": "1.0"
-          },
-          {
-            "evidence_key": "hr-compensation-payroll@1.0#适用范围",
-            "document_id": "hr-compensation-payroll",
-            "version": "1.0"
           }
         ],
         "citations": [
@@ -424,7 +374,7 @@
         "status": "success",
         "refusal_reason": null,
         "answer": "至少保留两家供应商的比价记录。",
-        "latency_ms": 6047.905442013871,
+        "latency_ms": 6140.857000020333,
         "model_calls": 2,
         "routed_document_keys": [
           "procurement-purchase-process@1.0",
@@ -432,16 +382,14 @@
           "hr-attendance-overtime@1.0",
           "hr-compensation-payroll@1.0"
         ],
-        "retrieval_hops": 2,
+        "retrieval_hops": 1,
         "required_need_ids": [
-          "rule_2",
-          "procedure",
-          "rule"
+          "rule",
+          "rule_2"
         ],
         "covered_need_ids": [
-          "rule_2",
-          "procedure",
-          "rule"
+          "rule",
+          "rule_2"
         ]
       },
       "metrics": {
@@ -461,7 +409,7 @@
         "evidence_need_coverage": null,
         "second_hop_trigger_accuracy": null,
         "second_hop_success": null,
-        "irrelevant_evidence_ratio": 0.5,
+        "irrelevant_evidence_ratio": 0.0,
         "core_pass": true
       },
       "error_type": null
@@ -485,16 +433,6 @@
             "evidence_key": "admin-asset-management@1.0#领用登记",
             "document_id": "admin-asset-management",
             "version": "1.0"
-          },
-          {
-            "evidence_key": "admin-asset-management@1.0#归还检查",
-            "document_id": "admin-asset-management",
-            "version": "1.0"
-          },
-          {
-            "evidence_key": "security-account-access@1.0#最小权限",
-            "document_id": "security-account-access",
-            "version": "1.0"
           }
         ],
         "citations": [
@@ -503,7 +441,7 @@
         "status": "success",
         "refusal_reason": null,
         "answer": "员工转岗时，原部门权限应在转岗生效日结束前回收。",
-        "latency_ms": 8348.710275953636,
+        "latency_ms": 6385.997063014656,
         "model_calls": 2,
         "routed_document_keys": [
           "hr-leave-holidays@1.0",
@@ -511,16 +449,16 @@
           "admin-asset-management@1.0",
           "security-account-access@1.0"
         ],
-        "retrieval_hops": 2,
+        "retrieval_hops": 1,
         "required_need_ids": [
-          "deadline",
           "rule",
-          "scope"
+          "deadline",
+          "procedure"
         ],
         "covered_need_ids": [
-          "deadline",
           "rule",
-          "scope"
+          "deadline",
+          "procedure"
         ]
       },
       "metrics": {
@@ -540,7 +478,7 @@
         "evidence_need_coverage": null,
         "second_hop_trigger_accuracy": null,
         "second_hop_success": null,
-        "irrelevant_evidence_ratio": 0.6,
+        "irrelevant_evidence_ratio": 0.6666666666666666,
         "core_pass": true
       },
       "error_type": null
@@ -554,13 +492,13 @@
         "status": "refused",
         "refusal_reason": "insufficient_evidence",
         "answer": "当前知识库中没有足够依据回答这个问题。",
-        "latency_ms": 3178.930080961436,
+        "latency_ms": 2768.449682975188,
         "model_calls": 1,
         "routed_document_keys": [
           "hr-leave-policy@2.0",
           "hr-resignation-process@1.0",
-          "hr-leave-holidays@1.0",
-          "admin-asset-management@1.0"
+          "hr-bereavement-leave@1.0",
+          "hr-leave-holidays@1.0"
         ],
         "retrieval_hops": 1,
         "required_need_ids": [
@@ -581,7 +519,7 @@
         "correct_refusal": null,
         "false_refusal": 1.0,
         "automated_answer_score": 0.0,
-        "document_route_recall": 1.0,
+        "document_route_recall": 0.0,
         "evidence_need_coverage": null,
         "second_hop_trigger_accuracy": null,
         "second_hop_success": null,
@@ -596,47 +534,27 @@
         "in_scope": true,
         "retrieved": [
           {
-            "evidence_key": "hr-onboarding-process@1.2#到岗办理",
-            "document_id": "hr-onboarding-process",
-            "version": "1.2"
-          },
-          {
-            "evidence_key": "hr-compensation-payroll@1.0#代扣与查询",
-            "document_id": "hr-compensation-payroll",
-            "version": "1.0"
-          },
-          {
             "evidence_key": "hr-employee-benefits@1.0#适用范围",
             "document_id": "hr-employee-benefits",
-            "version": "1.0"
-          },
-          {
-            "evidence_key": "hr-compensation-payroll@1.0#适用范围",
-            "document_id": "hr-compensation-payroll",
-            "version": "1.0"
-          },
-          {
-            "evidence_key": "hr-leave-holidays@1.0#年假申请",
-            "document_id": "hr-leave-holidays",
             "version": "1.0"
           },
           {
             "evidence_key": "hr-leave-holidays@1.0#适用范围",
             "document_id": "hr-leave-holidays",
             "version": "1.0"
+          },
+          {
+            "evidence_key": "hr-compensation-payroll@1.0#适用范围",
+            "document_id": "hr-compensation-payroll",
+            "version": "1.0"
           }
         ],
-        "citations": [
-          "hr-employee-benefits@1.0#适用范围",
-          "hr-onboarding-process@1.2#到岗办理",
-          "hr-compensation-payroll@1.0#代扣与查询",
-          "hr-compensation-payroll@1.0#适用范围"
-        ],
-        "status": "success",
-        "refusal_reason": null,
-        "answer": "无法确定普通员工是否能查询全员付款审批额度，权限表未在提供的证据中出现。",
-        "latency_ms": 9704.083262011409,
-        "model_calls": 2,
+        "citations": [],
+        "status": "refused",
+        "refusal_reason": "insufficient_evidence",
+        "answer": "当前知识库中没有足够依据回答这个问题。",
+        "latency_ms": 3891.304852964822,
+        "model_calls": 1,
         "routed_document_keys": [
           "hr-leave-holidays@1.0",
           "hr-employee-benefits@1.0",
@@ -649,7 +567,6 @@
           "scope"
         ],
         "covered_need_ids": [
-          "rule",
           "scope"
         ]
       },
@@ -680,7 +597,7 @@
         "status": "refused",
         "refusal_reason": "out_of_scope",
         "answer": "这个问题不属于当前企业制度与流程知识库的范围。",
-        "latency_ms": 1.6999539802782238,
+        "latency_ms": 1.7268529627472162,
         "model_calls": 0,
         "routed_document_keys": [],
         "retrieval_hops": 0,
@@ -706,19 +623,98 @@
       "error_type": null
     },
     {
-      "case_id": "dev-insufficient-parental-leave",
+      "case_id": "dev-hr-parental-leave-days",
       "observation": {
         "in_scope": true,
-        "retrieved": [],
-        "citations": [],
-        "status": "refused",
-        "refusal_reason": "insufficient_evidence",
-        "answer": "当前知识库中没有足够依据回答这个问题。",
-        "latency_ms": 2454.6215960290283,
-        "model_calls": 1,
+        "retrieved": [
+          {
+            "evidence_key": "hr-parental-leave@1.0#育儿假天数",
+            "document_id": "hr-parental-leave",
+            "version": "1.0"
+          },
+          {
+            "evidence_key": "hr-parental-leave@1.0#适用范围",
+            "document_id": "hr-parental-leave",
+            "version": "1.0"
+          },
+          {
+            "evidence_key": "hr-maternity-leave@1.0#产假天数",
+            "document_id": "hr-maternity-leave",
+            "version": "1.0"
+          }
+        ],
+        "citations": [
+          "hr-parental-leave@1.0#育儿假天数"
+        ],
+        "status": "success",
+        "refusal_reason": null,
+        "answer": "公司的育儿假每年有5天。",
+        "latency_ms": 7544.868495024275,
+        "model_calls": 2,
         "routed_document_keys": [
-          "hr-leave-policy@2.0",
+          "hr-parental-leave@1.0",
+          "hr-maternity-leave@1.0",
+          "hr-paternity-leave@1.0",
+          "hr-leave-policy@2.0"
+        ],
+        "retrieval_hops": 1,
+        "required_need_ids": [
+          "rule"
+        ],
+        "covered_need_ids": [
+          "rule"
+        ]
+      },
+      "metrics": {
+        "domain_accuracy": 1.0,
+        "ranking": {
+          "recall_at_k": 1.0,
+          "reciprocal_rank": 1.0,
+          "ndcg_at_k": 1.0
+        },
+        "access_leakage": 0.0,
+        "version_accuracy": 1.0,
+        "citation_accuracy": 1.0,
+        "correct_refusal": null,
+        "false_refusal": 0.0,
+        "automated_answer_score": 1.0,
+        "document_route_recall": 1.0,
+        "evidence_need_coverage": null,
+        "second_hop_trigger_accuracy": null,
+        "second_hop_success": null,
+        "irrelevant_evidence_ratio": 0.3333333333333333,
+        "core_pass": true
+      },
+      "error_type": null
+    },
+    {
+      "case_id": "dev-insufficient-uncovered-leave",
+      "observation": {
+        "in_scope": true,
+        "retrieved": [
+          {
+            "evidence_key": "hr-leave-holidays@1.0#适用范围",
+            "document_id": "hr-leave-holidays",
+            "version": "1.0"
+          },
+          {
+            "evidence_key": "hr-employee-benefits@1.0#补贴标准",
+            "document_id": "hr-employee-benefits",
+            "version": "1.0"
+          }
+        ],
+        "citations": [
+          "hr-employee-benefits@1.0#补贴标准",
+          "hr-leave-holidays@1.0#适用范围"
+        ],
+        "status": "success",
+        "refusal_reason": null,
+        "answer": "无法确定员工探亲假每年有几天。",
+        "latency_ms": 4401.949246996082,
+        "model_calls": 2,
+        "routed_document_keys": [
           "hr-leave-holidays@1.0",
+          "hr-leave-policy@2.0",
           "hr-resignation-process@1.0",
           "hr-employee-benefits@1.0"
         ],
@@ -726,86 +722,7 @@
         "required_need_ids": [
           "rule"
         ],
-        "covered_need_ids": []
-      },
-      "metrics": {
-        "domain_accuracy": 1.0,
-        "ranking": null,
-        "access_leakage": 0.0,
-        "version_accuracy": null,
-        "citation_accuracy": null,
-        "correct_refusal": 1.0,
-        "false_refusal": 0.0,
-        "automated_answer_score": null,
-        "document_route_recall": null,
-        "evidence_need_coverage": null,
-        "second_hop_trigger_accuracy": null,
-        "second_hop_success": null,
-        "irrelevant_evidence_ratio": 0.0,
-        "core_pass": true
-      },
-      "error_type": null
-    },
-    {
-      "case_id": "dev-future-draft-not-effective",
-      "observation": {
-        "in_scope": true,
-        "retrieved": [
-          {
-            "evidence_key": "hr-leave-policy@2.0#申请与审批",
-            "document_id": "hr-leave-policy",
-            "version": "2.0"
-          },
-          {
-            "evidence_key": "hr-leave-policy@2.0#材料要求",
-            "document_id": "hr-leave-policy",
-            "version": "2.0"
-          },
-          {
-            "evidence_key": "hr-leave-policy@2.0#例外处理",
-            "document_id": "hr-leave-policy",
-            "version": "2.0"
-          },
-          {
-            "evidence_key": "hr-leave-holidays@1.0#带薪年假",
-            "document_id": "hr-leave-holidays",
-            "version": "1.0"
-          },
-          {
-            "evidence_key": "hr-leave-holidays@1.0#年假申请",
-            "document_id": "hr-leave-holidays",
-            "version": "1.0"
-          },
-          {
-            "evidence_key": "hr-leave-holidays@1.0#适用范围",
-            "document_id": "hr-leave-holidays",
-            "version": "1.0"
-          }
-        ],
-        "citations": [
-          "hr-leave-holidays@1.0#带薪年假",
-          "hr-leave-policy@2.0#申请与审批",
-          "hr-leave-policy@2.0#材料要求",
-          "hr-leave-policy@2.0#例外处理"
-        ],
-        "status": "degraded",
-        "refusal_reason": null,
-        "answer": "回答生成未通过引用校验，以下为已验证的检索依据：\n- 员工请假管理制度（v2.0，员工请假管理制度 > 申请与审批）：员工应至少提前 1 个工作日在内部系统提交请假申请。连续请假不超过 2 个工作日，由直属主管审批；超过 2 个工作日还需部门负责人审批。\n- 员工请假管理制度（v2.0，员工请假管理制度 > 材料要求）：病假超过 2 个工作日时，应上传医疗机构出具的证明。紧急就医可先电话报备，返岗后 2 个工作日内补交材料。\n- 员工请假管理制度（v2.0，员工请假管理制度 > 例外处理）：突发情况无法提前申请时，应在当日工作开始前向直属主管报备，并在恢复工作后补齐系统申请。\n- 员工休假管理办法（v1.0，员工休假管理办法 > 带薪年假）：连续工作满 1 年不足 10 年的员工，每年享受带薪年假 5 天；满 10 年不足 20 年的享受 10 天；满 20 年及以上的享受 15 天。年假应在自然年度内安排，确因工作无法安排的，经审批后可结转至次年。",
-        "latency_ms": 10384.274854965042,
-        "model_calls": 3,
-        "routed_document_keys": [
-          "hr-leave-policy@2.0",
-          "hr-leave-holidays@1.0",
-          "hr-resignation-process@1.0",
-          "hr-employee-benefits@1.0"
-        ],
-        "retrieval_hops": 2,
-        "required_need_ids": [
-          "rule",
-          "material"
-        ],
         "covered_need_ids": [
-          "material",
           "rule"
         ]
       },
@@ -828,6 +745,48 @@
       "error_type": null
     },
     {
+      "case_id": "dev-future-draft-not-effective",
+      "observation": {
+        "in_scope": true,
+        "retrieved": [],
+        "citations": [],
+        "status": "refused",
+        "refusal_reason": "insufficient_evidence",
+        "answer": "当前知识库中没有足够依据回答这个问题。",
+        "latency_ms": 4462.144702963997,
+        "model_calls": 1,
+        "routed_document_keys": [
+          "hr-leave-policy@2.0",
+          "hr-leave-holidays@1.0",
+          "hr-bereavement-leave@1.0",
+          "hr-paternity-leave@1.0"
+        ],
+        "retrieval_hops": 2,
+        "required_need_ids": [
+          "rule",
+          "deadline"
+        ],
+        "covered_need_ids": []
+      },
+      "metrics": {
+        "domain_accuracy": 1.0,
+        "ranking": null,
+        "access_leakage": 0.0,
+        "version_accuracy": null,
+        "citation_accuracy": null,
+        "correct_refusal": 1.0,
+        "false_refusal": 0.0,
+        "automated_answer_score": null,
+        "document_route_recall": null,
+        "evidence_need_coverage": null,
+        "second_hop_trigger_accuracy": null,
+        "second_hop_success": null,
+        "irrelevant_evidence_ratio": 0.0,
+        "core_pass": true
+      },
+      "error_type": null
+    },
+    {
       "case_id": "dev-hr-leave-emergency-two-hop",
       "observation": {
         "in_scope": true,
@@ -836,21 +795,27 @@
             "evidence_key": "hr-medical-certificate-process@1.0#Certificate requirements",
             "document_id": "hr-medical-certificate-process",
             "version": "1.0"
+          },
+          {
+            "evidence_key": "hr-medical-certificate-process@1.0#Emergency submission",
+            "document_id": "hr-medical-certificate-process",
+            "version": "1.0"
           }
         ],
         "citations": [
+          "hr-medical-certificate-process@1.0#Emergency submission",
           "hr-medical-certificate-process@1.0#Certificate requirements"
         ],
         "status": "success",
         "refusal_reason": null,
-        "answer": "For extended sick leave (longer than two working days), a medical certificate issued by a medical institution is required. The certificate must identify the employee and specify the covered dates.",
-        "latency_ms": 7998.26216098154,
+        "answer": "For extended sick leave (longer than two working days), a medical certificate issued by a medical institution is required, identifying the employee and covered dates; if an emergency prevents advance submission, the employee must notify their direct manager before the workday starts and submit the system request and supporting certificate within two working days after returning.",
+        "latency_ms": 7921.494331967551,
         "model_calls": 2,
         "routed_document_keys": [
           "hr-medical-certificate-process@1.0",
-          "hr-resignation-process@1.0",
-          "hr-leave-holidays@1.0",
-          "procurement-supplier-onboarding-process@1.0"
+          "hr-bereavement-leave@1.0",
+          "procurement-supplier-onboarding-process@1.0",
+          "hr-leave-holidays@1.0"
         ],
         "retrieval_hops": 1,
         "required_need_ids": [
@@ -865,9 +830,9 @@
       "metrics": {
         "domain_accuracy": 1.0,
         "ranking": {
-          "recall_at_k": 0.3333333333333333,
+          "recall_at_k": 0.6666666666666666,
           "reciprocal_rank": 1.0,
-          "ndcg_at_k": 0.46927872602275644
+          "ndcg_at_k": 0.7653606369886217
         },
         "access_leakage": 0.0,
         "version_accuracy": 0.0,
@@ -893,41 +858,14 @@
             "evidence_key": "procurement-supplier-onboarding-process@1.0#Required registration",
             "document_id": "procurement-supplier-onboarding-process",
             "version": "1.0"
-          },
-          {
-            "evidence_key": "hr-onboarding-process@1.2#办理时限",
-            "document_id": "hr-onboarding-process",
-            "version": "1.2"
-          },
-          {
-            "evidence_key": "hr-onboarding-process@1.2#入职前准备",
-            "document_id": "hr-onboarding-process",
-            "version": "1.2"
-          },
-          {
-            "evidence_key": "hr-onboarding-process@1.2#到岗办理",
-            "document_id": "hr-onboarding-process",
-            "version": "1.2"
-          },
-          {
-            "evidence_key": "procurement-supplier-onboarding-process@1.0#Review and activation",
-            "document_id": "procurement-supplier-onboarding-process",
-            "version": "1.0"
-          },
-          {
-            "evidence_key": "hr-medical-certificate-process@1.0#Emergency submission",
-            "document_id": "hr-medical-certificate-process",
-            "version": "1.0"
           }
         ],
-        "citations": [
-          "procurement-supplier-onboarding-process@1.0#Required registration"
-        ],
-        "status": "success",
-        "refusal_reason": null,
-        "answer": "A new supplier must provide its legal name, tax registration, bank account, contact, and signed compliance declaration before onboarding. No threshold is specified in the evidence.",
-        "latency_ms": 7870.662395027466,
-        "model_calls": 2,
+        "citations": [],
+        "status": "refused",
+        "refusal_reason": "insufficient_evidence",
+        "answer": "当前知识库中没有足够依据回答这个问题。",
+        "latency_ms": 4194.55871701939,
+        "model_calls": 1,
         "routed_document_keys": [
           "procurement-supplier-onboarding-process@1.0",
           "hr-medical-certificate-process@1.0",
@@ -940,8 +878,7 @@
           "material"
         ],
         "covered_need_ids": [
-          "material",
-          "rule"
+          "material"
         ]
       },
       "metrics": {
@@ -953,15 +890,15 @@
         },
         "access_leakage": 0.0,
         "version_accuracy": 0.0,
-        "citation_accuracy": 1.0,
+        "citation_accuracy": 0.0,
         "correct_refusal": null,
-        "false_refusal": 0.0,
-        "automated_answer_score": 0.5,
+        "false_refusal": 1.0,
+        "automated_answer_score": 0.0,
         "document_route_recall": 1.0,
-        "evidence_need_coverage": 1.0,
+        "evidence_need_coverage": 0.5,
         "second_hop_trigger_accuracy": 1.0,
-        "second_hop_success": 1.0,
-        "irrelevant_evidence_ratio": 0.6666666666666666,
+        "second_hop_success": 0.0,
+        "irrelevant_evidence_ratio": 0.0,
         "core_pass": false
       },
       "error_type": null
@@ -975,7 +912,7 @@
         "status": "refused",
         "refusal_reason": "insufficient_evidence",
         "answer": "当前知识库中没有足够依据回答这个问题。",
-        "latency_ms": 3036.3186270114966,
+        "latency_ms": 3195.076632022392,
         "model_calls": 1,
         "routed_document_keys": [
           "hr-medical-certificate-process@1.0",
@@ -1015,64 +952,25 @@
       "case_id": "dev-hr-missing-exception-refusal",
       "observation": {
         "in_scope": true,
-        "retrieved": [
-          {
-            "evidence_key": "hr-leave-holidays@1.0#适用范围",
-            "document_id": "hr-leave-holidays",
-            "version": "1.0"
-          },
-          {
-            "evidence_key": "hr-leave-holidays@1.0#调休补班",
-            "document_id": "hr-leave-holidays",
-            "version": "1.0"
-          },
-          {
-            "evidence_key": "hr-leave-policy@2.0#申请与审批",
-            "document_id": "hr-leave-policy",
-            "version": "2.0"
-          },
-          {
-            "evidence_key": "hr-attendance-overtime@1.0#加班申请",
-            "document_id": "hr-attendance-overtime",
-            "version": "1.0"
-          },
-          {
-            "evidence_key": "hr-attendance-overtime@1.0#考勤记录",
-            "document_id": "hr-attendance-overtime",
-            "version": "1.0"
-          },
-          {
-            "evidence_key": "hr-leave-policy@2.0#适用范围",
-            "document_id": "hr-leave-policy",
-            "version": "2.0"
-          }
-        ],
-        "citations": [
-          "hr-leave-holidays@1.0#适用范围",
-          "hr-leave-policy@2.0#申请与审批",
-          "hr-attendance-overtime@1.0#加班申请",
-          "hr-leave-holidays@1.0#调休补班"
-        ],
-        "status": "success",
-        "refusal_reason": null,
-        "answer": "无适用的育儿假例外规定适用于承包商。",
-        "latency_ms": 9721.595921029802,
-        "model_calls": 2,
+        "retrieved": [],
+        "citations": [],
+        "status": "refused",
+        "refusal_reason": "insufficient_evidence",
+        "answer": "当前知识库中没有足够依据回答这个问题。",
+        "latency_ms": 4223.303946026135,
+        "model_calls": 1,
         "routed_document_keys": [
+          "hr-parental-leave@1.0",
+          "hr-paternity-leave@1.0",
           "hr-leave-holidays@1.0",
-          "hr-leave-policy@2.0",
-          "hr-resignation-process@1.0",
-          "hr-attendance-overtime@1.0"
+          "hr-maternity-leave@1.0"
         ],
         "retrieval_hops": 2,
         "required_need_ids": [
-          "scope",
-          "exception"
+          "exception",
+          "scope"
         ],
-        "covered_need_ids": [
-          "scope",
-          "exception"
-        ]
+        "covered_need_ids": []
       },
       "metrics": {
         "domain_accuracy": 1.0,
@@ -1080,15 +978,15 @@
         "access_leakage": 0.0,
         "version_accuracy": null,
         "citation_accuracy": null,
-        "correct_refusal": 0.0,
+        "correct_refusal": 1.0,
         "false_refusal": 0.0,
         "automated_answer_score": null,
         "document_route_recall": null,
-        "evidence_need_coverage": 1.0,
+        "evidence_need_coverage": 0.0,
         "second_hop_trigger_accuracy": 1.0,
-        "second_hop_success": 1.0,
-        "irrelevant_evidence_ratio": 1.0,
-        "core_pass": false
+        "second_hop_success": 0.0,
+        "irrelevant_evidence_ratio": 0.0,
+        "core_pass": true
       },
       "error_type": null
     },
@@ -1096,42 +994,13 @@
       "case_id": "dev-finance-restricted-supplement-no-leak",
       "observation": {
         "in_scope": true,
-        "retrieved": [
-          {
-            "evidence_key": "finance-travel-allowance@1.0#适用范围",
-            "document_id": "finance-travel-allowance",
-            "version": "1.0"
-          },
-          {
-            "evidence_key": "finance-expense-policy@2.0#票据要求",
-            "document_id": "finance-expense-policy",
-            "version": "2.0"
-          },
-          {
-            "evidence_key": "finance-expense-policy@2.0#报销期限",
-            "document_id": "finance-expense-policy",
-            "version": "2.0"
-          },
-          {
-            "evidence_key": "hr-medical-certificate-process@1.0#Emergency submission",
-            "document_id": "hr-medical-certificate-process",
-            "version": "1.0"
-          },
-          {
-            "evidence_key": "hr-compensation-payroll@1.0#适用范围",
-            "document_id": "hr-compensation-payroll",
-            "version": "1.0"
-          }
-        ],
-        "citations": [
-          "finance-expense-policy@2.0#票据要求",
-          "finance-expense-policy@2.0#报销期限"
-        ],
-        "status": "success",
-        "refusal_reason": null,
-        "answer": "支付审批例外规则包括：高铁二等座、飞机经济舱、住宿在城市标准内，均需部门负责人审批；报销期限为出差结束后15个自然日内，超期需直属主管在系统中补充逾期说明后提交财务复核。",
-        "latency_ms": 8185.21782499738,
-        "model_calls": 2,
+        "retrieved": [],
+        "citations": [],
+        "status": "refused",
+        "refusal_reason": "insufficient_evidence",
+        "answer": "当前知识库中没有足够依据回答这个问题。",
+        "latency_ms": 4399.319133954123,
+        "model_calls": 1,
         "routed_document_keys": [
           "hr-medical-certificate-process@1.0",
           "finance-travel-allowance@1.0",
@@ -1143,10 +1012,7 @@
           "rule",
           "exception"
         ],
-        "covered_need_ids": [
-          "rule",
-          "exception"
-        ]
+        "covered_need_ids": []
       },
       "metrics": {
         "domain_accuracy": 1.0,
@@ -1158,10 +1024,10 @@
         "false_refusal": 0.0,
         "automated_answer_score": null,
         "document_route_recall": null,
-        "evidence_need_coverage": 1.0,
+        "evidence_need_coverage": 0.0,
         "second_hop_trigger_accuracy": 1.0,
-        "second_hop_success": 1.0,
-        "irrelevant_evidence_ratio": 1.0,
+        "second_hop_success": 0.0,
+        "irrelevant_evidence_ratio": 0.0,
         "core_pass": false
       },
       "error_type": null
