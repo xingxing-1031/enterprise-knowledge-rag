@@ -65,8 +65,8 @@
 当前 production 容器已通过 Docker 运行 PostgreSQL/pgvector，并完成远程模型（`text-embedding-v3` / `qwen3-rerank` / `qwen-plus`）的三方案 development 评测（当前 25 份文档语料快照 `sha256:d5148700…`）：
 
 - `evaluation/reports/development-*-r1..r3.json` 保存百炼 `qwen-plus` 三策略各 3 次对比，`development-summary.json` 保存均值、范围和总体标准差；`latest-development.json` 指向生产默认 `hybrid_rrf_reranker` 的第 3 次报告。容器内无 git 元数据，`code_commit` 记为 `unknown0`。
-- 纯向量、Hybrid RRF、Hybrid + Reranker 的核心通过率均值分别为 51.85%、46.30%、57.41%；执行成功率均值均为 100%，权限泄漏率均为 0。
-- Reranker 本轮核心通过率与引用准确率（80.56%）均为三策略最高、证据覆盖也最高（40.00%），但 P95 均值 28.26s 明显高于纯向量（8.91s）与 Hybrid RRF（13.80s）；Hybrid RRF 核心通过率反而低于纯向量，说明策略排序对语料与用例口径敏感，单轮对比不能外推。三策略二跳成功率均为 0（多跳用例 gold 口径限制）。因此生产默认 `hybrid_rrf_reranker` 是链路展示而非"更准"的结论。
+- 纯向量、Hybrid RRF、Hybrid + Reranker 的核心通过率均值分别为 57.41%、53.70%、61.11%；执行成功率均值 98.15%–100%，权限泄漏率均为 0。
+- Reranker 本轮核心通过率与引用准确率（83.33%）均为三策略最高、证据覆盖也最高（40.00%），P95 均值（7.66s）与纯向量（7.65s）持平；Hybrid RRF 核心通过率仍低于纯向量，说明策略排序对语料与用例口径敏感，单轮对比不能外推。三策略二跳成功率均为 0（多跳用例 gold 口径限制）。因此生产默认 `hybrid_rrf_reranker` 是链路展示而非"更准"的结论。
 - 9 份重复报告的权限泄漏率均为 0。
 - 8 条 frozen holdout 已在提交 `f31a2e2` 上一次性运行（本地 `bge-m3`、12 份文档语料快照 `sha256:810fac…`）：执行成功率 75.00%、核心通过率 62.50%、Recall@5 100.00%、引用准确率 85.00%、权限泄漏率 0%、P50/P95 6.93s/41.45s。
 - frozen 中两条远程 `ModelProviderError` 计为失败，病假紧急流程题因引用不完整未通过；报告已归档为 `evaluation/reports/final-holdout.json`，禁止调参后重跑，数字只代表当时快照。

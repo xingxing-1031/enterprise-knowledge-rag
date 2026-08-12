@@ -34,11 +34,11 @@ docker compose up -d --build --wait
 
 | 策略 | 执行成功率均值 | 核心通过率均值（范围） | Recall@5 均值 | 引用准确率均值 | 证据覆盖 / 二跳成功 | P50 / P95 均值 |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| 纯向量 | 100.00% | 51.85%（50.00%–55.56%） | 75.46% | 63.89% | 30.00% / 0.00% | 4.98s / 8.91s |
-| Hybrid RRF | 100.00% | 46.30%（44.44%–50.00%） | 76.39% | 62.04% | 30.00% / 0.00% | 5.03s / 13.80s |
-| Hybrid + Reranker | 100.00% | 57.41%（55.56%–61.11%） | 75.46% | 80.56% | 40.00% / 0.00% | 5.69s / 28.26s |
+| 纯向量 | 100.00% | 57.41%（55.56%–61.11%） | 75.46% | 70.83% | 30.00% / 0.00% | 4.78s / 7.65s |
+| Hybrid RRF | 98.15% | 53.70%（50.00%–55.56%） | 75.46% | 66.20% | 30.00% / 0.00% | 4.73s / 8.44s |
+| Hybrid + Reranker | 98.15% | 61.11%（61.11%–61.11%） | 74.54% | 83.33% | 40.00% / 0.00% | 5.46s / 7.66s |
 
-全部 9 次策略运行的权限泄漏率均为 0。本轮 25 份文档语料上，Reranker 的核心通过率（57.41%）与引用准确率（80.56%）均为三策略最高，证据覆盖也最高（40.00%）；但它的 P95 均值（28.26s）明显高于纯向量（8.91s）与 Hybrid RRF（13.80s）。Hybrid RRF 本轮核心通过率（46.30%）反而低于纯向量（51.85%），三策略二跳成功率均为 0（多跳用例的 gold 口径限制）。这组数据说明检索策略优劣对语料与用例敏感，单轮对比不能外推；演示默认使用 `hybrid_rrf_reranker` 是为了展示完整检索链路（BM25 + 向量 RRF + 重排），是否采用仍要看冻结集与成本。完整均值、范围与总体标准差见 [`evaluation/reports/development-summary.json`](evaluation/reports/development-summary.json)，指标定义与限制见 [`docs/EVALUATION_PROTOCOL.md`](docs/EVALUATION_PROTOCOL.md)。
+全部 9 次策略运行的权限泄漏率均为 0。本轮 25 份文档语料上，Reranker 的核心通过率（61.11%）与引用准确率（83.33%）均为三策略最高，证据覆盖也最高（40.00%），P95 均值（7.66s）与纯向量（7.65s）持平。Hybrid RRF 本轮核心通过率（53.70%）仍低于纯向量（57.41%），三策略二跳成功率均为 0（多跳用例的 gold 口径限制）。这组数据说明检索策略优劣对语料与用例敏感，单轮对比不能外推；演示默认使用 `hybrid_rrf_reranker` 是为了展示完整检索链路（BM25 + 向量 RRF + 重排），是否采用仍要看冻结集与成本。完整均值、范围与总体标准差见 [`evaluation/reports/development-summary.json`](evaluation/reports/development-summary.json)，指标定义与限制见 [`docs/EVALUATION_PROTOCOL.md`](docs/EVALUATION_PROTOCOL.md)。
 
 固定配置后一次性消费了 8 条合成 frozen holdout（提交 `f31a2e2`、默认 Hybrid RRF、本地 `bge-m3`、`qwen-plus`、12 份文档语料快照 `sha256:810fac…`）：执行成功率 75.00%、核心通过率 62.50%、Recall@5 100.00%、引用准确率 85.00%、权限泄漏率 0%、P50/P95 6.93s/41.45s。两条远程 `ModelProviderError` 保留在分母中，验收后未根据结果调参或重跑。该冻结集的语料与模型配置早于当前生产部署，且已一次性消费，数字只代表当时快照，不代表当前生产策略。原始证据见 [`evaluation/reports/final-holdout.json`](evaluation/reports/final-holdout.json)。
 
