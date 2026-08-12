@@ -24,6 +24,8 @@ const demoAccounts = [
   },
 ] as const;
 
+const TRUST_POINTS = ["混合检索", "权限隔离", "引用可溯源"];
+
 export default function LoginPage({
   onLogin,
 }: {
@@ -50,78 +52,82 @@ export default function LoginPage({
   return (
     <main className="login-page">
       <form className="login-card" onSubmit={submit}>
-        <div className="login-brand">
-          <span className="logo-mark large" aria-hidden="true">
-            <ShieldCheck size={22} strokeWidth={1.8} />
-          </span>
-          <h1>制度智查</h1>
-        </div>
-        <p className="login-subtitle">企业制度知识库工作台 · 请选择演示身份登录</p>
-        <p className="login-intro">
-          用自然语言直接问制度与流程问题，例如「出差报销期限」「育儿假天数」「加班怎么算」。
-          答案只引用已授权且生效的制度文档，并按登录身份做权限过滤。
-        </p>
-
-        <div className="demo-account-list" aria-label="公开演示账号">
-          {demoAccounts.map((account) => (
-            <button
-              className="demo-account"
-              type="button"
-              key={account.username}
-              onClick={() => {
-                setUsername(account.username);
-                setPassword(account.password);
-              }}
-            >
-              <span>
-                <strong>{account.title}</strong>
-                <small>{account.description}</small>
-              </span>
-              <code>
-                {account.username}
-                <br />
-                {account.password}
-              </code>
-            </button>
-          ))}
-        </div>
-
-        <label htmlFor="username">用户名</label>
-        <div className="input-with-icon">
-          <UserRound size={16} />
-          <input
-            id="username"
-            autoComplete="username"
-            value={username}
-            onChange={(event) => setUsername(event.target.value)}
-            placeholder="请输入用户名"
-            required
-          />
+        <div className="login-brand-panel">
+          <div className="login-brand">
+            <span className="logo-mark large" aria-hidden="true">
+              <ShieldCheck size={24} strokeWidth={1.8} />
+            </span>
+            <h1>制度智查</h1>
+          </div>
+          <p className="login-hero">可信依据 · 权限隔离</p>
+          <p className="login-tagline">
+            用自然语言直接问制度与流程问题，例如「出差报销期限」「育儿假天数」。
+            答案只引用已授权且生效的制度文档，并按登录身份做权限过滤。
+          </p>
+          <ul className="login-points">
+            {TRUST_POINTS.map((point) => (
+              <li key={point}>{point}</li>
+            ))}
+          </ul>
+          <div className="login-demo-heading">
+            <span className="login-demo-label">选择演示身份</span>
+          </div>
+          <div className="demo-account-list" aria-label="公开演示账号">
+            {demoAccounts.map((account) => (
+              <button
+                className="demo-account"
+                type="button"
+                key={account.username}
+                onClick={() => {
+                  setUsername(account.username);
+                  setPassword(account.password);
+                }}
+              >
+                <span>
+                  <strong>{account.title}</strong>
+                  <small>{account.description}</small>
+                </span>
+                <code>{account.username}</code>
+              </button>
+            ))}
+          </div>
         </div>
 
-        <label htmlFor="password">密码</label>
-        <div className="input-with-icon">
-          <LockKeyhole size={16} />
-          <input
-            id="password"
-            type="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            placeholder="请输入密码"
-            required
-          />
-        </div>
-
-        {error ? <p className="form-error">{error}</p> : null}
-
-        <button className="primary-button login-submit" type="submit" disabled={submitting}>
-          {submitting ? "正在登录" : "登录"}
-        </button>
-
-        <div className="login-notice">
-          <span className="service-dot online" aria-hidden="true" />
-          <p>公开演示数据 · 角色与权限均由服务器校验</p>
+        <div className="login-form-area">
+          <p className="login-subtitle">企业制度知识库工作台 · 请选择演示身份登录</p>
+          <label htmlFor="username">用户名</label>
+          <div className="input-with-icon">
+            <UserRound size={16} />
+            <input
+              id="username"
+              autoComplete="username"
+              value={username}
+              onChange={(event) => setUsername(event.target.value)}
+              placeholder="请输入用户名"
+              required
+            />
+          </div>
+          <label htmlFor="password">密码</label>
+          <div className="input-with-icon">
+            <LockKeyhole size={16} />
+            <input
+              id="password"
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder="请输入密码"
+              required
+            />
+          </div>
+          {error ? <p className="form-error">{error}</p> : null}
+          <button className="primary-button login-submit" type="submit" disabled={submitting}>
+            {submitting ? "正在登录" : "登录"}
+          </button>
+          <div className="login-notice">
+            <span className="service-dot online" aria-hidden="true" />
+            <p>公开演示数据 · 角色与权限均由服务器校验</p>
+          </div>
         </div>
       </form>
     </main>
