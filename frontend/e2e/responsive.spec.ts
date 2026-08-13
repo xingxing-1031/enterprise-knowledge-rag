@@ -27,7 +27,9 @@ for (const viewport of viewports) {
     );
 
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: "知识问答" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "企业运营智能助手" }),
+    ).toBeVisible();
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
     );
@@ -40,7 +42,8 @@ for (const viewport of viewports) {
     } else {
       await expect(navigation).toHaveCSS("position", "sticky");
       await expect(page.getByText("公开演示身份")).toBeVisible();
-      await expect(page.getByRole("heading", { name: "引用台账" })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "引用台账" })).toHaveCount(0);
+      await expect(page.locator(".chat-layout")).toHaveClass(/chat-layout-single/);
     }
   });
 
