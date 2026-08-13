@@ -10,7 +10,12 @@ from enterprise_knowledge_rag.documents.source_models import (
     ImportPreview,
     IngestionStatus,
 )
-from enterprise_knowledge_rag.models import ChatResult, UserContext, UserRole
+from enterprise_knowledge_rag.models import (
+    ChatResult,
+    RetrievalEvidence,
+    UserContext,
+    UserRole,
+)
 from enterprise_knowledge_rag.tracing import TraceEvent
 from enterprise_knowledge_rag.workflow import WorkflowRun
 
@@ -107,10 +112,65 @@ def make_client(role=UserRole.EMPLOYEE):
     service = FakeService()
     app = create_app(
         service,
-        settings=Settings(app_env="test"),
+        settings=Settings(
+            app_env="test",
+            internal_service_token="test-internal-token",
+        ),
         session_resolver=FixedResolver(role),
     )
     return TestClient(app), service
+
+
+def test_internal_evidence_requires_service_token() -> None:
+    client, _ = make_client()
+
+    response = client.post(
+        "/internal/evidence",
+        json={"query": "退款制度", "user_id": "u1", "role": "analyst"},
+    )
+
+    assert response.status_code == 401
+
+
+def test_internal_evidence_maps_agent_role_and_returns_governed_fields() -> None:
+    client, service = make_client()
+    service.run = lambda request, user: WorkflowRun(
+        result=ChatResult(
+            status="success",
+            evidence=[
+                RetrievalEvidence(
+                    evidence_id="ev:refund-v1",
+                    chunk_id="chunk-1",
+                    document_id="refund-policy",
+                    title="售后退款制度",
+                    section_path=["退款时限"],
+                    version="1.0",
+                    effective_from=datetime(2026, 1, 1, tzinfo=UTC),
+                    quote="退款申请需在七日内发起。",
+                    retrieval_channels={"vector", "bm25"},
+                    retrieval_rank=1,
+                    reranker_score=0.92,
+                )
+            ],
+        ),
+        trace=(),
+    )
+
+    response = client.post(
+        "/internal/evidence",
+        headers={"X-Internal-Token": "test-internal-token"},
+        json={
+            "query": "退款制度",
+            "user_id": "u1",
+            "role": "analyst",
+            "departments": ["admin"],
+            "top_k": 3,
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["evidence"][0]["source_id"] == "ev:refund-v1"
+    assert response.json()["evidence"][0]["permissions"] == ["employee"]
 
 
 def test_chat_uses_server_resolved_identity() -> None:

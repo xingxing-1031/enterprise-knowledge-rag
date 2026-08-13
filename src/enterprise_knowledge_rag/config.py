@@ -2,7 +2,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import Field, model_validator
+from pydantic import Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -59,6 +59,7 @@ class Settings(BaseSettings):
     auth_session_secret: str = ""
     auth_session_ttl_seconds: int = Field(default=28_800, ge=300, le=86_400)
     auth_cookie_secure: bool = False
+    internal_service_token: SecretStr | None = None
     auth_employee_username: str = "employee-demo"
     auth_employee_user_id: str = "demo-employee"
     auth_employee_departments: str = "hr,finance,admin"

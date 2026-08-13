@@ -149,6 +149,33 @@ class ChatResult(StrictModel):
     degradation_reason: str | None = None
 
 
+class InternalEvidenceRequest(StrictModel):
+    query: str = Field(min_length=1, max_length=2000)
+    user_id: str = Field(min_length=1, max_length=128)
+    role: Literal["analyst", "admin"]
+    departments: set[str] = Field(default_factory=set, max_length=20)
+    as_of: datetime | None = None
+    top_k: int = Field(default=5, ge=1, le=20)
+    session_id: str | None = Field(default=None, max_length=128)
+
+
+class InternalEvidenceItem(StrictModel):
+    source_id: str = Field(min_length=1)
+    title: str = Field(min_length=1)
+    version: str = Field(min_length=1)
+    effective_from: datetime
+    quote: str = Field(min_length=1)
+    score: float = Field(ge=0, le=1)
+    permissions: set[str] = Field(default_factory=set)
+
+
+class InternalEvidenceResponse(StrictModel):
+    status: str = Field(min_length=1)
+    evidence: list[InternalEvidenceItem] = Field(default_factory=list)
+    refusal_reason: RefusalReason | None = None
+    degradation_reason: str | None = None
+
+
 class IndexingSummary(StrictModel):
     discovered: int = Field(ge=0)
     indexed: int = Field(ge=0)

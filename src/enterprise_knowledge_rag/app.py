@@ -1,3 +1,4 @@
+import hmac
 import json
 from collections.abc import Sequence
 from pathlib import Path
@@ -36,6 +37,9 @@ from enterprise_knowledge_rag.documents.source_models import (
 from enterprise_knowledge_rag.models import (
     ChatRequest,
     ChatResult,
+    InternalEvidenceItem,
+    InternalEvidenceRequest,
+    InternalEvidenceResponse,
     LoginRequest,
     UserContext,
     UserRole,
@@ -218,6 +222,17 @@ def create_app(
                 detail="知识服务暂时不可用，请稍后重试。",
             ) from exc
 
+    def require_internal_token(request: Request) -> None:
+        configured = settings.internal_service_token
+        if configured is None:
+            raise HTTPException(status_code=503, detail="内部知识接口未配置")
+        supplied = request.headers.get("X-Internal-Token", "")
+        if not hmac.compare_digest(
+            supplied,
+            configured.get_secret_value(),
+        ):
+            raise HTTPException(status_code=401, detail="内部服务认证失败")
+
     @app.get("/health")
     def health() -> dict[str, str]:
         return {"status": "ok"}
@@ -282,6 +297,53 @@ def create_app(
         user: UserContext = Depends(current_user),
     ) -> ChatResult:
         return safe_run(chat_request, user).result
+
+    @app.post(
+        "/internal/evidence",
+        response_model=InternalEvidenceResponse,
+        include_in_schema=False,
+    )
+    def internal_evidence(
+        evidence_request: InternalEvidenceRequest,
+        request: Request,
+    ) -> InternalEvidenceResponse:
+        require_internal_token(request)
+        role = (
+            UserRole.DEPARTMENT_ADMIN
+            if evidence_request.role == "admin"
+            else UserRole.EMPLOYEE
+        )
+        user = UserContext(
+            user_id=evidence_request.user_id,
+            role=role,
+            departments=evidence_request.departments,
+        )
+        result = safe_run(
+            ChatRequest(
+                question=evidence_request.query,
+                session_id=evidence_request.session_id,
+                as_of=evidence_request.as_of,
+            ),
+            user,
+        ).result
+        evidence = [
+            InternalEvidenceItem(
+                source_id=item.evidence_id,
+                title=item.title,
+                version=item.version,
+                effective_from=item.effective_from,
+                quote=item.quote,
+                score=max(0.0, min(1.0, item.reranker_score or 0.0)),
+                permissions={role.value},
+            )
+            for item in result.evidence[: evidence_request.top_k]
+        ]
+        return InternalEvidenceResponse(
+            status=result.status,
+            evidence=evidence,
+            refusal_reason=result.refusal_reason,
+            degradation_reason=result.degradation_reason,
+        )
 
     @app.post("/chat/stream")
     def chat_stream(
