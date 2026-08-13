@@ -74,6 +74,15 @@ def test_first_index_writes_document_chunks_and_vectors() -> None:
     assert len(chunks) == len(vectors)
 
 
+def test_retail_refund_policy_is_part_of_synthetic_corpus() -> None:
+    path = CORPUS_DIR / "operations" / "retail-after-sales-refund-policy.md"
+
+    result = make_service().index_paths([path])
+
+    assert result.indexed == 1
+    assert result.failed == 0
+
+
 def test_index_persists_deterministic_parent_search_text_and_vector(
     tmp_path: Path,
 ) -> None:
