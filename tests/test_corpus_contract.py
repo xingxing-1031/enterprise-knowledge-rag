@@ -41,8 +41,11 @@ def test_documents_satisfy_metadata_contract() -> None:
         DocumentRecord.model_validate(read_front_matter(CORPUS_DIR / item))
         for item in manifest["documents"]
     ]
-    assert len(records) == 26
+    assert len(records) == 27
     assert "operations-retail-refund-policy" in {
+        record.document_id for record in records
+    }
+    assert "operations-retail-weekly-review-policy" in {
         record.document_id for record in records
     }
     assert {record.status.value for record in records} >= {"active", "expired", "draft"}
