@@ -60,6 +60,9 @@ class Settings(BaseSettings):
     auth_session_ttl_seconds: int = Field(default=28_800, ge=300, le=86_400)
     auth_cookie_secure: bool = False
     internal_service_token: SecretStr | None = None
+    retail_agent_url: str | None = None
+    retail_agent_token: SecretStr | None = None
+    retail_agent_timeout_seconds: float = Field(default=90.0, gt=0.0, le=300.0)
     auth_employee_username: str = "employee-demo"
     auth_employee_user_id: str = "demo-employee"
     auth_employee_departments: str = "hr,finance,admin"
@@ -94,6 +97,14 @@ class Settings(BaseSettings):
         ):
             raise ValueError(
                 "reranker_provider=none is incompatible with hybrid_rrf_reranker"
+            )
+        if self.retail_agent_url and not self.retail_agent_url.startswith(
+            ("http://", "https://")
+        ):
+            raise ValueError("retail_agent_url must be an HTTP(S) URL")
+        if self.retail_agent_url and self.retail_agent_token is None:
+            raise ValueError(
+                "retail_agent_token is required when retail agent is enabled"
             )
         return self
 

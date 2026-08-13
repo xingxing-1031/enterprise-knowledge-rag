@@ -67,6 +67,9 @@ if [[ ! "$INTERNAL_SERVICE_TOKEN" =~ ^[0-9a-fA-F]{64}$ ]]; then
   exit 1
 fi
 set_env_value INTERNAL_SERVICE_TOKEN "$INTERNAL_SERVICE_TOKEN"
+set_env_value RETAIL_AGENT_URL http://host.docker.internal
+set_env_value RETAIL_AGENT_TOKEN "$INTERNAL_SERVICE_TOKEN"
+set_env_value RETAIL_AGENT_TIMEOUT_SECONDS 90
 unset INTERNAL_SERVICE_TOKEN
 
 docker compose --env-file "$ENV_FILE" -p enterprise-knowledge-rag-vps \

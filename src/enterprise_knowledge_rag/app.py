@@ -53,6 +53,10 @@ class ChatApiService(Protocol):
 
     def run(self, request: ChatRequest, user: UserContext) -> WorkflowRun: ...
 
+    def run_knowledge(
+        self, request: ChatRequest, user: UserContext
+    ) -> WorkflowRun: ...
+
     def clear_session(self, user: UserContext, session_id: str | None) -> None: ...
 
     def documents_overview(self, user: UserContext) -> list[dict[str, Any]]: ...
@@ -104,6 +108,12 @@ class ConfiguredSessionResolver:
 
 
 STAGE_LABELS = {
+    "supervisor": "规划任务并选择 Agent",
+    "general_agent": "通用对话 Agent 正在回答",
+    "knowledge_agent": "知识 Agent 正在核验企业证据",
+    "data_agent": "数据 Agent 正在分析经营数据",
+    "synthesis_agent": "综合 Agent 正在汇总结果",
+    "review_agent": "审核 Agent 正在校验结果",
     "domain": "判断问题范围",
     "rewrite": "整理查询条件",
     "retrieve": "检索企业知识",
@@ -318,14 +328,21 @@ def create_app(
             role=role,
             departments=evidence_request.departments,
         )
-        result = safe_run(
-            ChatRequest(
-                question=evidence_request.query,
-                session_id=evidence_request.session_id,
-                as_of=evidence_request.as_of,
-            ),
-            user,
-        ).result
+        chat_request = ChatRequest(
+            question=evidence_request.query,
+            session_id=evidence_request.session_id,
+            as_of=evidence_request.as_of,
+        )
+        try:
+            knowledge_runner = getattr(service, "run_knowledge", service.run)
+            result = knowledge_runner(chat_request, user).result
+        except Exception as exc:
+            if settings.app_env == "test":
+                raise
+            raise HTTPException(
+                status_code=503,
+                detail="知识服务暂时不可用，请稍后重试。",
+            ) from exc
         evidence = [
             InternalEvidenceItem(
                 source_id=item.evidence_id,

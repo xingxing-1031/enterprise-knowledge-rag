@@ -10,7 +10,7 @@ import type { AppView, SessionInfo } from "../types";
 
 
 const NAV_ITEMS = [
-  { id: "chat" as const, label: "知识问答", icon: MessageSquareText },
+  { id: "chat" as const, label: "智能助手", icon: MessageSquareText },
   { id: "knowledge" as const, label: "知识库", icon: BookOpenText },
   { id: "evaluation" as const, label: "评测", icon: ChartNoAxesCombined },
 ];
@@ -39,8 +39,8 @@ export function Navigation({ active, onChange, session, onLogout }: NavigationPr
           <ShieldCheck size={20} strokeWidth={1.8} />
         </span>
         <div>
-          <strong>制度智查</strong>
-          <span>企业知识工作台</span>
+          <strong>企业运营 Agent</strong>
+          <span>多智能体协作工作台</span>
         </div>
       </div>
 

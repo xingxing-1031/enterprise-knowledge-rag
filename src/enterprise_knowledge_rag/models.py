@@ -43,6 +43,44 @@ class RefusalReason(StrEnum):
     SERVICE_FAILED = "service_failed"
 
 
+class AgentMode(StrEnum):
+    GENERAL = "general"
+    KNOWLEDGE = "knowledge"
+    DATA = "data"
+    COLLABORATION = "collaboration"
+
+
+class AgentStep(StrictModel):
+    agent: str = Field(min_length=1, max_length=80)
+    task: str = Field(min_length=1, max_length=500)
+    status: Literal[
+        "pending",
+        "running",
+        "succeeded",
+        "degraded",
+        "refused",
+        "failed",
+    ] = "pending"
+
+
+class AgentReview(StrictModel):
+    passed: bool
+    checks: dict[str, bool] = Field(default_factory=dict)
+    limitations: list[str] = Field(default_factory=list, max_length=20)
+
+
+class DataAgentResult(StrictModel):
+    status: str = Field(min_length=1, max_length=40)
+    skill_id: str | None = Field(default=None, max_length=80)
+    answer: str = ""
+    rows: list[dict] = Field(default_factory=list, max_length=1000)
+    chart: dict | None = None
+    report: dict | None = None
+    tool_calls: list[dict] = Field(default_factory=list, max_length=50)
+    evidence_ids: list[str] = Field(default_factory=list, max_length=100)
+    limitations: list[str] = Field(default_factory=list, max_length=20)
+
+
 class DocumentRecord(StrictModel):
     document_id: str = Field(min_length=1)
     title: str = Field(min_length=1)
@@ -147,6 +185,11 @@ class ChatResult(StrictModel):
     evidence: list[RetrievalEvidence] = Field(default_factory=list)
     refusal_reason: RefusalReason | None = None
     degradation_reason: str | None = None
+    agent_mode: AgentMode | None = None
+    agents: list[str] = Field(default_factory=list, max_length=10)
+    task_plan: list[AgentStep] = Field(default_factory=list, max_length=12)
+    data_result: DataAgentResult | None = None
+    review: AgentReview | None = None
 
 
 class InternalEvidenceRequest(StrictModel):

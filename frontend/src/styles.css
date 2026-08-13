@@ -234,6 +234,10 @@ select:focus-visible {
   min-height: 100vh;
 }
 
+.chat-layout-single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .chat-view {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
@@ -441,6 +445,104 @@ select:focus-visible {
   border-radius: 999px;
   font-size: 10px;
   font-weight: 700;
+}
+
+.result-labels,
+.agent-roster {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+}
+
+.agent-mode,
+.agent-roster span,
+.data-evidence,
+.review-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 24px;
+  padding: 0 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.agent-mode,
+.agent-roster span {
+  color: var(--blue);
+  background: var(--blue-soft);
+  border: 1px solid var(--blue-line);
+}
+
+.agent-execution {
+  margin-top: 14px;
+  padding-top: 13px;
+  border-top: 1px solid var(--soft-line);
+}
+
+.agent-execution ol {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.agent-execution li {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: 9px;
+  align-items: start;
+}
+
+.agent-execution li > span {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  color: var(--brand-deep);
+  background: var(--brand-soft);
+  border: 1px solid var(--brand-line);
+  border-radius: 50%;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.agent-execution li strong,
+.agent-execution li small {
+  display: block;
+}
+
+.agent-execution li strong {
+  color: var(--ink);
+  font-size: 11px;
+}
+
+.agent-execution li small {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.data-evidence,
+.review-state {
+  margin-top: 11px;
+}
+
+.data-evidence,
+.review-state.is-passed {
+  color: var(--green);
+  background: var(--green-soft);
+  border: 1px solid var(--green-line);
+}
+
+.review-state.is-limited {
+  color: var(--amber);
+  background: var(--amber-soft);
+  border: 1px solid var(--amber-line);
 }
 
 .result-degraded {

@@ -39,6 +39,29 @@ export interface ChatResult {
   evidence: RetrievalEvidence[];
   refusal_reason?: string | null;
   degradation_reason?: string | null;
+  agent_mode?: "general" | "knowledge" | "data" | "collaboration" | null;
+  agents?: string[];
+  task_plan?: Array<{
+    agent: string;
+    task: string;
+    status: "pending" | "running" | "succeeded" | "degraded" | "refused" | "failed";
+  }>;
+  data_result?: {
+    status: string;
+    skill_id?: string | null;
+    answer: string;
+    rows: Array<Record<string, unknown>>;
+    chart?: Record<string, unknown> | null;
+    report?: Record<string, unknown> | null;
+    tool_calls: Array<Record<string, unknown>>;
+    evidence_ids: string[];
+    limitations: string[];
+  } | null;
+  review?: {
+    passed: boolean;
+    checks: Record<string, boolean>;
+    limitations: string[];
+  } | null;
 }
 
 export interface ProgressEvent {

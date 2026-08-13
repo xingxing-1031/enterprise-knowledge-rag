@@ -199,7 +199,7 @@ export default function App() {
       />
       <section className="workspace">
         {activeView === "chat" ? (
-          <div className="chat-layout">
+          <div className={evidence.length > 0 ? "chat-layout" : "chat-layout chat-layout-single"}>
             <ChatView
               messages={messages}
               question={question}
@@ -216,7 +216,7 @@ export default function App() {
               evidence={evidence}
               onOpenEvidence={handleOpenEvidence}
             />
-            <EvidencePanel evidence={evidence} mobileOpen={evidenceOpen} activeId={activeEvidenceId} onClose={() => setEvidenceOpen(false)} />
+            {evidence.length > 0 ? <EvidencePanel evidence={evidence} mobileOpen={evidenceOpen} activeId={activeEvidenceId} onClose={() => setEvidenceOpen(false)} /> : null}
             {evidenceOpen ? <button className="drawer-scrim" type="button" aria-label="关闭引用" onClick={() => setEvidenceOpen(false)} /> : null}
           </div>
         ) : null}

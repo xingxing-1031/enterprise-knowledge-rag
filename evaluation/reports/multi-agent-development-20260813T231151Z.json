@@ -1,0 +1,414 @@
+{
+  "dataset": "multi_agent_development.jsonl",
+  "case_count": 26,
+  "route_accuracy": 1.0,
+  "agent_selection_accuracy": 1.0,
+  "records": [
+    {
+      "case_id": "general-01",
+      "expected_mode": "general",
+      "actual_mode": "general",
+      "expected_agents": [
+        "general_agent"
+      ],
+      "actual_agents": [
+        "general_agent"
+      ],
+      "route_correct": true,
+      "agents_correct": true,
+      "latency_ms": 0.0866999980644323
+    },
+    {
+      "case_id": "general-02",
+      "expected_mode": "general",
+      "actual_mode": "general",
+      "expected_agents": [
+        "general_agent"
+      ],
+      "actual_agents": [
+        "general_agent"
+      ],
+      "route_correct": true,
+      "agents_correct": true,
+      "latency_ms": 0.020200001017656177
+    },
+    {
+      "case_id": "general-03",
+      "expected_mode": "general",
+      "actual_mode": "general",
+      "expected_agents": [
+        "general_agent"
+      ],
+      "actual_agents": [
+        "general_agent"
+      ],
+      "route_correct": true,
+      "agents_correct": true,
+      "latency_ms": 0.018500002624932677
+    },
+    {
+      "case_id": "general-04",
+      "expected_mode": "general",
+      "actual_mode": "general",
+      "expected_agents": [
+        "general_agent"
+      ],
+      "actual_agents": [
+        "general_agent"
+      ],
+      "route_correct": true,
+      "agents_correct": true,
+      "latency_ms": 0.014900000678608194
+    },
+    {
+      "case_id": "general-05",
+      "expected_mode": "general",
+      "actual_mode": "general",
+      "expected_agents": [
+        "general_agent"
+      ],
+      "actual_agents": [
+        "general_agent"
+      ],
+      "route_correct": true,
+      "agents_correct": true,
+      "latency_ms": 0.014199998986441642
+    },
+    {
+      "case_id": "general-06",
+      "expected_mode": "general",
+      "actual_mode": "general",
+      "expected_agents": [
+        "general_agent"
+      ],
+      "actual_agents": [
+        "general_agent"
+      ],
+      "route_correct": true,
+      "agents_correct": true,
+      "latency_ms": 0.015599998732795939
+    },
+    {
+      "case_id": "knowledge-01",
+      "expected_mode": "knowledge",
+      "actual_mode": "knowledge",
+      "expected_agents": [
+        "knowledge_agent"
+      ],
+      "actual_agents": [
+        "knowledge_agent"
+      ],
+      "route_correct": true,
+      "agents_correct": true,
+      "latency_ms": 0.015099998563528061
+    },
+    {
+      "case_id": "knowledge-02",
+      "expected_mode": "knowledge",
+      "actual_mode": "knowledge",
+      "expected_agents": [
+        "knowledge_agent"
+      ],
+      "actual_agents": [
+        "knowledge_agent"
+      ],
+      "route_correct": true,
+      "agents_correct": true,
+      "latency_ms": 0.012299999070819467
+    },
+    {
+      "case_id": "knowledge-03",
+      "expected_mode": "knowledge",
+      "actual_mode": "knowledge",
+      "expected_agents": [
+        "knowledge_agent"
+      ],
+      "actual_agents": [
+        "knowledge_agent"
+      ],
+      "route_correct": true,
+      "agents_correct": true,
+      "latency_ms": 0.01049999991664663
+    },
+    {
+      "case_id": "knowledge-04",
+      "expected_mode": "knowledge",
+      "actual_mode": "knowledge",
+      "expected_agents": [
+        "knowledge_agent"
+      ],
+      "actual_agents": [
+        "knowledge_agent"
+      ],
+      "route_correct": true,
+      "agents_correct": true,
+      "latency_ms": 0.015000001440057531
+    },
+    {
+      "case_id": "knowledge-05",
+      "expected_mode": "knowledge",
+      "actual_mode": "knowledge",
+      "expected_agents": [
+        "knowledge_agent"
+      ],
+      "actual_agents": [
+        "knowledge_agent"
+      ],
+      "route_correct": true,
+      "agents_correct": true,
+      "latency_ms": 0.013200002285884693
+    },
+    {
+      "case_id": "knowledge-06",
+      "expected_mode": "knowledge",
+      "actual_mode": "knowledge",
+      "expected_agents": [
+        "knowledge_agent"
+      ],
+      "actual_agents": [
+        "knowledge_agent"
+      ],
+      "route_correct": true,
+      "agents_correct": true,
+      "latency_ms": 0.012299999070819467
+    },
+    {
+      "case_id": "data-01",
+      "expected_mode": "data",
+      "actual_mode": "data",
+      "expected_agents": [
+        "data_agent"
+      ],
+      "actual_agents": [
+        "data_agent"
+      ],
+      "route_correct": true,
+      "agents_correct": true,
+      "latency_ms": 0.013599998055724427
+    },
+    {
+      "case_id": "data-02",
+      "expected_mode": "data",
+      "actual_mode": "data",
+      "expected_agents": [
+        "data_agent"
+      ],
+      "actual_agents": [
+        "data_agent"
+      ],
+      "route_correct": true,
+      "agents_correct": true,
+      "latency_ms": 0.011400003131711856
+    },
+    {
+      "case_id": "data-03",
+      "expected_mode": "data",
+      "actual_mode": "data",
+      "expected_agents": [
+        "data_agent"
+      ],
+      "actual_agents": [
+        "data_agent"
+      ],
+      "route_correct": true,
+      "agents_correct": true,
+      "latency_ms": 0.010699997801566496
+    },
+    {
+      "case_id": "data-04",
+      "expected_mode": "data",
+      "actual_mode": "data",
+      "expected_agents": [
+        "data_agent"
+      ],
+      "actual_agents": [
+        "data_agent"
+      ],
+      "route_correct": true,
+      "agents_correct": true,
+      "latency_ms": 0.012699998478638008
+    },
+    {
+      "case_id": "data-05",
+      "expected_mode": "data",
+      "actual_mode": "data",
+      "expected_agents": [
+        "data_agent"
+      ],
+      "actual_agents": [
+        "data_agent"
+      ],
+      "route_correct": true,
+      "agents_correct": true,
+      "latency_ms": 0.011000000085914508
+    },
+    {
+      "case_id": "data-06",
+      "expected_mode": "data",
+      "actual_mode": "data",
+      "expected_agents": [
+        "data_agent"
+      ],
+      "actual_agents": [
+        "data_agent"
+      ],
+      "route_correct": true,
+      "agents_correct": true,
+      "latency_ms": 0.010699997801566496
+    },
+    {
+      "case_id": "data-07",
+      "expected_mode": "data",
+      "actual_mode": "data",
+      "expected_agents": [
+        "data_agent"
+      ],
+      "actual_agents": [
+        "data_agent"
+      ],
+      "route_correct": true,
+      "agents_correct": true,
+      "latency_ms": 0.012500000593718141
+    },
+    {
+      "case_id": "collaboration-01",
+      "expected_mode": "collaboration",
+      "actual_mode": "collaboration",
+      "expected_agents": [
+        "knowledge_agent",
+        "data_agent",
+        "synthesis_agent",
+        "review_agent"
+      ],
+      "actual_agents": [
+        "knowledge_agent",
+        "data_agent",
+        "synthesis_agent",
+        "review_agent"
+      ],
+      "route_correct": true,
+      "agents_correct": true,
+      "latency_ms": 0.018200000340584666
+    },
+    {
+      "case_id": "collaboration-02",
+      "expected_mode": "collaboration",
+      "actual_mode": "collaboration",
+      "expected_agents": [
+        "knowledge_agent",
+        "data_agent",
+        "synthesis_agent",
+        "review_agent"
+      ],
+      "actual_agents": [
+        "knowledge_agent",
+        "data_agent",
+        "synthesis_agent",
+        "review_agent"
+      ],
+      "route_correct": true,
+      "agents_correct": true,
+      "latency_ms": 0.01939999856404029
+    },
+    {
+      "case_id": "collaboration-03",
+      "expected_mode": "collaboration",
+      "actual_mode": "collaboration",
+      "expected_agents": [
+        "knowledge_agent",
+        "data_agent",
+        "synthesis_agent",
+        "review_agent"
+      ],
+      "actual_agents": [
+        "knowledge_agent",
+        "data_agent",
+        "synthesis_agent",
+        "review_agent"
+      ],
+      "route_correct": true,
+      "agents_correct": true,
+      "latency_ms": 0.012699998478638008
+    },
+    {
+      "case_id": "collaboration-04",
+      "expected_mode": "collaboration",
+      "actual_mode": "collaboration",
+      "expected_agents": [
+        "knowledge_agent",
+        "data_agent",
+        "synthesis_agent",
+        "review_agent"
+      ],
+      "actual_agents": [
+        "knowledge_agent",
+        "data_agent",
+        "synthesis_agent",
+        "review_agent"
+      ],
+      "route_correct": true,
+      "agents_correct": true,
+      "latency_ms": 0.014199998986441642
+    },
+    {
+      "case_id": "collaboration-05",
+      "expected_mode": "collaboration",
+      "actual_mode": "collaboration",
+      "expected_agents": [
+        "knowledge_agent",
+        "data_agent",
+        "synthesis_agent",
+        "review_agent"
+      ],
+      "actual_agents": [
+        "knowledge_agent",
+        "data_agent",
+        "synthesis_agent",
+        "review_agent"
+      ],
+      "route_correct": true,
+      "agents_correct": true,
+      "latency_ms": 0.011200001608813182
+    },
+    {
+      "case_id": "collaboration-06",
+      "expected_mode": "collaboration",
+      "actual_mode": "collaboration",
+      "expected_agents": [
+        "knowledge_agent",
+        "data_agent",
+        "synthesis_agent",
+        "review_agent"
+      ],
+      "actual_agents": [
+        "knowledge_agent",
+        "data_agent",
+        "synthesis_agent",
+        "review_agent"
+      ],
+      "route_correct": true,
+      "agents_correct": true,
+      "latency_ms": 0.013700002455152571
+    },
+    {
+      "case_id": "collaboration-07",
+      "expected_mode": "collaboration",
+      "actual_mode": "collaboration",
+      "expected_agents": [
+        "knowledge_agent",
+        "data_agent",
+        "synthesis_agent",
+        "review_agent"
+      ],
+      "actual_agents": [
+        "knowledge_agent",
+        "data_agent",
+        "synthesis_agent",
+        "review_agent"
+      ],
+      "route_correct": true,
+      "agents_correct": true,
+      "latency_ms": 0.012399999832268804
+    }
+  ]
+}

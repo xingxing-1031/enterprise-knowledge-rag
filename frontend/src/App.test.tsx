@@ -65,6 +65,16 @@ describe("enterprise knowledge workbench", () => {
             reranker_score: 0.92,
           },
         ],
+        agent_mode: "knowledge",
+        agents: ["knowledge_agent", "review_agent"],
+        task_plan: [
+          { agent: "knowledge_agent", task: "检索并核验企业知识证据", status: "succeeded" },
+        ],
+        review: {
+          passed: true,
+          checks: { knowledge_citations_present: true },
+          limitations: [],
+        },
       };
     });
   });
@@ -73,12 +83,14 @@ describe("enterprise knowledge workbench", () => {
     const user = userEvent.setup();
     render(<App />);
 
-    await user.type(screen.getByLabelText("输入企业制度或流程问题"), "报销多久内提交？");
+    await user.type(screen.getByLabelText("输入对话或企业任务"), "报销多久内提交？");
     await user.click(screen.getByRole("button", { name: "发送问题" }));
 
     expect(await screen.findByText(/十五个自然日内提交/)).toBeInTheDocument();
     expect(screen.getByText("差旅与费用报销管理制度")).toBeInTheDocument();
     expect(screen.getByText("版本 2.0")).toBeInTheDocument();
+    expect(screen.getAllByText("知识 Agent")).toHaveLength(2);
+    expect(screen.getByText("审核通过")).toBeInTheDocument();
   });
 
   it("keeps trusted session data when one metadata request fails", async () => {
@@ -156,8 +168,8 @@ describe("enterprise knowledge workbench", () => {
 
     render(<App />);
 
-    expect(await screen.findByRole("heading", { name: "制度智查" })).toBeInTheDocument();
-    expect(screen.queryByText("开始一次制度查询")).not.toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "企业运营 Agent" })).toBeInTheDocument();
+    expect(screen.queryByText("开始一次对话或企业任务")).not.toBeInTheDocument();
   });
 
   it("enters the workbench after signing in with a demo account", async () => {
@@ -171,6 +183,6 @@ describe("enterprise knowledge workbench", () => {
     await user.click(screen.getByRole("button", { name: "登录" }));
 
     expect(api.login).toHaveBeenCalledWith("knowledge-admin-demo", "KnowledgeAdmin2026!");
-    expect(await screen.findByText("开始一次制度查询")).toBeInTheDocument();
+    expect(await screen.findByText("开始一次对话或企业任务")).toBeInTheDocument();
   });
 });

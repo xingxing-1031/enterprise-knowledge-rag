@@ -31,6 +31,9 @@ x-app-environment: &app-environment
   DEMO_DEPARTMENTS: ${DEMO_DEPARTMENTS:-hr,finance,admin}
   AUTH_SESSION_SECRET: ${AUTH_SESSION_SECRET:?set AUTH_SESSION_SECRET}
   INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:?set INTERNAL_SERVICE_TOKEN}
+  RETAIL_AGENT_URL: ${RETAIL_AGENT_URL:-http://host.docker.internal}
+  RETAIL_AGENT_TOKEN: ${RETAIL_AGENT_TOKEN:?set RETAIL_AGENT_TOKEN}
+  RETAIL_AGENT_TIMEOUT_SECONDS: ${RETAIL_AGENT_TIMEOUT_SECONDS:-90}
   AUTH_SESSION_TTL_SECONDS: ${AUTH_SESSION_TTL_SECONDS:-28800}
   AUTH_COOKIE_SECURE: ${AUTH_COOKIE_SECURE:-false}
   AUTH_EMPLOYEE_USERNAME: ${AUTH_EMPLOYEE_USERNAME:-employee-demo}
@@ -103,6 +106,8 @@ services:
       - "8010"
     volumes:
       - enterprise_rag_vps_uploads:/app/data/uploads
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       index:
         condition: service_completed_successfully
