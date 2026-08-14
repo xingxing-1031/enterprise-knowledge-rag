@@ -89,7 +89,7 @@ describe("enterprise knowledge workbench", () => {
     expect(await screen.findByText(/十五个自然日内提交/)).toBeInTheDocument();
     expect(screen.getByText("差旅与费用报销管理制度")).toBeInTheDocument();
     expect(screen.getByText("版本 2.0")).toBeInTheDocument();
-    expect(screen.getAllByText("知识 Agent")).toHaveLength(2);
+    expect(screen.getAllByText("知识检索")).toHaveLength(2);
     expect(screen.getByText("审核通过")).toBeInTheDocument();
   });
 
@@ -168,7 +168,7 @@ describe("enterprise knowledge workbench", () => {
 
     render(<App />);
 
-    expect(await screen.findByRole("heading", { name: "企业运营 Agent" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "企业知识库 RAG" })).toBeInTheDocument();
     expect(screen.queryByText("开始一次对话或企业任务")).not.toBeInTheDocument();
   });
 

@@ -39,8 +39,8 @@ export function Navigation({ active, onChange, session, onLogout }: NavigationPr
           <ShieldCheck size={20} strokeWidth={1.8} />
         </span>
         <div>
-          <strong>企业运营 Agent</strong>
-          <span>多智能体协作工作台</span>
+          <strong>企业知识库 RAG</strong>
+          <span>可审计证据工作台</span>
         </div>
       </div>
 

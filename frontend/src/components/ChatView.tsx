@@ -13,10 +13,10 @@ import type { ChatMessage, ProgressEvent, RetrievalEvidence } from "../types";
 
 
 const EXAMPLE_QUESTIONS = [
-  "你好，介绍一下你能做什么",
+  "公司的差旅报销制度是什么？",
   "出差结束后最晚多久提交报销？",
-  "分析最近30天各渠道销售额",
-  "分析退款率变化，并判断是否触发售后制度",
+  "员工请假需要经过哪些审批？",
+  "供应商付款需要哪些制度依据？",
 ];
 
 
@@ -43,20 +43,14 @@ const STATUS_LABELS = {
 };
 
 
-const MODE_LABELS = {
-  general: "通用对话",
+const MODE_LABELS: Record<string, string> = {
   knowledge: "企业知识",
-  data: "经营数据",
-  collaboration: "多 Agent 协作",
 };
 
 
 const AGENT_LABELS: Record<string, string> = {
-  general_agent: "通用对话 Agent",
-  knowledge_agent: "知识 Agent",
-  data_agent: "数据 Agent",
-  synthesis_agent: "综合 Agent",
-  review_agent: "审核 Agent",
+  knowledge_agent: "知识检索",
+  review_agent: "证据审核",
 };
 
 
@@ -78,7 +72,7 @@ export function ChatView({
       <header className="chat-heading">
         <div>
           <span className="panel-kicker">企业制度问答</span>
-          <h1>企业运营智能助手</h1>
+          <h1>企业制度智查</h1>
         </div>
         <button className="text-button" type="button" onClick={onClear}>
           <RotateCcw size={16} />
@@ -167,7 +161,7 @@ export function ChatView({
           <div className="progress-ledger">
             <div className="progress-title">
               <LoaderCircle className="spin" size={17} />
-              <strong>企业运营 Agent 正在执行</strong>
+              <strong>RAG 正在检索并核验证据</strong>
             </div>
             <ol>
               {progress.length === 0 ? (

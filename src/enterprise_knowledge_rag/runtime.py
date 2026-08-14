@@ -1,6 +1,5 @@
 import json
 from collections.abc import Callable, Sequence
-from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime
 from pathlib import Path
 from threading import Lock
@@ -14,11 +13,7 @@ from enterprise_knowledge_rag.documents.source_models import (
     SourceFile,
 )
 from enterprise_knowledge_rag.models import (
-    AgentMode,
-    AgentReview,
-    AgentStep,
     ChatRequest,
-    ChatResult,
     DocumentRecord,
     UserContext,
     UserRole,
@@ -138,10 +133,6 @@ class RuntimeChatService:
         chat_runner: ChatRunner = run_chat,
         clock: Callable[[], datetime] | None = None,
         history_max_messages: int = 8,
-        supervisor: Any | None = None,
-        general_agent: Any | None = None,
-        retail_agent: Any | None = None,
-        synthesis_agent: Any | None = None,
     ) -> None:
         self._graph = graph
         self._repository = repository
@@ -154,10 +145,6 @@ class RuntimeChatService:
         self._history_max_messages = history_max_messages
         self._histories: dict[tuple[str, str], list[dict[str, str]]] = {}
         self._history_lock = Lock()
-        self._supervisor = supervisor
-        self._general_agent = general_agent
-        self._retail_agent = retail_agent
-        self._synthesis_agent = synthesis_agent
 
     @staticmethod
     def _session_key(user: UserContext, session_id: str | None) -> tuple[str, str]:
@@ -170,11 +157,7 @@ class RuntimeChatService:
         key = self._session_key(user, request.session_id)
         with self._history_lock:
             history = list(self._histories.get(key, []))
-        if self._supervisor is None:
-            result = self._run_knowledge(request, user, history)
-        else:
-            plan = self._supervisor.plan(request.question, history)
-            result = self._run_plan(plan, request, user, history)
+        result = self._run_knowledge(request, user, history)
         if result.result.status != "failed" and result.result.answer:
             updated = [
                 *history,
@@ -208,219 +191,6 @@ class RuntimeChatService:
             user,
             as_of=request.as_of or self._clock(),
             history=history,
-        )
-
-    @staticmethod
-    def _completed_steps(steps: Sequence[AgentStep], status: str) -> list[AgentStep]:
-        step_status = "succeeded" if status == "success" else status
-        if step_status not in {"succeeded", "degraded", "refused", "failed"}:
-            step_status = "degraded"
-        return [item.model_copy(update={"status": step_status}) for item in steps]
-
-    def _run_plan(self, plan, request, user, history) -> WorkflowRun:
-        from enterprise_knowledge_rag.tracing import StageTimer
-
-        trace = [StageTimer("supervisor").event("success")]
-        if plan.mode is AgentMode.GENERAL:
-            try:
-                answer = self._general_agent.answer(request.question, history)
-                status = "success"
-                limitation = None
-            except Exception:
-                answer = "通用对话服务暂时不可用，请稍后再试。"
-                status = "failed"
-                limitation = "通用对话模型调用失败。"
-            result = ChatResult(
-                status=status,
-                answer=answer,
-                degradation_reason=limitation,
-                agent_mode=plan.mode,
-                agents=["general_agent", "review_agent"],
-                task_plan=self._completed_steps(plan.steps, status),
-                review=AgentReview(
-                    passed=status == "success",
-                    checks={"no_enterprise_claim_without_evidence": True},
-                    limitations=[limitation] if limitation else [],
-                ),
-            )
-            trace.extend([
-                StageTimer("general_agent").event(status),
-                StageTimer("review_agent").event(
-                    "passed" if status == "success" else "failed"
-                ),
-            ])
-            return WorkflowRun(result=result, trace=tuple(trace))
-
-        if plan.mode is AgentMode.KNOWLEDGE:
-            knowledge = self._run_knowledge(request, user, history)
-            reviewed = knowledge.result.model_copy(
-                update={
-                    "agent_mode": plan.mode,
-                    "agents": ["knowledge_agent", "review_agent"],
-                    "task_plan": self._completed_steps(
-                        plan.steps, knowledge.result.status
-                    ),
-                    "review": AgentReview(
-                        passed=(
-                            knowledge.result.status == "success"
-                            and bool(knowledge.result.citations)
-                        ),
-                        checks={
-                            "knowledge_citations_present": bool(
-                                knowledge.result.citations
-                            )
-                        },
-                    ),
-                }
-            )
-            return knowledge.__class__(
-                result=reviewed,
-                trace=(
-                    trace[0],
-                    *knowledge.trace,
-                    StageTimer("review_agent").event(
-                        "passed" if reviewed.review.passed else "refused"
-                    ),
-                ),
-                in_scope=knowledge.in_scope,
-                retrieval_candidates=knowledge.retrieval_candidates,
-                model_calls=knowledge.model_calls,
-                retrieval_hops=knowledge.retrieval_hops,
-                routed_document_keys=knowledge.routed_document_keys,
-                required_need_ids=knowledge.required_need_ids,
-                covered_need_ids=knowledge.covered_need_ids,
-            )
-
-        if plan.mode is AgentMode.DATA:
-            if self._retail_agent is None:
-                from enterprise_knowledge_rag.models import DataAgentResult
-
-                data = DataAgentResult(
-                    status="failed",
-                    limitations=["经营数据 Agent 未配置。"],
-                )
-            else:
-                data = self._retail_agent.run(
-                    request.question,
-                    user,
-                    session_id=request.session_id,
-                    as_of=request.as_of,
-                )
-            passed = data.status in {"succeeded", "degraded"} and bool(
-                data.evidence_ids
-            )
-            status = (
-                "success"
-                if data.status == "succeeded" and passed
-                else ("degraded" if data.answer else "failed")
-            )
-            result = ChatResult(
-                status=status,
-                answer=data.answer or "经营数据 Agent 暂时无法完成该任务。",
-                degradation_reason="；".join(data.limitations) or None,
-                agent_mode=plan.mode,
-                agents=["data_agent", "review_agent"],
-                task_plan=self._completed_steps(plan.steps, status),
-                data_result=data,
-                review=AgentReview(
-                    passed=passed,
-                    checks={"data_evidence_present": bool(data.evidence_ids)},
-                    limitations=data.limitations,
-                ),
-            )
-            return WorkflowRun(
-                result=result,
-                trace=(
-                    trace[0],
-                    StageTimer("data_agent").event(data.status),
-                    StageTimer("review_agent").event(
-                        "passed" if passed else "degraded"
-                    ),
-                ),
-            )
-
-        if self._retail_agent is None:
-            from enterprise_knowledge_rag.models import DataAgentResult
-
-            knowledge = self._run_knowledge(request, user, history)
-            data = DataAgentResult(
-                status="failed",
-                limitations=["经营数据 Agent 未配置。"],
-            )
-        else:
-            with ThreadPoolExecutor(max_workers=2) as executor:
-                knowledge_future = executor.submit(
-                    self._run_knowledge, request, user, history
-                )
-                data_future = executor.submit(
-                    self._retail_agent.run,
-                    request.question,
-                    user,
-                    session_id=request.session_id,
-                    as_of=request.as_of,
-                )
-                knowledge = knowledge_future.result()
-                data = data_future.result()
-        knowledge_ok = knowledge.result.status == "success" and bool(
-            knowledge.result.citations
-        )
-        data_ok = data.status in {"succeeded", "degraded"} and bool(
-            data.evidence_ids
-        )
-        limitations = list(data.limitations)
-        if not knowledge_ok:
-            limitations.append("企业知识证据不足，未形成完整制度判断。")
-        if not data_ok:
-            limitations.append("经营数据证据不足，未形成完整数据判断。")
-        if knowledge_ok and data_ok:
-            try:
-                answer = self._synthesis_agent.synthesize(
-                    request.question, knowledge.result.answer, data.answer
-                )
-            except Exception:
-                answer = (
-                    f"数据发现：{data.answer}\n\n制度依据：{knowledge.result.answer}"
-                )
-                limitations.append("综合模型不可用，已返回两类已验证结果。")
-            status = "degraded" if limitations else "success"
-        else:
-            available = [
-                item for item in (data.answer, knowledge.result.answer) if item
-            ]
-            answer = "\n\n".join(available) or "当前无法获得完成任务所需的充分证据。"
-            status = "degraded" if available else "refused"
-        review = AgentReview(
-            passed=knowledge_ok and data_ok,
-            checks={
-                "knowledge_citations_present": knowledge_ok,
-                "data_evidence_present": data_ok,
-                "required_agents_completed": knowledge_ok and data_ok,
-            },
-            limitations=limitations,
-        )
-        result = ChatResult(
-            status=status,
-            answer=answer,
-            citations=knowledge.result.citations,
-            evidence=knowledge.result.evidence,
-            degradation_reason="；".join(limitations) or None,
-            agent_mode=plan.mode,
-            agents=["knowledge_agent", "data_agent", "synthesis_agent", "review_agent"],
-            task_plan=self._completed_steps(plan.steps, status),
-            data_result=data,
-            review=review,
-        )
-        return WorkflowRun(
-            result=result,
-            trace=(
-                trace[0],
-                StageTimer("knowledge_agent").event(knowledge.result.status),
-                StageTimer("data_agent").event(data.status),
-                StageTimer("synthesis_agent").event(status),
-                StageTimer("review_agent").event(
-                    "passed" if review.passed else "degraded"
-                ),
-            ),
         )
 
     def clear_session(self, user: UserContext, session_id: str | None) -> None:

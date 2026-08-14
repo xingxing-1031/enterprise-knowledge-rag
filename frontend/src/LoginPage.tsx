@@ -24,7 +24,7 @@ const demoAccounts = [
   },
 ] as const;
 
-const TRUST_POINTS = ["按需多 Agent", "权限隔离", "证据可溯源"];
+const TRUST_POINTS = ["混合检索", "权限隔离", "证据可溯源"];
 
 export default function LoginPage({
   onLogin,
@@ -57,12 +57,12 @@ export default function LoginPage({
             <span className="logo-mark large" aria-hidden="true">
               <ShieldCheck size={24} strokeWidth={1.8} />
             </span>
-            <h1>企业运营 Agent</h1>
+            <h1>企业知识库 RAG</h1>
           </div>
-          <p className="login-hero">通用对话 · 企业知识 · 经营分析</p>
+          <p className="login-hero">企业制度 · 版本治理 · 证据回答</p>
           <p className="login-tagline">
-            普通问题直接对话，企业任务按需调用知识与数据 Agent。
-            企业事实只使用授权证据，经营分析通过受治理工具执行。
+            文档经过解析、权限过滤、混合检索和引用校验后回答。
+            证据不足时拒答，不用模型常识补写企业制度。
           </p>
           <ul className="login-points">
             {TRUST_POINTS.map((point) => (
@@ -94,7 +94,7 @@ export default function LoginPage({
         </div>
 
         <div className="login-form-area">
-          <p className="login-subtitle">企业运营多 Agent 工作台 · 请选择演示身份登录</p>
+          <p className="login-subtitle">企业制度 RAG 工作台 · 请选择演示身份登录</p>
           <label htmlFor="username">用户名</label>
           <div className="input-with-icon">
             <UserRound size={16} />

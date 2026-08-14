@@ -10,7 +10,6 @@ from enterprise_knowledge_rag.documents.import_repository import ImportRepositor
 from enterprise_knowledge_rag.documents.indexing import IndexingService
 from enterprise_knowledge_rag.documents.ingestion import IngestionService
 from enterprise_knowledge_rag.documents.repository import KnowledgeRepository
-from enterprise_knowledge_rag.general_chat import GeneralChatAgent, SynthesisAgent
 from enterprise_knowledge_rag.generation import AnswerGenerator
 from enterprise_knowledge_rag.providers import (
     CrossEncoderRerankerProvider,
@@ -20,7 +19,6 @@ from enterprise_knowledge_rag.providers import (
     RemoteRerankerProvider,
     SentenceTransformerEmbeddingProvider,
 )
-from enterprise_knowledge_rag.retail_agent import RetailAgentClient
 from enterprise_knowledge_rag.retrieval import (
     DocumentRouter,
     EvidenceCoverageService,
@@ -36,7 +34,6 @@ from enterprise_knowledge_rag.runtime import (
     IdentityQueryRewriter,
     RuntimeChatService,
 )
-from enterprise_knowledge_rag.supervisor import Supervisor
 from enterprise_knowledge_rag.workflow import WorkflowDependencies, build_workflow
 
 
@@ -146,22 +143,6 @@ def build_runtime_service(
         model=settings.model_name,
         timeout_seconds=settings.model_timeout_seconds,
     )
-    general_agent = GeneralChatAgent(
-        chat_client,
-        model=settings.model_name,
-        timeout_seconds=settings.model_timeout_seconds,
-    )
-    retail_agent = None
-    if settings.retail_agent_url:
-        import httpx
-
-        assert settings.retail_agent_token is not None
-        retail_agent = RetailAgentClient(
-            settings.retail_agent_url,
-            httpx.Client(),
-            service_token=settings.retail_agent_token.get_secret_value(),
-            timeout_seconds=settings.retail_agent_timeout_seconds,
-        )
     generator = AnswerGenerator(structured_provider)
     planner = RetrievalPlanner(structured_provider)
     hierarchical = HierarchicalRetrievalService(
@@ -202,10 +183,6 @@ def build_runtime_service(
         knowledge_dir=settings.knowledge_dir,
         latest_evaluation_path=settings.latest_evaluation_path,
         history_max_messages=settings.history_max_messages,
-        supervisor=Supervisor(structured_provider),
-        general_agent=general_agent,
-        retail_agent=retail_agent,
-        synthesis_agent=SynthesisAgent(general_agent),
     )
 
 

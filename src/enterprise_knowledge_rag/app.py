@@ -108,12 +108,7 @@ class ConfiguredSessionResolver:
 
 
 STAGE_LABELS = {
-    "supervisor": "规划任务并选择 Agent",
-    "general_agent": "通用对话 Agent 正在回答",
     "knowledge_agent": "知识 Agent 正在核验企业证据",
-    "data_agent": "数据 Agent 正在分析经营数据",
-    "synthesis_agent": "综合 Agent 正在汇总结果",
-    "review_agent": "审核 Agent 正在校验结果",
     "domain": "判断问题范围",
     "rewrite": "整理查询条件",
     "retrieve": "检索企业知识",
@@ -180,7 +175,7 @@ def create_app(
     settings = settings or get_settings()
     resolver = session_resolver or AuthSessionResolver(settings)
     app = FastAPI(
-        title="企业制度与流程知识库助手 API",
+        title="企业知识库 RAG API",
         version="0.1.0",
         lifespan=lifespan,
     )

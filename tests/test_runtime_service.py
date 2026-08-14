@@ -119,6 +119,27 @@ def test_service_keeps_history_isolated_and_can_clear_it(tmp_path: Path) -> None
     assert runner.histories[2] == []
 
 
+def test_runtime_always_uses_governed_rag_without_agent_dependencies(
+    tmp_path: Path,
+) -> None:
+    service, runner, _ = make_service(tmp_path)
+    user = UserContext(
+        user_id="employee-1",
+        role=UserRole.EMPLOYEE,
+        departments={"finance"},
+    )
+
+    result = service.run(
+        ChatRequest(question="查询公司昨天销售额", session_id="rag-only"),
+        user,
+    )
+
+    assert result.result.answer == "回答：查询公司昨天销售额"
+    assert len(runner.histories) == 1
+    assert not hasattr(service, "_supervisor")
+    assert not hasattr(service, "_retail_agent")
+
+
 def test_documents_overview_hides_inaccessible_metadata(tmp_path: Path) -> None:
     service, _, _ = make_service(tmp_path)
     employee = UserContext(
