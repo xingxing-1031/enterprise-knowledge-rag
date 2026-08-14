@@ -1,84 +1,36 @@
-export type ResultStatus = "success" | "degraded" | "refused" | "failed";
-
 export interface SessionInfo {
   user_id: string;
-  role: "employee" | "department_admin" | "knowledge_admin";
+  role: "knowledge_admin";
   departments: string[];
   public_demo_mode: boolean;
 }
 
-export interface Citation {
-  evidence_id: string;
-  label: string;
+export interface AdminOverview {
+  document_count: number;
+  active_count: number;
+  inactive_count: number;
+  needs_review_count: number;
+  chunk_count: number;
+  indexed_count: number;
+  last_indexed_at: string | null;
+  recent_audit_count: number;
 }
 
-export interface RetrievalEvidence {
-  evidence_id: string;
-  chunk_id: string;
+export interface ManagedDocument {
   document_id: string;
-  title: string;
-  section_path: string[];
   version: string;
-  effective_from: string;
-  quote: string;
-  retrieval_channels: string[];
-  retrieval_rank: number;
-  reranker_score: number | null;
-}
-
-export interface ChatRequest {
-  question: string;
-  session_id?: string;
-  as_of?: string;
-}
-
-export interface ChatResult {
-  status: ResultStatus;
-  answer: string;
-  citations: Citation[];
-  evidence: RetrievalEvidence[];
-  refusal_reason?: string | null;
-  degradation_reason?: string | null;
-  agent_mode?: "general" | "knowledge" | "data" | "collaboration" | null;
-  agents?: string[];
-  task_plan?: Array<{
-    agent: string;
-    task: string;
-    status: "pending" | "running" | "succeeded" | "degraded" | "refused" | "failed";
-  }>;
-  data_result?: {
-    status: string;
-    skill_id?: string | null;
-    answer: string;
-    rows: Array<Record<string, unknown>>;
-    chart?: Record<string, unknown> | null;
-    report?: Record<string, unknown> | null;
-    tool_calls: Array<Record<string, unknown>>;
-    evidence_ids: string[];
-    limitations: string[];
-  } | null;
-  review?: {
-    passed: boolean;
-    checks: Record<string, boolean>;
-    limitations: string[];
-  } | null;
-}
-
-export interface ProgressEvent {
-  stage: string;
-  label: string;
-  status: string;
-}
-
-export interface DocumentOverview {
-  document_id: string;
   title: string;
-  version: string;
+  document_type: "policy" | "process" | "handbook" | "faq";
   department: string;
-  visibility: string;
-  status: string;
+  visibility: "public" | "department" | "restricted";
+  status: "draft" | "active" | "inactive" | "expired" | "revoked";
   effective_from: string;
   effective_to: string | null;
+  topic_tags: string[];
+  source_filename: string;
+  chunk_count: number;
+  indexed: boolean;
+  indexed_at: string | null;
 }
 
 export type IngestionStatus =
@@ -93,10 +45,10 @@ export type IngestionStatus =
 export interface ImportMetadata {
   document_id: string;
   title: string;
-  document_type: "policy" | "process" | "handbook" | "faq";
+  document_type: ManagedDocument["document_type"];
   department: string;
-  visibility: "public" | "department" | "restricted";
-  allowed_roles: SessionInfo["role"][];
+  visibility: ManagedDocument["visibility"];
+  allowed_roles: string[];
   version: string;
   effective_from: string;
   effective_to?: string | null;
@@ -147,11 +99,55 @@ export interface EvaluationOverview {
   [key: string]: unknown;
 }
 
-export type AppView = "chat" | "knowledge" | "evaluation";
-
-export interface ChatMessage {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  result?: ChatResult;
+export interface AdminAuditEvent {
+  event_id: string;
+  action: string;
+  actor_id: string;
+  document_ref_hash: string | null;
+  version: string | null;
+  result: string;
+  reason_code: string | null;
+  created_at: string;
 }
+
+export interface SafeDebugCandidate {
+  document_id: string;
+  version: string;
+  title: string;
+  department: string;
+  chunk_id: string;
+  channels: string[];
+  channel_ranks: Record<string, number>;
+  retrieval_score: number;
+  reranker_score: number | null;
+}
+
+export interface RetrievalDebugStage {
+  name: "authorization" | "bm25" | "vector" | "rrf" | "rerank" | "evidence";
+  candidate_count: number;
+  excluded_count: number;
+  duration_ms: number;
+  candidates: SafeDebugCandidate[];
+  note?: string | null;
+}
+
+export interface RetrievalDebugResponse {
+  query: string;
+  strategy: string;
+  simulated_role: string;
+  simulated_departments: string[];
+  status: string;
+  stages: RetrievalDebugStage[];
+  total_duration_ms: number;
+}
+
+export interface DeleteResult {
+  deleted: boolean;
+  document_id: string;
+  version: string;
+  chunk_count: number;
+  source_removed: boolean;
+  tombstone_recorded: boolean;
+}
+
+export type AppView = "overview" | "documents" | "imports" | "retrieval" | "evaluation";

@@ -10,7 +10,7 @@
                          权限/版本/生效时间 -> Evidence -> 引用回答
 ```
 
-项目一“企析”通过带 `X-Internal-Token` 的 `/internal/evidence` 调用本服务。项目二不会反向调用项目一，因此不存在循环依赖。直接访问本项目仍可使用 RAG 对话工作台、文档管理和评测页面。
+项目一“企析”通过带 `X-Internal-Token` 的 `/internal/evidence` 调用本服务。项目二不会反向调用项目一，因此不存在循环依赖。直接访问本项目只提供知识库管理员控制台，不提供普通用户聊天入口。
 
 ## 核心能力
 
@@ -20,7 +20,9 @@
 - 父文档路由、结构化证据需求、有限二跳补全
 - 引用校验、证据覆盖率、证据不足拒答和降级
 - `/internal/evidence` 受认证证据 API
-- PostgreSQL/pgvector、FastAPI、LangGraph、SSE、React/Vite
+- 单管理员认证、导入审核、文档停用/恢复/重建索引/永久删除、审计墓碑
+- 检索实验室：权限过滤、BM25、向量、RRF、Rerank、证据链路诊断
+- PostgreSQL/pgvector、FastAPI、React/Vite
 - development 与 frozen holdout 评测报告，所有指标均可追溯到报告文件
 
 ## 快速启动
@@ -29,7 +31,7 @@
 docker compose up -d --build --wait
 ```
 
-默认打开 `http://127.0.0.1:8010/`。迁移、索引、模型和安全运维说明见 [`docs/OPERATIONS.md`](docs/OPERATIONS.md)。
+默认打开 `http://127.0.0.1:8010/`，使用 `knowledge-admin-demo / KnowledgeAdmin2026!` 进入演示控制台。迁移、索引、模型和安全运维说明见 [`docs/OPERATIONS.md`](docs/OPERATIONS.md)。
 
 ## 可复现评测
 

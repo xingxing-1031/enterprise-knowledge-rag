@@ -3,8 +3,14 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
+from time import perf_counter
 from typing import Protocol
 
+from enterprise_knowledge_rag.admin_models import (
+    RetrievalDebugResponse,
+    RetrievalDebugStage,
+    SafeDebugCandidate,
+)
 from enterprise_knowledge_rag.models import (
     DocumentRecord,
     RetrievalCandidate,
@@ -205,4 +211,140 @@ class RetrievalService:
             ),
             candidates=tuple(selected),
             authorized_document_keys=document_keys,
+        )
+
+    def debug_retrieve(
+        self,
+        query: str,
+        *,
+        user: UserContext,
+        as_of: datetime,
+        top_k: int = 5,
+        strategy: RetrievalStrategy = RetrievalStrategy.HYBRID_RRF_RERANKER,
+    ) -> RetrievalDebugResponse:
+        """Return explainable retrieval telemetry without exposing chunk text."""
+
+        started = perf_counter()
+
+        def safe(candidate: RetrievalCandidate) -> SafeDebugCandidate:
+            return SafeDebugCandidate(
+                document_id=candidate.document.document_id,
+                version=candidate.document.version,
+                title=candidate.document.title,
+                department=candidate.document.department,
+                chunk_id=candidate.chunk.chunk_id,
+                channels=tuple(sorted(candidate.channels)),
+                channel_ranks=dict(candidate.channel_ranks),
+                retrieval_score=round(float(candidate.retrieval_score), 6),
+                reranker_score=(
+                    round(float(candidate.reranker_score), 6)
+                    if candidate.reranker_score is not None
+                    else None
+                ),
+            )
+
+        grouped: dict[str, list[DocumentRecord]] = defaultdict(list)
+        for document in self._corpus.list_documents():
+            grouped[document.document_id].append(document)
+        authorized: set[tuple[str, str]] = set()
+        denied = 0
+        for document_id, documents in grouped.items():
+            resolution = resolve_effective_versions(documents, as_of=as_of)
+            if (
+                resolution.status is VersionResolutionStatus.SELECTED
+                and resolution.document
+            ):
+                if can_access(user, resolution.document):
+                    authorized.add((document_id, resolution.document.version))
+                elif _metadata_matches(query, resolution.document):
+                    denied += 1
+        auth_duration = int((perf_counter() - started) * 1000)
+        stages: list[RetrievalDebugStage] = [
+            RetrievalDebugStage(
+                name="authorization",
+                candidate_count=len(authorized),
+                excluded_count=denied,
+                duration_ms=auth_duration,
+                note="仅统计授权后的文档数量，不返回被拒绝文档正文",
+            )
+        ]
+        pool_limit = max(top_k * 2, 10)
+        stage_started = perf_counter()
+        query_vector = self._query_embeddings.embed_query(query)
+        vector = self._vector.search(
+            query_vector, document_keys=frozenset(authorized), limit=pool_limit
+        )
+        stages.append(
+            RetrievalDebugStage(
+                name="vector",
+                candidate_count=len(vector),
+                duration_ms=int((perf_counter() - stage_started) * 1000),
+                candidates=tuple(safe(item) for item in vector[:top_k]),
+            )
+        )
+        stage_started = perf_counter()
+        lexical_candidates = self._corpus.list_candidates(frozenset(authorized))
+        lexical = LexicalRetriever(lexical_candidates).search(query, limit=pool_limit)
+        stages.insert(
+            1,
+            RetrievalDebugStage(
+                name="bm25",
+                candidate_count=len(lexical),
+                duration_ms=int((perf_counter() - stage_started) * 1000),
+                candidates=tuple(safe(item) for item in lexical[:top_k]),
+            ),
+        )
+        stage_started = perf_counter()
+        fused = reciprocal_rank_fusion(
+            {"bm25": lexical, "vector": vector}, limit=pool_limit
+        )
+        stages.append(
+            RetrievalDebugStage(
+                name="rrf",
+                candidate_count=len(fused),
+                duration_ms=int((perf_counter() - stage_started) * 1000),
+                candidates=tuple(safe(item) for item in fused[:top_k]),
+            )
+        )
+        if strategy is RetrievalStrategy.VECTOR_BASELINE:
+            final = vector[:top_k]
+            reranked: list[RetrievalCandidate] = []
+        elif strategy is RetrievalStrategy.HYBRID_RRF:
+            final = fused[:top_k]
+            reranked = []
+        else:
+            stage_started = perf_counter()
+            reranked = self._reranker.rerank(query, fused, limit=top_k)
+            final = reranked
+        stages.append(
+            RetrievalDebugStage(
+                name="rerank",
+                candidate_count=len(reranked) if reranked else len(final),
+                duration_ms=(
+                    int((perf_counter() - stage_started) * 1000)
+                    if reranked
+                    else 0
+                ),
+                candidates=tuple(safe(item) for item in final[:top_k]),
+                note="向量基线和 RRF 方案跳过重排",
+            )
+        )
+        stages.append(
+            RetrievalDebugStage(
+                name="evidence",
+                candidate_count=len(final),
+                duration_ms=0,
+                candidates=tuple(safe(item) for item in final[:top_k]),
+            )
+        )
+        return RetrievalDebugResponse(
+            query=query,
+            strategy=strategy.value,
+            simulated_role=user.role.value,
+            simulated_departments=tuple(sorted(user.departments)),
+            status="ready"
+            if final
+            else ("permission_denied" if denied else "insufficient_evidence"),
+            stages=tuple(stages),
+            total_duration_ms=int((perf_counter() - started) * 1000),
         )

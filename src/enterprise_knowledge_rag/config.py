@@ -51,29 +51,11 @@ class Settings(BaseSettings):
     evidence_max_tokens: int = Field(default=1200, ge=64, le=10_000)
     history_max_messages: int = Field(default=8, ge=2, le=20)
     public_demo_mode: bool = True
-    public_demo_max_rows: int = Field(default=20, ge=1, le=100)
-    demo_user_id: str = "demo-employee"
-    demo_role: str = "employee"
-    demo_departments: str = "hr,finance,admin"
     auth_cookie_name: str = "rag_session"
     auth_session_secret: str = ""
     auth_session_ttl_seconds: int = Field(default=28_800, ge=300, le=86_400)
     auth_cookie_secure: bool = False
     internal_service_token: SecretStr | None = None
-    auth_employee_username: str = "employee-demo"
-    auth_employee_user_id: str = "demo-employee"
-    auth_employee_departments: str = "hr,finance,admin"
-    auth_employee_password_hash: str = (
-        "pbkdf2_sha256$210000$0nylxKwRt4QkjctvmLjdFw"
-        "$ZMVH9Qe5hNhOIIFRWkj8lyLQCFz6aCrDo7PFauuRDIc"
-    )
-    auth_department_admin_username: str = "department-admin-demo"
-    auth_department_admin_user_id: str = "demo-department-admin"
-    auth_department_admin_departments: str = "hr,finance,admin"
-    auth_department_admin_password_hash: str = (
-        "pbkdf2_sha256$210000$Z267edmp4uosaSuf0ubzDA"
-        "$sAeW_CJhgQTBZBYjNGSDX9vKm8UGpLblPrNRm1YoBt8"
-    )
     auth_knowledge_admin_username: str = "knowledge-admin-demo"
     auth_knowledge_admin_user_id: str = "demo-knowledge-admin"
     auth_knowledge_admin_departments: str = "hr,finance,admin,procurement,security"
@@ -81,6 +63,7 @@ class Settings(BaseSettings):
         "pbkdf2_sha256$210000$P58H3UwiBzg4AnUzhAuvXg"
         "$oypDqCdnPuRTDe8PRlmv0f6bmpBM5Q1Js-xCVThzF-A"
     )
+    admin_audit_secret: str = "local-admin-audit-secret-change-me"
     allowed_origins: str = "http://127.0.0.1:5173,http://localhost:5173"
     request_max_bytes: int = Field(default=16_384, ge=1024, le=1_048_576)
 

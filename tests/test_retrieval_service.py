@@ -229,6 +229,35 @@ def test_section_retrieval_cannot_expand_supplied_document_keys() -> None:
 
     assert corpus.received_keys == frozenset({("leave-policy", "1.0")})
     assert backend.received_keys == frozenset({("leave-policy", "1.0")})
-    assert {item.document.document_id for item in result.candidates} == {
-        "leave-policy"
-    }
+    assert {item.document.document_id for item in result.candidates} == {"leave-policy"}
+
+
+def test_debug_trace_explains_pipeline_without_chunk_text() -> None:
+    candidate = make_candidate(
+        "payment:1",
+        title="付款审批制度",
+        content="秘密付款材料只能由财务部门查看。",
+        document_id="payment-policy",
+    )
+    corpus = FakeCorpus([candidate])
+    service = RetrievalService(
+        corpus,
+        VectorRetriever(FakeVectorBackend([candidate])),
+        FakeEmbedding(),
+        Reranker(MatchingScores()),
+    )
+    result = service.debug_retrieve(
+        "付款审批制度",
+        user=UserContext(user_id="u1", role=UserRole.EMPLOYEE),
+        as_of=datetime(2026, 8, 10, tzinfo=UTC),
+    )
+
+    assert [stage.name for stage in result.stages] == [
+        "authorization",
+        "bm25",
+        "vector",
+        "rrf",
+        "rerank",
+        "evidence",
+    ]
+    assert "秘密付款材料" not in result.model_dump_json()

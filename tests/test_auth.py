@@ -23,41 +23,34 @@ def make_auth_client(
     return TestClient(app), service
 
 
-ACCOUNTS = {
-    "employee-demo": ("EmployeeDemo2026!", "employee"),
-    "department-admin-demo": ("DepartmentAdmin2026!", "department_admin"),
-    "knowledge-admin-demo": ("KnowledgeAdmin2026!", "knowledge_admin"),
-}
-
-
 def login(client: TestClient, username: str, password: str):
     return client.post("/auth/login", json={"username": username, "password": password})
 
 
+def test_only_knowledge_administrator_can_log_in() -> None:
+    client, _ = make_auth_client()
+    response = login(client, "knowledge-admin-demo", "KnowledgeAdmin2026!")
+    assert response.status_code == 200
+    assert response.json()["role"] == "knowledge_admin"
+    assert "rag_session" in response.headers.get("set-cookie", "")
+
+
 @pytest.mark.parametrize(
-    ("username", "password", "role"),
+    "username,password",
     [
-        ("employee-demo", "EmployeeDemo2026!", "employee"),
-        ("department-admin-demo", "DepartmentAdmin2026!", "department_admin"),
-        ("knowledge-admin-demo", "KnowledgeAdmin2026!", "knowledge_admin"),
+        ("employee-demo", "EmployeeDemo2026!"),
+        ("department-admin-demo", "DepartmentAdmin2026!"),
     ],
 )
-def test_demo_accounts_log_in_with_matching_role(
-    username: str, password: str, role: str
-) -> None:
+def test_non_admin_demo_accounts_are_rejected(username: str, password: str) -> None:
     client, _ = make_auth_client()
-
-    response = login(client, username, password)
-
-    assert response.status_code == 200
-    assert response.json()["role"] == role
-    assert "rag_session" in response.headers.get("set-cookie", "")
+    assert login(client, username, password).status_code == 401
 
 
 def test_login_rejects_wrong_password() -> None:
     client, _ = make_auth_client()
 
-    response = login(client, "employee-demo", "wrong-password")
+    response = login(client, "knowledge-admin-demo", "wrong-password")
 
     assert response.status_code == 401
 
@@ -91,22 +84,13 @@ def test_session_returns_identity_after_login() -> None:
 def test_logout_invalidates_session() -> None:
     client, _ = make_auth_client()
 
-    login(client, "employee-demo", "EmployeeDemo2026!")
+    login(client, "knowledge-admin-demo", "KnowledgeAdmin2026!")
     assert client.get("/session").status_code == 200
 
     logout = client.post("/auth/logout")
 
     assert logout.status_code == 204
     assert client.get("/session").status_code == 401
-
-
-def test_employee_cannot_reach_admin_endpoint() -> None:
-    client, _ = make_auth_client()
-
-    login(client, "employee-demo", "EmployeeDemo2026!")
-    response = client.post("/documents/index")
-
-    assert response.status_code == 403
 
 
 def test_knowledge_admin_can_reach_admin_endpoint() -> None:

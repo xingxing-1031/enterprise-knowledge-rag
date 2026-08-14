@@ -1,5 +1,7 @@
 from typing import Any
 
+from enterprise_knowledge_rag.admin_audit import AdminAuditRepository
+from enterprise_knowledge_rag.admin_service import KnowledgeAdminService
 from enterprise_knowledge_rag.app import create_app
 from enterprise_knowledge_rag.config import Settings, get_settings
 from enterprise_knowledge_rag.database import (
@@ -175,6 +177,19 @@ def build_runtime_service(
         upload_dir=settings.upload_storage_dir,
         knowledge_dir=settings.knowledge_dir,
     )
+    audit = AdminAuditRepository(
+        connection_factory,
+        secret=settings.admin_audit_secret,
+    )
+    admin_service = KnowledgeAdminService(
+        repository=repository,
+        indexing=indexing,
+        audit=audit,
+        knowledge_dir=settings.knowledge_dir,
+        upload_storage_dir=settings.upload_storage_dir,
+        import_repository=ImportRepository(connection_factory),
+        retrieval=retrieval,
+    )
     return RuntimeChatService(
         graph=graph,
         repository=repository,
@@ -183,6 +198,7 @@ def build_runtime_service(
         knowledge_dir=settings.knowledge_dir,
         latest_evaluation_path=settings.latest_evaluation_path,
         history_max_messages=settings.history_max_messages,
+        admin_service=admin_service,
     )
 
 
@@ -201,4 +217,5 @@ def create_runtime_app(settings: Settings | None = None):
             timeout_seconds=resolved.database_pool_timeout_seconds,
         ),
         static_dir=resolved.frontend_dist_dir,
+        admin_service=getattr(service, "admin_service", None),
     )

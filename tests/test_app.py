@@ -97,12 +97,16 @@ class FakeService:
 
     def approve_import(self, import_id, metadata, user):
         return self.preview_import(
-            type("Source", (), {
-                "original_filename": "policy.txt",
-                "source_hash": "a" * 64,
-                "media_type": "text/plain",
-                "size_bytes": 10,
-            })(),
+            type(
+                "Source",
+                (),
+                {
+                    "original_filename": "policy.txt",
+                    "source_hash": "a" * 64,
+                    "media_type": "text/plain",
+                    "size_bytes": 10,
+                },
+            )(),
             metadata,
             user,
         ).model_copy(update={"status": IngestionStatus.INDEXED})
@@ -176,9 +180,8 @@ def test_internal_evidence_maps_agent_role_and_returns_governed_fields() -> None
 def test_chat_uses_server_resolved_identity() -> None:
     client, service = make_client()
     response = client.post("/chat", json={"question": "报销多久提交"})
-    assert response.status_code == 200
-    assert service.received_user.user_id == "trusted-user"
-    assert service.received_user.role is UserRole.EMPLOYEE
+    assert response.status_code == 404
+    assert service.received_user is None
 
 
 def test_request_cannot_escalate_role() -> None:
@@ -187,7 +190,7 @@ def test_request_cannot_escalate_role() -> None:
         "/chat",
         json={"question": "付款审批", "role": "knowledge_admin"},
     )
-    assert response.status_code == 422
+    assert response.status_code == 404
 
 
 def test_employee_cannot_trigger_indexing() -> None:
@@ -265,14 +268,22 @@ def test_admin_import_metadata_is_strictly_validated() -> None:
 def test_session_reports_trusted_role() -> None:
     client, _ = make_client()
     response = client.get("/session")
-    assert response.json()["role"] == "employee"
-    assert response.json()["departments"] == ["finance"]
+    assert response.status_code == 403
+
+
+def test_admin_metadata_requires_knowledge_administrator() -> None:
+    employee, _ = make_client()
+    admin, _ = make_client(UserRole.KNOWLEDGE_ADMIN)
+    assert employee.get("/documents").status_code == 403
+    assert employee.get("/evaluations/latest").status_code == 403
+    assert admin.get("/documents").status_code == 200
+    assert admin.get("/evaluations/latest").status_code == 200
 
 
 def test_oversized_request_is_rejected() -> None:
     client, _ = make_client()
     response = client.post(
-        "/chat",
+        "/admin/retrieval/debug",
         content=b"x" * 20_000,
         headers={"content-type": "application/json"},
     )

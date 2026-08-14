@@ -133,6 +133,7 @@ class RuntimeChatService:
         chat_runner: ChatRunner = run_chat,
         clock: Callable[[], datetime] | None = None,
         history_max_messages: int = 8,
+        admin_service: Any | None = None,
     ) -> None:
         self._graph = graph
         self._repository = repository
@@ -143,6 +144,7 @@ class RuntimeChatService:
         self._chat_runner = chat_runner
         self._clock = clock or (lambda: datetime.now(UTC))
         self._history_max_messages = history_max_messages
+        self.admin_service = admin_service
         self._histories: dict[tuple[str, str], list[dict[str, str]]] = {}
         self._history_lock = Lock()
 

@@ -25,6 +25,7 @@ class Visibility(StrEnum):
 class DocumentStatus(StrEnum):
     DRAFT = "draft"
     ACTIVE = "active"
+    INACTIVE = "inactive"
     EXPIRED = "expired"
     REVOKED = "revoked"
 

@@ -5,7 +5,8 @@ The VPS deployment uses remote Qwen generation, remote embeddings
 DashScope OpenAI-compatible endpoints, so every feature behaves as in local
 development. The default retrieval strategy is `hybrid_rrf_reranker`. The
 server only runs PostgreSQL, FastAPI, React, and Caddy — no local models are
-loaded.
+loaded. The browser surface is an administrator-only control plane; employee
+evidence is served to project one through the internal token endpoint.
 
 The deployment is isolated from the retail project:
 
@@ -41,9 +42,11 @@ index on a fresh volume calls the remote embedding API for every chunk.
 
 ## First smoke test
 
-Open `http://<server-ip>:8010/` and verify:
+Open `http://<server-ip>:8010/`, sign in as the configured knowledge
+administrator, and verify:
 
-1. A normal policy question returns a cited answer.
-2. A restricted question is refused without revealing document content.
-3. An evidence-insufficient question is refused.
-4. The API is ready only after migrations and remote embedding indexing finish.
+1. The overview shows document and index counts.
+2. A document can be deactivated, restored, and reindexed.
+3. The retrieval lab shows authorization, BM25, vector, RRF, rerank, and evidence stages without chunk text.
+4. Permanent deletion requires exact-title confirmation and removes the version from the list.
+5. Project one can still call `/internal/evidence` with `X-Internal-Token`.

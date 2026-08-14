@@ -110,6 +110,7 @@ jobs:
           -d enterprise_rag
           -c "SELECT COUNT(*) AS migrations FROM schema_migrations;"
           -c "SELECT 1 / CASE WHEN EXISTS (SELECT 1 FROM schema_migrations WHERE version = '004_ingestion_and_document_routing') THEN 1 ELSE 0 END AS migration_004_applied;"
+          -c "SELECT 1 / CASE WHEN EXISTS (SELECT 1 FROM schema_migrations WHERE version = '005_admin_control_plane') THEN 1 ELSE 0 END AS migration_005_applied;"
           -c "SELECT COUNT(*) AS documents FROM knowledge_documents;"
           -c "SELECT COUNT(*) AS chunks FROM knowledge_chunks;"
           -c "SELECT COUNT(*) AS parent_vectors FROM knowledge_documents WHERE document_embedding IS NOT NULL;"

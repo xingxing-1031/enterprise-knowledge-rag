@@ -16,9 +16,20 @@ from fastapi import (
     status,
 )
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
+from enterprise_knowledge_rag.admin_models import (
+    AdminOverview,
+    DeleteResult,
+    ManagedDocument,
+    RetrievalDebugRequest,
+    RetrievalDebugResponse,
+)
+from enterprise_knowledge_rag.admin_service import (
+    DocumentConfirmationError,
+    DocumentNotFoundError,
+    UnsafeSourcePathError,
+)
 from enterprise_knowledge_rag.auth import (
     AuthSessionResolver,
     issue_session,
@@ -36,7 +47,6 @@ from enterprise_knowledge_rag.documents.source_models import (
 )
 from enterprise_knowledge_rag.models import (
     ChatRequest,
-    ChatResult,
     InternalEvidenceItem,
     InternalEvidenceRequest,
     InternalEvidenceResponse,
@@ -53,9 +63,7 @@ class ChatApiService(Protocol):
 
     def run(self, request: ChatRequest, user: UserContext) -> WorkflowRun: ...
 
-    def run_knowledge(
-        self, request: ChatRequest, user: UserContext
-    ) -> WorkflowRun: ...
+    def run_knowledge(self, request: ChatRequest, user: UserContext) -> WorkflowRun: ...
 
     def clear_session(self, user: UserContext, session_id: str | None) -> None: ...
 
@@ -84,27 +92,29 @@ class ChatApiService(Protocol):
     ) -> ImportPreview: ...
 
 
+class AdminApiService(Protocol):
+    def overview(self, actor: UserContext) -> AdminOverview: ...
+    def documents(self, actor: UserContext) -> tuple[ManagedDocument, ...]: ...
+    def deactivate(
+        self, document_id: str, version: str, actor: UserContext
+    ) -> ManagedDocument: ...
+    def restore(
+        self, document_id: str, version: str, actor: UserContext
+    ) -> ManagedDocument: ...
+    def reindex(
+        self, document_id: str, version: str, actor: UserContext
+    ) -> ManagedDocument: ...
+    def delete(
+        self, document_id: str, version: str, *, confirmation: str, actor: UserContext
+    ) -> DeleteResult: ...
+    def audit(self, actor: UserContext, *, limit: int = 50) -> list[Any]: ...
+    def debug_retrieve(
+        self, request: RetrievalDebugRequest, actor: UserContext
+    ) -> RetrievalDebugResponse: ...
+
+
 class SessionResolver(Protocol):
     def resolve(self, request: Request) -> UserContext: ...
-
-
-class ConfiguredSessionResolver:
-    """Demo identity comes from server settings, never from the request body."""
-
-    def __init__(self, settings: Settings) -> None:
-        self._settings = settings
-
-    def resolve(self, request: Request) -> UserContext:
-        del request
-        return UserContext(
-            user_id=self._settings.demo_user_id,
-            role=UserRole(self._settings.demo_role),
-            departments={
-                item.strip()
-                for item in self._settings.demo_departments.split(",")
-                if item.strip()
-            },
-        )
 
 
 STAGE_LABELS = {
@@ -141,20 +151,6 @@ def _demo_accounts(
 ) -> tuple[tuple[str, str, UserRole, str, str], ...]:
     return (
         (
-            settings.auth_employee_username,
-            settings.auth_employee_user_id,
-            UserRole.EMPLOYEE,
-            settings.auth_employee_departments,
-            settings.auth_employee_password_hash,
-        ),
-        (
-            settings.auth_department_admin_username,
-            settings.auth_department_admin_user_id,
-            UserRole.DEPARTMENT_ADMIN,
-            settings.auth_department_admin_departments,
-            settings.auth_department_admin_password_hash,
-        ),
-        (
             settings.auth_knowledge_admin_username,
             settings.auth_knowledge_admin_user_id,
             UserRole.KNOWLEDGE_ADMIN,
@@ -171,6 +167,7 @@ def create_app(
     session_resolver: SessionResolver | None = None,
     lifespan: Any | None = None,
     static_dir: Path | None = None,
+    admin_service: AdminApiService | None = None,
 ) -> FastAPI:
     settings = settings or get_settings()
     resolver = session_resolver or AuthSessionResolver(settings)
@@ -187,8 +184,8 @@ def create_app(
             if origin.strip()
         ],
         allow_credentials=True,
-        allow_methods=["GET", "POST"],
-        allow_headers=["Content-Type", "Authorization"],
+        allow_methods=["GET", "POST", "DELETE"],
+        allow_headers=["Content-Type", "Authorization", "X-Internal-Token"],
     )
 
     @app.middleware("http")
@@ -288,20 +285,13 @@ def create_app(
         return response
 
     @app.get("/session")
-    def session(user: UserContext = Depends(current_user)) -> dict[str, Any]:
+    def session(user: UserContext = Depends(require_admin)) -> dict[str, Any]:
         return {
             "user_id": user.user_id,
             "role": user.role.value,
             "departments": sorted(user.departments),
             "public_demo_mode": settings.public_demo_mode,
         }
-
-    @app.post("/chat", response_model=ChatResult)
-    def chat(
-        chat_request: ChatRequest,
-        user: UserContext = Depends(current_user),
-    ) -> ChatResult:
-        return safe_run(chat_request, user).result
 
     @app.post(
         "/internal/evidence",
@@ -357,29 +347,10 @@ def create_app(
             degradation_reason=result.degradation_reason,
         )
 
-    @app.post("/chat/stream")
-    def chat_stream(
-        chat_request: ChatRequest,
-        user: UserContext = Depends(current_user),
-    ) -> StreamingResponse:
-        run = safe_run(chat_request, user)
-
-        def events():
-            yield from _public_progress(run.trace)
-            yield _sse("result", run.result.model_dump(mode="json"))
-
-        return StreamingResponse(events(), media_type="text/event-stream")
-
-    @app.post("/chat/clear", status_code=204)
-    def clear_chat(
-        chat_request: ChatRequest,
-        user: UserContext = Depends(current_user),
-    ) -> Response:
-        service.clear_session(user, chat_request.session_id)
-        return Response(status_code=204)
-
     @app.get("/documents")
-    def documents(user: UserContext = Depends(current_user)) -> list[dict[str, Any]]:
+    def documents(user: UserContext = Depends(require_admin)) -> Any:
+        if admin_service is not None:
+            return admin_service.documents(user)
         return service.documents_overview(user)
 
     @app.post("/documents/index")
@@ -389,8 +360,108 @@ def create_app(
         return service.index_documents(user)
 
     @app.get("/evaluations/latest")
-    def latest_evaluation() -> dict[str, Any]:
+    def latest_evaluation(user: UserContext = Depends(require_admin)) -> dict[str, Any]:
+        del user
         return service.latest_evaluation()
+
+    @app.get("/admin/overview", response_model=AdminOverview)
+    def admin_overview(user: UserContext = Depends(require_admin)) -> AdminOverview:
+        if admin_service is None:
+            raise HTTPException(status_code=503, detail="管理服务尚未配置")
+        return admin_service.overview(user)
+
+    def _document_action_error(exc: Exception) -> HTTPException:
+        if isinstance(exc, DocumentNotFoundError):
+            return HTTPException(status_code=404, detail="文档版本不存在")
+        if isinstance(exc, DocumentConfirmationError):
+            return HTTPException(status_code=409, detail="文档标题确认不匹配")
+        if isinstance(exc, UnsafeSourcePathError):
+            return HTTPException(status_code=409, detail="文档源文件不在受控目录")
+        if isinstance(exc, FileNotFoundError):
+            return HTTPException(status_code=409, detail="文档源文件不存在")
+        return HTTPException(status_code=503, detail="文档操作暂时不可用")
+
+    @app.post(
+        "/admin/documents/{document_id}/{version}/deactivate",
+        response_model=ManagedDocument,
+    )
+    def deactivate_document(
+        document_id: str, version: str, user: UserContext = Depends(require_admin)
+    ) -> ManagedDocument:
+        if admin_service is None:
+            raise HTTPException(status_code=503, detail="管理服务尚未配置")
+        try:
+            return admin_service.deactivate(document_id, version, user)
+        except Exception as exc:
+            raise _document_action_error(exc) from exc
+
+    @app.post(
+        "/admin/documents/{document_id}/{version}/restore",
+        response_model=ManagedDocument,
+    )
+    def restore_document(
+        document_id: str, version: str, user: UserContext = Depends(require_admin)
+    ) -> ManagedDocument:
+        if admin_service is None:
+            raise HTTPException(status_code=503, detail="管理服务尚未配置")
+        try:
+            return admin_service.restore(document_id, version, user)
+        except Exception as exc:
+            raise _document_action_error(exc) from exc
+
+    @app.post(
+        "/admin/documents/{document_id}/{version}/reindex",
+        response_model=ManagedDocument,
+    )
+    def reindex_document(
+        document_id: str, version: str, user: UserContext = Depends(require_admin)
+    ) -> ManagedDocument:
+        if admin_service is None:
+            raise HTTPException(status_code=503, detail="管理服务尚未配置")
+        try:
+            return admin_service.reindex(document_id, version, user)
+        except Exception as exc:
+            raise _document_action_error(exc) from exc
+
+    @app.delete("/admin/documents/{document_id}/{version}", response_model=DeleteResult)
+    def delete_document(
+        document_id: str,
+        version: str,
+        confirmation: str,
+        user: UserContext = Depends(require_admin),
+    ) -> DeleteResult:
+        if admin_service is None:
+            raise HTTPException(status_code=503, detail="管理服务尚未配置")
+        try:
+            return admin_service.delete(
+                document_id, version, confirmation=confirmation, actor=user
+            )
+        except Exception as exc:
+            raise _document_action_error(exc) from exc
+
+    @app.get("/admin/audit")
+    def admin_audit(
+        limit: int = 50, user: UserContext = Depends(require_admin)
+    ) -> list[Any]:
+        if admin_service is None:
+            raise HTTPException(status_code=503, detail="管理服务尚未配置")
+        return admin_service.audit(user, limit=limit)
+
+    @app.post("/admin/retrieval/debug", response_model=RetrievalDebugResponse)
+    def debug_retrieval(
+        debug_request: RetrievalDebugRequest,
+        user: UserContext = Depends(require_admin),
+    ) -> RetrievalDebugResponse:
+        if admin_service is None:
+            raise HTTPException(status_code=503, detail="管理服务尚未配置")
+        try:
+            return admin_service.debug_retrieve(debug_request, user)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail="检索调试参数不合法") from exc
+        except Exception as exc:
+            if settings.app_env == "test":
+                raise
+            raise HTTPException(status_code=503, detail="检索调试暂时不可用") from exc
 
     @app.post(
         "/knowledge/imports",

@@ -67,6 +67,19 @@ def test_ingestion_migration_adds_import_jobs_and_parent_vectors() -> None:
     assert "storage_path TEXT NOT NULL" in sql
 
 
+def test_admin_migration_adds_safe_audit_log() -> None:
+    migration_path = (
+        Path(__file__).parents[1]
+        / "db"
+        / "migrations"
+        / "005_admin_control_plane.sql"
+    )
+    sql = migration_path.read_text(encoding="utf-8")
+    assert "CREATE TABLE IF NOT EXISTS knowledge_admin_audit" in sql
+    assert "document_ref_hash CHAR(64)" in sql
+    assert "content" not in sql.lower()
+
+
 def test_delivery_smoke_invokes_retrieval_script_as_module() -> None:
     workflow_path = Path(__file__).parents[1] / ".github" / "workflows" / "ci.yml"
 

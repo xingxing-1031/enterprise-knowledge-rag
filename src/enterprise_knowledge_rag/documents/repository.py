@@ -491,3 +491,130 @@ class KnowledgeRepository:
                     """,
                     {**chunk.model_dump(), "embedding": list(embedding)},
                 )
+
+    def get_document_version(
+        self, document_id: str, version: str
+    ) -> DocumentRecord | None:
+        from psycopg.rows import dict_row
+
+        with (
+            self._connection() as connection,
+            connection.cursor(row_factory=dict_row) as cursor,
+        ):
+            cursor.execute(
+                f"SELECT {DOCUMENT_SELECT} FROM knowledge_documents d "
+                "WHERE d.document_id = %s AND d.version = %s",
+                (document_id, version),
+            )
+            row = cursor.fetchone()
+        return _document_from_row(row) if row is not None else None
+
+    def set_document_status(
+        self, document_id: str, version: str, status: DocumentStatus
+    ) -> DocumentRecord | None:
+        from psycopg.rows import dict_row
+
+        with (
+            self._connection() as connection,
+            connection.cursor(row_factory=dict_row) as cursor,
+        ):
+            cursor.execute(
+                f"""
+                UPDATE knowledge_documents
+                SET status = %(status)s
+                WHERE document_id = %(document_id)s AND version = %(version)s
+                RETURNING {DOCUMENT_SELECT}
+                """,
+                {
+                    "document_id": document_id,
+                    "version": version,
+                    "status": status.value,
+                },
+            )
+            row = cursor.fetchone()
+        return _document_from_row(row) if row is not None else None
+
+    def delete_document_version(
+        self, document_id: str, version: str
+    ) -> dict[str, Any] | None:
+        from psycopg.rows import dict_row
+
+        with (
+            self._connection() as connection,
+            connection.cursor(row_factory=dict_row) as cursor,
+        ):
+            cursor.execute(
+                """
+                SELECT source_path,
+                    (SELECT COUNT(*) FROM knowledge_chunks c
+                     WHERE c.document_id = d.document_id
+                       AND c.document_version = d.version) AS chunk_count
+                FROM knowledge_documents d
+                WHERE d.document_id = %s AND d.version = %s
+                FOR UPDATE
+                """,
+                (document_id, version),
+            )
+            row = cursor.fetchone()
+            if row is None:
+                return None
+            cursor.execute(
+                "DELETE FROM knowledge_documents "
+                "WHERE document_id = %s AND version = %s",
+                (document_id, version),
+            )
+        return {
+            "source_path": row["source_path"],
+            "chunk_count": int(row["chunk_count"] or 0),
+        }
+
+    def admin_documents(self) -> list[dict[str, Any]]:
+        from psycopg.rows import dict_row
+
+        with (
+            self._connection() as connection,
+            connection.cursor(row_factory=dict_row) as cursor,
+        ):
+            cursor.execute(
+                f"""
+                SELECT {DOCUMENT_SELECT},
+                    COUNT(c.chunk_id)::int AS chunk_count
+                FROM knowledge_documents d
+                LEFT JOIN knowledge_chunks c
+                    ON c.document_id = d.document_id
+                   AND c.document_version = d.version
+                   AND c.embedding_model = %(embedding_model)s
+                GROUP BY d.document_id, d.version
+                ORDER BY d.indexed_at DESC, d.document_id, d.version
+                """,
+                {"embedding_model": self._embedding_model},
+            )
+            rows = cursor.fetchall()
+        return list(rows)
+
+    def admin_overview(self) -> dict[str, Any]:
+        with self._connection() as connection, connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT
+                    COUNT(*)::int AS document_count,
+                    COUNT(*) FILTER (WHERE status = 'active')::int AS active_count,
+                    COUNT(*) FILTER (WHERE status = 'inactive')::int AS inactive_count,
+                    (SELECT COUNT(*)::int FROM knowledge_chunks) AS chunk_count,
+                    (SELECT COUNT(DISTINCT (document_id, document_version))::int
+                     FROM knowledge_chunks WHERE embedding_model = %s) AS indexed_count,
+                    MAX(indexed_at) AS last_indexed_at
+                FROM knowledge_documents
+                """,
+                (self._embedding_model,),
+            )
+            row = cursor.fetchone()
+        return {
+            "document_count": int(row[0] or 0),
+            "active_count": int(row[1] or 0),
+            "inactive_count": int(row[2] or 0),
+            "needs_review_count": 0,
+            "chunk_count": int(row[3] or 0),
+            "indexed_count": int(row[4] or 0),
+            "last_indexed_at": row[5],
+        }

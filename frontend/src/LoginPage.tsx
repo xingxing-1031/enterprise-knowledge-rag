@@ -1,49 +1,22 @@
-import { LockKeyhole, ShieldCheck, UserRound } from "lucide-react";
-import { FormEvent, useState } from "react";
+import { LockKeyhole, ShieldCheck } from "lucide-react";
+import { useState } from "react";
 import { login } from "./api";
 import type { SessionInfo } from "./types";
 
-const demoAccounts = [
-  {
-    username: "knowledge-admin-demo",
-    password: "KnowledgeAdmin2026!",
-    title: "知识库管理员",
-    description: "可查看全部制度文档与入库审批，推荐用于整体演示。",
-  },
-  {
-    username: "department-admin-demo",
-    password: "DepartmentAdmin2026!",
-    title: "部门管理员",
-    description: "可访问本部门与受控文档，例如付款审批权限表。",
-  },
-  {
-    username: "employee-demo",
-    password: "EmployeeDemo2026!",
-    title: "普通员工",
-    description: "仅可见公开制度，敏感内容会被权限拦截。",
-  },
-] as const;
-
-const TRUST_POINTS = ["混合检索", "权限隔离", "证据可溯源"];
-
-export default function LoginPage({
-  onLogin,
-}: {
-  onLogin: (session: SessionInfo) => void;
-}) {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+export default function LoginPage({ onLogin }: { onLogin: (session: SessionInfo) => void }) {
+  const [username, setUsername] = useState("knowledge-admin-demo");
+  const [password, setPassword] = useState("KnowledgeAdmin2026!");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  async function submit(event: FormEvent) {
+  async function submit(event: React.FormEvent) {
     event.preventDefault();
     setSubmitting(true);
     setError("");
     try {
-      onLogin(await login(username, password));
-    } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "登录失败，请稍后重试。");
+      onLogin(await login(username.trim(), password));
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : "登录失败，请检查管理员凭据");
     } finally {
       setSubmitting(false);
     }
@@ -51,85 +24,19 @@ export default function LoginPage({
 
   return (
     <main className="login-page">
-      <form className="login-card" onSubmit={submit}>
-        <div className="login-brand-panel">
-          <div className="login-brand">
-            <span className="logo-mark large" aria-hidden="true">
-              <ShieldCheck size={24} strokeWidth={1.8} />
-            </span>
-            <h1>企业知识库 RAG</h1>
-          </div>
-          <p className="login-hero">企业制度 · 版本治理 · 证据回答</p>
-          <p className="login-tagline">
-            文档经过解析、权限过滤、混合检索和引用校验后回答。
-            证据不足时拒答，不用模型常识补写企业制度。
-          </p>
-          <ul className="login-points">
-            {TRUST_POINTS.map((point) => (
-              <li key={point}>{point}</li>
-            ))}
-          </ul>
-          <div className="login-demo-heading">
-            <span className="login-demo-label">选择演示身份</span>
-          </div>
-          <div className="demo-account-list" aria-label="公开演示账号">
-            {demoAccounts.map((account) => (
-              <button
-                className="demo-account"
-                type="button"
-                key={account.username}
-                onClick={() => {
-                  setUsername(account.username);
-                  setPassword(account.password);
-                }}
-              >
-                <span>
-                  <strong>{account.title}</strong>
-                  <small>{account.description}</small>
-                </span>
-                <code>{account.username}</code>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="login-form-area">
-          <p className="login-subtitle">企业制度 RAG 工作台 · 请选择演示身份登录</p>
-          <label htmlFor="username">用户名</label>
-          <div className="input-with-icon">
-            <UserRound size={16} />
-            <input
-              id="username"
-              autoComplete="username"
-              value={username}
-              onChange={(event) => setUsername(event.target.value)}
-              placeholder="请输入用户名"
-              required
-            />
-          </div>
-          <label htmlFor="password">密码</label>
-          <div className="input-with-icon">
-            <LockKeyhole size={16} />
-            <input
-              id="password"
-              type="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              placeholder="请输入密码"
-              required
-            />
-          </div>
-          {error ? <p className="form-error">{error}</p> : null}
-          <button className="primary-button login-submit" type="submit" disabled={submitting}>
-            {submitting ? "正在登录" : "登录"}
-          </button>
-          <div className="login-notice">
-            <span className="service-dot online" aria-hidden="true" />
-            <p>公开演示数据 · 角色与权限均由服务器校验</p>
-          </div>
-        </div>
-      </form>
+      <section className="login-panel" aria-labelledby="login-title">
+        <div className="login-brand"><span className="brand-mark large" aria-hidden="true"><ShieldCheck size={25} /></span><div><strong>知库控制台</strong><span>Enterprise Knowledge Control Plane</span></div></div>
+        <div className="login-copy"><span className="panel-kicker">受控访问</span><h1 id="login-title">管理员登录</h1><p>文档入库、权限检索、索引维护和评测报告都在这里完成。</p></div>
+        <form className="login-form" onSubmit={(event) => void submit(event)}>
+          <label htmlFor="username">管理员账号</label>
+          <input id="username" autoComplete="username" value={username} onChange={(event) => setUsername(event.target.value)} />
+          <label htmlFor="password">访问密码</label>
+          <div className="password-field"><LockKeyhole size={16} aria-hidden="true" /><input id="password" type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} /></div>
+          {error ? <div className="form-error" role="alert">{error}</div> : null}
+          <button className="primary-button" disabled={submitting} type="submit">{submitting ? "正在验证" : "进入管理控制台"}</button>
+        </form>
+        <div className="login-footnote"><span className="status-dot" aria-hidden="true" />仅允许知识库管理员访问，普通用户通过项目一的内部证据接口获取知识。</div>
+      </section>
     </main>
   );
 }

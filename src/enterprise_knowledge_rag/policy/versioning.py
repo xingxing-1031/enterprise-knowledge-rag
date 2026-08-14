@@ -20,7 +20,11 @@ class VersionResolution:
 
 
 def _is_effective(document: DocumentRecord, as_of: datetime) -> bool:
-    if document.status in {DocumentStatus.DRAFT, DocumentStatus.REVOKED}:
+    if document.status in {
+        DocumentStatus.DRAFT,
+        DocumentStatus.INACTIVE,
+        DocumentStatus.REVOKED,
+    }:
         return False
     if document.effective_from > as_of:
         return False
