@@ -1,10 +1,15 @@
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
 
 from scripts.evaluation_support import code_commit, corpus_snapshot
 from scripts.run_development_smoke import select_case
-from scripts.run_final_holdout import require_frozen_confirmation
+from scripts.run_final_holdout import (
+    FROZEN_SHA256,
+    require_frozen_confirmation,
+    verify_frozen_hash,
+)
 
 
 def test_code_commit_prefers_explicit_container_value(
@@ -50,3 +55,10 @@ def test_frozen_guard_refuses_to_overwrite(tmp_path) -> None:
 
     with pytest.raises(FileExistsError):
         require_frozen_confirmation("CONSUME_ONCE", output)
+
+
+def test_v2_frozen_hash_matches_committed_dataset() -> None:
+    project_root = Path(__file__).resolve().parents[1]
+
+    verify_frozen_hash(project_root / "evaluation" / "frozen-holdout-v2.json")
+    assert len(FROZEN_SHA256) == 64

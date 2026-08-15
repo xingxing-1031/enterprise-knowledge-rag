@@ -30,8 +30,11 @@ def main() -> int:
     settings = get_settings()
     dataset = load_dataset(PROJECT_ROOT / "evaluation" / "development-v2.json")
     repetitions = int(os.getenv("EVAL_REPETITIONS", "1"))
+    max_workers = int(os.getenv("EVAL_MAX_WORKERS", "1"))
     if repetitions < 1:
         raise ValueError("EVAL_REPETITIONS must be positive")
+    if max_workers < 1:
+        raise ValueError("EVAL_MAX_WORKERS must be positive")
 
     pool = create_connection_pool(settings)
     pool.open(wait=True, timeout=settings.database_pool_timeout_seconds)
@@ -65,6 +68,7 @@ def main() -> int:
                 )
                 report = EvaluationRunner(
                     executor,
+                    max_workers=max_workers,
                 ).run(
                     dataset,
                     strategy=strategy,

@@ -23,7 +23,7 @@ except ModuleNotFoundError:
     from evaluation_support import build_live_services, code_commit, corpus_snapshot
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-FROZEN_SHA256 = "571616f9172881b0196c4d889a1d5d3691905fb7db035a14effb5f7d46cd465d"
+FROZEN_SHA256 = "9e21768f777e61cccd27adc2555ec6e71233aeb6a65db6e83442e836b1b27fb3"
 
 
 def verify_frozen_hash(dataset_path: Path) -> None:
@@ -44,14 +44,17 @@ def require_frozen_confirmation(confirmation: str, output_path: Path) -> None:
 
 
 def main() -> int:
-    dataset_path = PROJECT_ROOT / "evaluation" / "frozen_holdout.json"
-    output_path = PROJECT_ROOT / "evaluation" / "reports" / "final-holdout.json"
+    dataset_path = PROJECT_ROOT / "evaluation" / "frozen-holdout-v2.json"
+    output_path = PROJECT_ROOT / "evaluation" / "reports" / "final-holdout-v2.json"
     verify_frozen_hash(dataset_path)
     require_frozen_confirmation(
         os.getenv("FROZEN_HOLDOUT_CONFIRM", ""),
         output_path,
     )
     dataset = load_dataset(dataset_path)
+    max_workers = int(os.getenv("EVAL_MAX_WORKERS", "1"))
+    if max_workers < 1:
+        raise ValueError("EVAL_MAX_WORKERS must be positive")
 
     settings = get_settings()
     strategy = EvaluationStrategy(settings.retrieval_strategy)
@@ -65,6 +68,7 @@ def main() -> int:
         report = EvaluationRunner(
             WorkflowEvaluationExecutor({strategy: service}),
             allow_frozen=True,
+            max_workers=max_workers,
         ).run(
             dataset,
             strategy=strategy,

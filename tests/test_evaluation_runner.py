@@ -1,5 +1,6 @@
 from datetime import UTC, datetime
 from pathlib import Path
+from threading import Barrier, Lock
 
 import pytest
 
@@ -176,6 +177,51 @@ def test_runner_records_case_failure_without_leaking_exception_text() -> None:
     assert report.cases[0].error_type == "TimeoutError"
     assert report.cases[0].error_code == "execution_error"
     assert "secret" not in report.model_dump_json()
+
+
+def test_runner_can_evaluate_in_parallel_without_reordering_results() -> None:
+    barrier = Barrier(2)
+    lock = Lock()
+    active = 0
+    peak_active = 0
+
+    class ParallelExecutor(FixedExecutor):
+        def run(self, case, *, strategy, corpus_snapshot):
+            nonlocal active, peak_active
+            with lock:
+                active += 1
+                peak_active = max(peak_active, active)
+            barrier.wait(timeout=2)
+            try:
+                return super().run(
+                    case,
+                    strategy=strategy,
+                    corpus_snapshot=corpus_snapshot,
+                )
+            finally:
+                with lock:
+                    active -= 1
+
+    dataset = EvaluationDataset(
+        dataset_id="development-v1",
+        version="1.0",
+        split=EvaluationSplit.DEVELOPMENT,
+        cases=[make_answer_case("first"), make_answer_case("second")],
+    )
+
+    report = EvaluationRunner(
+        ParallelExecutor(),
+        max_workers=2,
+        clock=lambda: NOW,
+    ).run(
+        dataset,
+        strategy=EvaluationStrategy.HYBRID_RRF,
+        corpus_snapshot="sha256:corpus-v1",
+        experiment=EXPERIMENT,
+    )
+
+    assert peak_active == 2
+    assert [case.case_id for case in report.cases] == ["first", "second"]
 
 
 def test_frozen_holdout_is_locked_by_default() -> None:

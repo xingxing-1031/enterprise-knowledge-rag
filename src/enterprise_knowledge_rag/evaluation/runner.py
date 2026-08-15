@@ -1,4 +1,5 @@
 from collections.abc import Callable, Sequence
+from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime
 from math import ceil
 from pathlib import Path
@@ -127,11 +128,42 @@ class EvaluationRunner:
         executor: EvaluationExecutor,
         *,
         allow_frozen: bool = False,
+        max_workers: int = 1,
         clock: Callable[[], datetime] | None = None,
     ) -> None:
+        if max_workers < 1:
+            raise ValueError("max_workers must be positive")
         self._executor = executor
         self._allow_frozen = allow_frozen
+        self._max_workers = max_workers
         self._clock = clock or (lambda: datetime.now(UTC))
+
+    def _evaluate_case(
+        self,
+        case: EvaluationCase,
+        *,
+        strategy: EvaluationStrategy,
+        corpus_snapshot: str,
+        ranking_k: int,
+    ) -> CaseEvaluation:
+        try:
+            observation = self._executor.run(
+                case,
+                strategy=strategy,
+                corpus_snapshot=corpus_snapshot,
+            )
+            metrics: CaseMetrics = grade_case(case, observation, k=ranking_k)
+            return CaseEvaluation(
+                case_id=case.case_id,
+                observation=observation,
+                metrics=metrics,
+            )
+        except Exception as exc:
+            return CaseEvaluation(
+                case_id=case.case_id,
+                error_type=type(exc).__name__,
+                error_code=getattr(exc, "stage", "execution_error"),
+            )
 
     def run(
         self,
@@ -150,30 +182,19 @@ class EvaluationRunner:
             raise ValueError("ranking_k must be positive")
 
         started_at = self._clock()
-        results: list[CaseEvaluation] = []
-        for case in dataset.cases:
-            try:
-                observation = self._executor.run(
-                    case,
-                    strategy=strategy,
-                    corpus_snapshot=corpus_snapshot,
-                )
-                metrics: CaseMetrics = grade_case(case, observation, k=ranking_k)
-                results.append(
-                    CaseEvaluation(
-                        case_id=case.case_id,
-                        observation=observation,
-                        metrics=metrics,
-                    )
-                )
-            except Exception as exc:
-                results.append(
-                    CaseEvaluation(
-                        case_id=case.case_id,
-                        error_type=type(exc).__name__,
-                        error_code=getattr(exc, "stage", "execution_error"),
-                    )
-                )
+        def evaluate(case: EvaluationCase) -> CaseEvaluation:
+            return self._evaluate_case(
+                case,
+                strategy=strategy,
+                corpus_snapshot=corpus_snapshot,
+                ranking_k=ranking_k,
+            )
+
+        if self._max_workers == 1:
+            results = [evaluate(case) for case in dataset.cases]
+        else:
+            with ThreadPoolExecutor(max_workers=self._max_workers) as workers:
+                results = list(workers.map(evaluate, dataset.cases))
 
         completed_at = self._clock()
         return EvaluationReport(
