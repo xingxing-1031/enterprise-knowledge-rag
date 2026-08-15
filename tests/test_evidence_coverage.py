@@ -7,6 +7,16 @@ from enterprise_knowledge_rag.documents.source_models import (
 )
 from enterprise_knowledge_rag.retrieval.coverage import EvidenceCoverageService
 
+
+class FakeNeedScoreProvider:
+    def __init__(self, scores_by_query):
+        self.scores_by_query = scores_by_query
+        self.calls = []
+
+    def score(self, query, passages):
+        self.calls.append((query, list(passages)))
+        return [self.scores_by_query.get(query, 0.0)] * len(passages)
+
 PLAN = RetrievalPlan(
     primary_query="病假超过两天交什么材料，紧急就医怎么办？",
     topic="员工请假",
@@ -145,6 +155,79 @@ def test_primary_query_bridge_requires_reranker_approval() -> None:
     # reranker 未认可强相关时禁止主查询桥接，避免任意共享词造成假覆盖。
     assert result.covered_need_ids == frozenset()
     assert result.missing_required_need_ids == frozenset({"rule"})
+
+
+def test_primary_query_bridge_cannot_cover_multiple_needs() -> None:
+    material = make_candidate(
+        "leave:material",
+        title="员工请假制度",
+        content="病假超过两天需要提交医疗机构证明材料。",
+    ).model_copy(update={"reranker_score": 0.8})
+
+    result = EvidenceCoverageService().cover(PLAN, [material])
+
+    assert result.covered_need_ids == frozenset({"material"})
+    assert result.missing_required_need_ids == frozenset({"exception"})
+
+
+def test_semantic_need_score_covers_cross_language_evidence() -> None:
+    plan = RetrievalPlan(
+        primary_query="What is the current expense submission deadline?",
+        topic="finance",
+        evidence_needs=[
+            EvidenceNeed(
+                need_id="deadline",
+                kind="deadline",
+                query="expense submission deadline",
+            )
+        ],
+        requires_multi_hop=False,
+        max_hops=1,
+    )
+    candidate = make_candidate(
+        "expense:deadline",
+        title="差旅与费用报销管理制度",
+        content="出差结束后 15 个自然日内提交报销申请。",
+    )
+    scorer = FakeNeedScoreProvider({"expense submission deadline": 0.86})
+
+    result = EvidenceCoverageService(need_score_provider=scorer).cover(
+        plan,
+        [candidate],
+    )
+
+    assert result.covered_need_ids == frozenset({"deadline"})
+    assert result.annotated_candidates[0].supports_need_ids == {"deadline"}
+
+
+def test_low_semantic_need_score_does_not_cover_evidence() -> None:
+    plan = RetrievalPlan(
+        primary_query="What is the current expense submission deadline?",
+        topic="finance",
+        evidence_needs=[
+            EvidenceNeed(
+                need_id="deadline",
+                kind="deadline",
+                query="expense submission deadline",
+            )
+        ],
+        requires_multi_hop=False,
+        max_hops=1,
+    )
+    candidate = make_candidate(
+        "expense:deadline",
+        title="差旅与费用报销管理制度",
+        content="高铁二等座，飞机经济舱。",
+    )
+    scorer = FakeNeedScoreProvider({"expense submission deadline": 0.2})
+
+    result = EvidenceCoverageService(need_score_provider=scorer).cover(
+        plan,
+        [candidate],
+    )
+
+    assert result.covered_need_ids == frozenset()
+    assert result.missing_required_need_ids == frozenset({"deadline"})
 
 
 @pytest.mark.parametrize("overlap", [-0.1, 1.1])

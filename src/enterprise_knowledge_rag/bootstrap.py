@@ -152,7 +152,8 @@ def build_runtime_service(
         router=DocumentRouter(repository, embeddings),
         section_retrieval=retrieval,
         coverage=EvidenceCoverageService(
-            min_reranker_score=settings.reranker_min_score
+            min_reranker_score=settings.reranker_min_score,
+            need_score_provider=reranker_scores,
         ),
         route_limit=settings.document_route_limit,
         evidence_max_items=settings.evidence_max_items,
