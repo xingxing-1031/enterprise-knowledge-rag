@@ -122,10 +122,11 @@ topic_tags: [请假, 病假]
     assert result.indexed == 1
     _, chunks, vectors, parent = repository.upserts[0]
     assert parent["document_search_text"] == (
-        "员工请假指南\nhandbook\nhr\n病假\n请假\n紧急情况"
+        "员工请假指南\nhandbook\nhr\n病假\n请假\n"
+        "申请流程\n员工应在系统中提交申请。\n紧急情况"
     )
     assert parent["document_embedding_model"] == "BAAI/bge-m3"
-    assert parent["document_embedding"] == [29.0, 1.0, 0.0, 0.0]
+    assert parent["document_embedding"] == [47.0, 1.0, 0.0, 0.0]
     assert len(chunks) == len(vectors)
 
 

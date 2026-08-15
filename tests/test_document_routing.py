@@ -105,3 +105,29 @@ def test_router_preserves_lexical_and_vector_channel_metadata() -> None:
     assert routes[0].lexical_rank == 1
     assert routes[0].vector_rank == 1
     assert routes[0].fused_score > 0
+
+
+def test_router_uses_section_summary_for_fine_grained_asset_question() -> None:
+    repository = FakeRouteRepository(
+        [
+            source(
+                "admin-asset-management",
+                "1.0",
+                "固定资产领用与归还流程",
+                "固定资产领用与归还流程\n异常处理\n资产遗失后应在发现后1个工作日内报备",
+            ),
+            source("hr-leave-policy", "2.0", "员工请假制度", "员工请假制度\n病假"),
+        ],
+        [],
+    )
+    router = DocumentRouter(repository, FakeQueryEmbeddings())
+
+    routes = router.route(
+        "资产遗失后最迟什么时候报备",
+        document_keys=frozenset(
+            {("admin-asset-management", "1.0"), ("hr-leave-policy", "2.0")}
+        ),
+    )
+
+    assert routes[0].document_id == "admin-asset-management"
+    assert routes[0].lexical_rank == 1

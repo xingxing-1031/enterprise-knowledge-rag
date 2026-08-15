@@ -45,25 +45,38 @@ class IndexRepository(Protocol):
     ) -> None: ...
 
 
-_TOP_LEVEL_HEADING = re.compile(r"^#\s+(.+?)\s*$")
+_ROUTING_HEADING = re.compile(r"^(#{1,2})\s+(.+?)\s*$")
+_ROUTING_TEXT_LIMIT = 2_000
 
 
 def _document_search_text(parsed) -> str:
-    """Build a stable metadata-first routing representation for one document."""
+    """Build a bounded metadata and section-summary routing representation."""
 
     record = parsed.record
     values = [record.title, record.document_type.value, record.department]
     values.extend(sorted(record.topic_tags))
-    values.extend(
-        match.group(1).strip()
-        for line in parsed.body.splitlines()
-        if (match := _TOP_LEVEL_HEADING.match(line)) is not None
-    )
+    lines = parsed.body.splitlines()
+    for index, line in enumerate(lines):
+        match = _ROUTING_HEADING.match(line.strip())
+        if match is None:
+            continue
+        heading = match.group(2).strip()
+        values.append(heading)
+        if len(match.group(1)) != 2:
+            continue
+        for summary_line in lines[index + 1 :]:
+            summary = summary_line.strip()
+            if not summary:
+                continue
+            if _ROUTING_HEADING.match(summary):
+                break
+            values.append(summary)
+            break
     unique: list[str] = []
     for value in values:
         if value and value not in unique:
             unique.append(value)
-    return "\n".join(unique)
+    return "\n".join(unique)[:_ROUTING_TEXT_LIMIT]
 
 
 class IndexingService:
