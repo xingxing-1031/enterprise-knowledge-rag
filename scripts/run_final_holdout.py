@@ -23,11 +23,12 @@ except ModuleNotFoundError:
     from evaluation_support import build_live_services, code_commit, corpus_snapshot
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-FROZEN_SHA256 = "9e21768f777e61cccd27adc2555ec6e71233aeb6a65db6e83442e836b1b27fb3"
+FROZEN_SHA256 = "5d3c38e91b5029da1bf498d7cace8f0aac7fe7472b691c551d14a57a96de669a"
 
 
 def verify_frozen_hash(dataset_path: Path) -> None:
-    actual = sha256(dataset_path.read_bytes()).hexdigest()
+    canonical_bytes = dataset_path.read_bytes().replace(b"\r\n", b"\n")
+    actual = sha256(canonical_bytes).hexdigest()
     if actual != FROZEN_SHA256:
         raise RuntimeError(
             f"frozen holdout hash mismatch: expected {FROZEN_SHA256}, got {actual}"
