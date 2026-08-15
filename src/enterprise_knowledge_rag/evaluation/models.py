@@ -43,6 +43,7 @@ class EvaluationCase(StrictModel):
     required_answer_facts: list[str] = Field(default_factory=list)
     required_need_ids: set[str] = Field(default_factory=set)
     expected_retrieval_hops: int = Field(default=1, ge=1, le=2)
+    tags: set[str] = Field(default_factory=set)
 
     @model_validator(mode="after")
     def validate_expected_outcome(self) -> "EvaluationCase":

@@ -88,3 +88,41 @@ def test_development_need_ids_use_server_canonical_vocabulary() -> None:
         for need_id in case.required_need_ids:
             base = re.sub(r"_\d+$", "", need_id)
             assert base in allowed, (case.case_id, need_id)
+
+
+def test_v2_datasets_cover_current_corpus_and_capability_slices() -> None:
+    development = load_dataset(PROJECT_ROOT / "evaluation" / "development-v2.json")
+    holdout = load_dataset(PROJECT_ROOT / "evaluation" / "frozen-holdout-v2.json")
+    _, _, document_ids = corpus_evidence()
+
+    positive_documents = {
+        key.split("@", 1)[0]
+        for case in development.cases
+        if case.expected_outcome.value == "answer"
+        for key in case.gold_evidence_keys
+    }
+    roles = {case.user.role.value for case in development.cases}
+    departments = {
+        department for case in development.cases for department in case.user.departments
+    }
+
+    assert 60 <= len(development.cases) <= 80
+    assert positive_documents == document_ids
+    assert roles == {"employee", "department_admin", "knowledge_admin"}
+    assert {"hr", "finance", "admin", "procurement", "security", "operations"} <= (
+        departments
+    )
+    assert sum(case.expected_retrieval_hops == 2 for case in development.cases) >= 12
+    refusal_count = sum(
+        case.expected_outcome.value == "refusal" for case in development.cases
+    )
+    assert refusal_count >= 8
+    assert {"cross_language", "paraphrase", "multi_hop", "permission"} <= {
+        tag for case in development.cases for tag in case.tags
+    }
+
+    assert holdout.split.value == "frozen_holdout"
+    assert holdout.frozen_at is not None
+    assert 20 <= len(holdout.cases) <= 30
+    development_questions = {case.question for case in development.cases}
+    assert not development_questions & {case.question for case in holdout.cases}

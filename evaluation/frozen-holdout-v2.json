@@ -1,0 +1,623 @@
+{
+  "dataset_id": "enterprise-rag-frozen-holdout-v2",
+  "version": "2.0",
+  "split": "frozen_holdout",
+  "frozen_at": "2026-08-15T12:00:00+08:00",
+  "cases": [
+    {
+      "case_id": "holdout-v2-asset-use",
+      "split": "frozen_holdout",
+      "question": "领取公司电脑时要登记什么并由谁审批？",
+      "as_of": "2026-08-15T10:00:00+08:00",
+      "user": {
+        "user_id": "eval-v2-employee-admin",
+        "role": "employee",
+        "departments": [
+          "admin"
+        ]
+      },
+      "expected_in_scope": true,
+      "expected_outcome": "answer",
+      "expected_refusal_reason": null,
+      "gold_evidence_keys": [
+        "admin-asset-management@1.0#领用登记"
+      ],
+      "expected_versions": {
+        "admin-asset-management": "1.0"
+      },
+      "forbidden_document_ids": [],
+      "required_answer_facts": [
+        "直属主管完成审批"
+      ],
+      "required_need_ids": [],
+      "expected_retrieval_hops": 1,
+      "tags": [
+        "answer"
+      ]
+    },
+    {
+      "case_id": "holdout-v2-security-minimum",
+      "split": "frozen_holdout",
+      "question": "系统权限申请应遵循什么原则？",
+      "as_of": "2026-08-15T10:00:00+08:00",
+      "user": {
+        "user_id": "eval-v2-employee-security",
+        "role": "employee",
+        "departments": [
+          "security"
+        ]
+      },
+      "expected_in_scope": true,
+      "expected_outcome": "answer",
+      "expected_refusal_reason": null,
+      "gold_evidence_keys": [
+        "security-account-access@1.0#最小权限"
+      ],
+      "expected_versions": {
+        "security-account-access": "1.0"
+      },
+      "forbidden_document_ids": [],
+      "required_answer_facts": [
+        "最小权限"
+      ],
+      "required_need_ids": [],
+      "expected_retrieval_hops": 1,
+      "tags": [
+        "answer"
+      ]
+    },
+    {
+      "case_id": "holdout-v2-travel-local",
+      "split": "frozen_holdout",
+      "question": "在常住工作城市出差是否发补贴？",
+      "as_of": "2026-08-15T10:00:00+08:00",
+      "user": {
+        "user_id": "eval-v2-employee-finance",
+        "role": "employee",
+        "departments": [
+          "finance"
+        ]
+      },
+      "expected_in_scope": true,
+      "expected_outcome": "answer",
+      "expected_refusal_reason": null,
+      "gold_evidence_keys": [
+        "finance-travel-allowance@1.0#同城不补贴"
+      ],
+      "expected_versions": {
+        "finance-travel-allowance": "1.0"
+      },
+      "forbidden_document_ids": [],
+      "required_answer_facts": [
+        "不计发出差补贴"
+      ],
+      "required_need_ids": [],
+      "expected_retrieval_hops": 1,
+      "tags": [
+        "answer"
+      ]
+    },
+    {
+      "case_id": "holdout-v2-overtime-record",
+      "split": "frozen_holdout",
+      "question": "加班结束后最晚几天补录申请？",
+      "as_of": "2026-08-15T10:00:00+08:00",
+      "user": {
+        "user_id": "eval-v2-employee-hr",
+        "role": "employee",
+        "departments": [
+          "hr"
+        ]
+      },
+      "expected_in_scope": true,
+      "expected_outcome": "answer",
+      "expected_refusal_reason": null,
+      "gold_evidence_keys": [
+        "hr-attendance-overtime@1.0#加班申请"
+      ],
+      "expected_versions": {
+        "hr-attendance-overtime": "1.0"
+      },
+      "forbidden_document_ids": [],
+      "required_answer_facts": [
+        "3 个工作日内"
+      ],
+      "required_need_ids": [],
+      "expected_retrieval_hops": 1,
+      "tags": [
+        "answer"
+      ]
+    },
+    {
+      "case_id": "holdout-v2-payroll-leaver",
+      "split": "frozen_holdout",
+      "question": "离职当月工资按什么折算？",
+      "as_of": "2026-08-15T10:00:00+08:00",
+      "user": {
+        "user_id": "eval-v2-employee-hr",
+        "role": "employee",
+        "departments": [
+          "hr"
+        ]
+      },
+      "expected_in_scope": true,
+      "expected_outcome": "answer",
+      "expected_refusal_reason": null,
+      "gold_evidence_keys": [
+        "hr-compensation-payroll@1.0#发放时间"
+      ],
+      "expected_versions": {
+        "hr-compensation-payroll": "1.0"
+      },
+      "forbidden_document_ids": [],
+      "required_answer_facts": [
+        "实际工作天数折算"
+      ],
+      "required_need_ids": [],
+      "expected_retrieval_hops": 1,
+      "tags": [
+        "answer"
+      ]
+    },
+    {
+      "case_id": "holdout-v2-benefit-check",
+      "split": "frozen_holdout",
+      "question": "公司每年提供几次免费体检？",
+      "as_of": "2026-08-15T10:00:00+08:00",
+      "user": {
+        "user_id": "eval-v2-employee-hr",
+        "role": "employee",
+        "departments": [
+          "hr"
+        ]
+      },
+      "expected_in_scope": true,
+      "expected_outcome": "answer",
+      "expected_refusal_reason": null,
+      "gold_evidence_keys": [
+        "hr-employee-benefits@1.0#健康福利"
+      ],
+      "expected_versions": {
+        "hr-employee-benefits": "1.0"
+      },
+      "forbidden_document_ids": [],
+      "required_answer_facts": [
+        "每年为员工安排一次免费体检"
+      ],
+      "required_need_ids": [],
+      "expected_retrieval_hops": 1,
+      "tags": [
+        "answer"
+      ]
+    },
+    {
+      "case_id": "holdout-v2-holiday-plan",
+      "split": "frozen_holdout",
+      "question": "公司法定节假日具体日期以什么为准？",
+      "as_of": "2026-08-15T10:00:00+08:00",
+      "user": {
+        "user_id": "eval-v2-employee-hr",
+        "role": "employee",
+        "departments": [
+          "hr"
+        ]
+      },
+      "expected_in_scope": true,
+      "expected_outcome": "answer",
+      "expected_refusal_reason": null,
+      "gold_evidence_keys": [
+        "hr-leave-holidays@1.0#法定节假日"
+      ],
+      "expected_versions": {
+        "hr-leave-holidays": "1.0"
+      },
+      "forbidden_document_ids": [],
+      "required_answer_facts": [
+        "国务院发布的年度安排"
+      ],
+      "required_need_ids": [],
+      "expected_retrieval_hops": 1,
+      "tags": [
+        "answer"
+      ]
+    },
+    {
+      "case_id": "holdout-v2-marriage-material",
+      "split": "frozen_holdout",
+      "question": "婚假申请需要上传什么证件？",
+      "as_of": "2026-08-15T10:00:00+08:00",
+      "user": {
+        "user_id": "eval-v2-employee-hr",
+        "role": "employee",
+        "departments": [
+          "hr"
+        ]
+      },
+      "expected_in_scope": true,
+      "expected_outcome": "answer",
+      "expected_refusal_reason": null,
+      "gold_evidence_keys": [
+        "hr-marriage-leave@1.0#申请材料"
+      ],
+      "expected_versions": {
+        "hr-marriage-leave": "1.0"
+      },
+      "forbidden_document_ids": [],
+      "required_answer_facts": [
+        "结婚证"
+      ],
+      "required_need_ids": [],
+      "expected_retrieval_hops": 1,
+      "tags": [
+        "answer"
+      ]
+    },
+    {
+      "case_id": "holdout-v2-maternity-difficult",
+      "split": "frozen_holdout",
+      "question": "难产增加多少天产假？",
+      "as_of": "2026-08-15T10:00:00+08:00",
+      "user": {
+        "user_id": "eval-v2-employee-hr",
+        "role": "employee",
+        "departments": [
+          "hr"
+        ]
+      },
+      "expected_in_scope": true,
+      "expected_outcome": "answer",
+      "expected_refusal_reason": null,
+      "gold_evidence_keys": [
+        "hr-maternity-leave@1.0#产假天数"
+      ],
+      "expected_versions": {
+        "hr-maternity-leave": "1.0"
+      },
+      "forbidden_document_ids": [],
+      "required_answer_facts": [
+        "增加产假 15 天"
+      ],
+      "required_need_ids": [],
+      "expected_retrieval_hops": 1,
+      "tags": [
+        "answer"
+      ]
+    },
+    {
+      "case_id": "holdout-v2-paternity-window",
+      "split": "frozen_holdout",
+      "question": "陪产假要在配偶生育后多久内休完？",
+      "as_of": "2026-08-15T10:00:00+08:00",
+      "user": {
+        "user_id": "eval-v2-employee-hr",
+        "role": "employee",
+        "departments": [
+          "hr"
+        ]
+      },
+      "expected_in_scope": true,
+      "expected_outcome": "answer",
+      "expected_refusal_reason": null,
+      "gold_evidence_keys": [
+        "hr-paternity-leave@1.0#陪产假天数"
+      ],
+      "expected_versions": {
+        "hr-paternity-leave": "1.0"
+      },
+      "forbidden_document_ids": [],
+      "required_answer_facts": [
+        "3 个月内"
+      ],
+      "required_need_ids": [],
+      "expected_retrieval_hops": 1,
+      "tags": [
+        "answer"
+      ]
+    },
+    {
+      "case_id": "holdout-v2-bereavement-parent",
+      "split": "frozen_holdout",
+      "question": "父母去世可休多少天丧假？",
+      "as_of": "2026-08-15T10:00:00+08:00",
+      "user": {
+        "user_id": "eval-v2-employee-hr",
+        "role": "employee",
+        "departments": [
+          "hr"
+        ]
+      },
+      "expected_in_scope": true,
+      "expected_outcome": "answer",
+      "expected_refusal_reason": null,
+      "gold_evidence_keys": [
+        "hr-bereavement-leave@1.0#丧假天数"
+      ],
+      "expected_versions": {
+        "hr-bereavement-leave": "1.0"
+      },
+      "forbidden_document_ids": [],
+      "required_answer_facts": [
+        "丧假 3 天"
+      ],
+      "required_need_ids": [],
+      "expected_retrieval_hops": 1,
+      "tags": [
+        "answer"
+      ]
+    },
+    {
+      "case_id": "holdout-v2-performance-d",
+      "split": "frozen_holdout",
+      "question": "绩效D档需要附什么？",
+      "as_of": "2026-08-15T10:00:00+08:00",
+      "user": {
+        "user_id": "eval-v2-employee-hr",
+        "role": "employee",
+        "departments": [
+          "hr"
+        ]
+      },
+      "expected_in_scope": true,
+      "expected_outcome": "answer",
+      "expected_refusal_reason": null,
+      "gold_evidence_keys": [
+        "hr-performance-management@1.0#考核等级"
+      ],
+      "expected_versions": {
+        "hr-performance-management": "1.0"
+      },
+      "forbidden_document_ids": [],
+      "required_answer_facts": [
+        "改进计划"
+      ],
+      "required_need_ids": [],
+      "expected_retrieval_hops": 1,
+      "tags": [
+        "answer"
+      ]
+    },
+    {
+      "case_id": "holdout-v2-resignation-access",
+      "split": "frozen_holdout",
+      "question": "离职人员账号和门禁何时回收？",
+      "as_of": "2026-08-15T10:00:00+08:00",
+      "user": {
+        "user_id": "eval-v2-employee-hr",
+        "role": "employee",
+        "departments": [
+          "hr"
+        ]
+      },
+      "expected_in_scope": true,
+      "expected_outcome": "answer",
+      "expected_refusal_reason": null,
+      "gold_evidence_keys": [
+        "hr-resignation-process@1.0#工作交接"
+      ],
+      "expected_versions": {
+        "hr-resignation-process": "1.0"
+      },
+      "forbidden_document_ids": [],
+      "required_answer_facts": [
+        "离职生效日当天回收"
+      ],
+      "required_need_ids": [],
+      "expected_retrieval_hops": 1,
+      "tags": [
+        "answer"
+      ]
+    },
+    {
+      "case_id": "holdout-v2-refund-warehouse",
+      "split": "frozen_holdout",
+      "question": "退货到仓后最迟多久完成退款审核？",
+      "as_of": "2026-08-15T10:00:00+08:00",
+      "user": {
+        "user_id": "eval-v2-employee-operations",
+        "role": "employee",
+        "departments": [
+          "operations"
+        ]
+      },
+      "expected_in_scope": true,
+      "expected_outcome": "answer",
+      "expected_refusal_reason": null,
+      "gold_evidence_keys": [
+        "operations-retail-refund-policy@1.0#退款受理时限"
+      ],
+      "expected_versions": {
+        "operations-retail-refund-policy": "1.0"
+      },
+      "forbidden_document_ids": [],
+      "required_answer_facts": [
+        "2 个工作日内"
+      ],
+      "required_need_ids": [],
+      "expected_retrieval_hops": 1,
+      "tags": [
+        "answer"
+      ]
+    },
+    {
+      "case_id": "holdout-v2-weekly-no-compare",
+      "split": "frozen_holdout",
+      "question": "缺少可比周期时周报如何描述趋势？",
+      "as_of": "2026-08-15T10:00:00+08:00",
+      "user": {
+        "user_id": "eval-v2-employee-operations",
+        "role": "employee",
+        "departments": [
+          "operations"
+        ]
+      },
+      "expected_in_scope": true,
+      "expected_outcome": "answer",
+      "expected_refusal_reason": null,
+      "gold_evidence_keys": [
+        "operations-retail-weekly-review-policy@1.0#对比与异常说明"
+      ],
+      "expected_versions": {
+        "operations-retail-weekly-review-policy": "1.0"
+      },
+      "forbidden_document_ids": [],
+      "required_answer_facts": [
+        "仅陈述当前周期事实"
+      ],
+      "required_need_ids": [],
+      "expected_retrieval_hops": 1,
+      "tags": [
+        "answer"
+      ]
+    },
+    {
+      "case_id": "holdout-v2-procurement-accept",
+      "split": "frozen_holdout",
+      "question": "采购到货后几天内完成验收？",
+      "as_of": "2026-08-15T10:00:00+08:00",
+      "user": {
+        "user_id": "eval-v2-department_admin-procurement",
+        "role": "department_admin",
+        "departments": [
+          "procurement"
+        ]
+      },
+      "expected_in_scope": true,
+      "expected_outcome": "answer",
+      "expected_refusal_reason": null,
+      "gold_evidence_keys": [
+        "procurement-purchase-process@1.0#到货验收"
+      ],
+      "expected_versions": {
+        "procurement-purchase-process": "1.0"
+      },
+      "forbidden_document_ids": [],
+      "required_answer_facts": [
+        "3 个工作日内"
+      ],
+      "required_need_ids": [],
+      "expected_retrieval_hops": 1,
+      "tags": [
+        "answer"
+      ]
+    },
+    {
+      "case_id": "holdout-v2-supplier-activate",
+      "split": "frozen_holdout",
+      "question": "新供应商由谁在审核后激活？",
+      "as_of": "2026-08-15T10:00:00+08:00",
+      "user": {
+        "user_id": "eval-v2-department_admin-procurement",
+        "role": "department_admin",
+        "departments": [
+          "procurement"
+        ]
+      },
+      "expected_in_scope": true,
+      "expected_outcome": "answer",
+      "expected_refusal_reason": null,
+      "gold_evidence_keys": [
+        "procurement-supplier-onboarding-process@1.0#Review and activation"
+      ],
+      "expected_versions": {
+        "procurement-supplier-onboarding-process": "1.0"
+      },
+      "forbidden_document_ids": [],
+      "required_answer_facts": [
+        "procurement administrator"
+      ],
+      "required_need_ids": [],
+      "expected_retrieval_hops": 1,
+      "tags": [
+        "cross_language",
+        "answer"
+      ]
+    },
+    {
+      "case_id": "holdout-v2-onboarding-day",
+      "split": "frozen_holdout",
+      "question": "正常情况下入职材料何时核验完？",
+      "as_of": "2026-08-15T10:00:00+08:00",
+      "user": {
+        "user_id": "eval-v2-employee-hr",
+        "role": "employee",
+        "departments": [
+          "hr"
+        ]
+      },
+      "expected_in_scope": true,
+      "expected_outcome": "answer",
+      "expected_refusal_reason": null,
+      "gold_evidence_keys": [
+        "hr-onboarding-process@1.2#办理时限"
+      ],
+      "expected_versions": {
+        "hr-onboarding-process": "1.2"
+      },
+      "forbidden_document_ids": [],
+      "required_answer_facts": [
+        "到岗当天完成"
+      ],
+      "required_need_ids": [],
+      "expected_retrieval_hops": 1,
+      "tags": [
+        "answer"
+      ]
+    },
+    {
+      "case_id": "holdout-v2-deny-payment",
+      "split": "frozen_holdout",
+      "question": "普通员工能看十万元以上付款审批人吗？",
+      "as_of": "2026-08-15T10:00:00+08:00",
+      "user": {
+        "user_id": "eval-v2-employee-finance",
+        "role": "employee",
+        "departments": [
+          "finance"
+        ]
+      },
+      "expected_in_scope": true,
+      "expected_outcome": "refusal",
+      "expected_refusal_reason": "permission_denied",
+      "gold_evidence_keys": [],
+      "expected_versions": {},
+      "forbidden_document_ids": [
+        "finance-payment-approval"
+      ],
+      "required_answer_facts": [],
+      "required_need_ids": [],
+      "expected_retrieval_hops": 1,
+      "tags": [
+        "permission",
+        "refusal"
+      ]
+    },
+    {
+      "case_id": "holdout-v2-deny-salary",
+      "split": "frozen_holdout",
+      "question": "查询全公司员工的薪酬披露细则",
+      "as_of": "2026-08-15T10:00:00+08:00",
+      "user": {
+        "user_id": "eval-v2-employee-finance",
+        "role": "employee",
+        "departments": [
+          "finance"
+        ]
+      },
+      "expected_in_scope": true,
+      "expected_outcome": "refusal",
+      "expected_refusal_reason": "permission_denied",
+      "gold_evidence_keys": [],
+      "expected_versions": {},
+      "forbidden_document_ids": [
+        "finance-compensation-confidentiality"
+      ],
+      "required_answer_facts": [],
+      "required_need_ids": [],
+      "expected_retrieval_hops": 1,
+      "tags": [
+        "permission",
+        "refusal"
+      ]
+    }
+  ]
+}

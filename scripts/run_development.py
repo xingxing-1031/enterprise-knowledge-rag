@@ -28,7 +28,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 def main() -> int:
     settings = get_settings()
-    dataset = load_dataset(PROJECT_ROOT / "evaluation" / "development.json")
+    dataset = load_dataset(PROJECT_ROOT / "evaluation" / "development-v2.json")
     repetitions = int(os.getenv("EVAL_REPETITIONS", "1"))
     if repetitions < 1:
         raise ValueError("EVAL_REPETITIONS must be positive")

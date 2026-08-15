@@ -10,12 +10,12 @@ from enterprise_knowledge_rag.models import (
     UserRole,
 )
 from enterprise_knowledge_rag.retrieval import RetrievalResult, RetrievalStatus
+from enterprise_knowledge_rag.runtime import IdentityQueryRewriter
 from enterprise_knowledge_rag.workflow import (
     WorkflowDependencies,
     build_workflow,
     run_chat,
 )
-from enterprise_knowledge_rag.runtime import IdentityQueryRewriter
 
 
 class FixedDomain:
