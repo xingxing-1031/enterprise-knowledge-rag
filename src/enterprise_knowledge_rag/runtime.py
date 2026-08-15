@@ -83,7 +83,30 @@ ENTERPRISE_TERMS = {
     "福利",
     "体检",
     "年终奖",
+    "退款",
+    "退货",
+    "售后",
+    "运营复盘",
+    "运营",
+    "经营",
+    "销售",
+    "门店",
+    "指标",
+    "周报",
 }
+
+FOLLOW_UP_MARKERS = (
+    "那",
+    "这个",
+    "那个",
+    "它",
+    "该",
+    "呢",
+    "多久",
+    "多少",
+    "哪些",
+    "怎么办",
+)
 
 
 class EnterpriseDomainClassifier:
@@ -98,8 +121,22 @@ class IdentityQueryRewriter:
         question: str,
         history: Sequence[dict[str, str]],
     ) -> str:
-        del history
-        return question.strip()
+        normalized = question.strip()
+        if not normalized or len(normalized) > 24:
+            return normalized
+        if not any(marker in normalized for marker in FOLLOW_UP_MARKERS):
+            return normalized
+        previous_user = next(
+            (
+                str(item.get("content", "")).strip()
+                for item in reversed(history)
+                if item.get("role") == "user" and str(item.get("content", "")).strip()
+            ),
+            "",
+        )
+        if not previous_user:
+            return normalized
+        return f"{previous_user} {normalized}"
 
 
 class RuntimeRepository(Protocol):

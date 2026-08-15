@@ -15,13 +15,16 @@ from enterprise_knowledge_rag.workflow import (
     build_workflow,
     run_chat,
 )
+from enterprise_knowledge_rag.runtime import IdentityQueryRewriter
 
 
 class FixedDomain:
     def __init__(self, in_scope=True):
         self.in_scope = in_scope
+        self.questions = []
 
     def is_in_scope(self, question):
+        self.questions.append(question)
         return self.in_scope
 
 
@@ -88,6 +91,29 @@ def make_graph(
     )
 
 
+def test_workflow_classifies_the_rewritten_follow_up() -> None:
+    domain = FixedDomain()
+    graph = build_workflow(
+        WorkflowDependencies(
+            domain=domain,
+            rewriter=IdentityQueryRewriter(),
+            retrieval=FixedRetrieval(),
+            generator=AnswerGenerator(FixedAnswerProvider()),
+        )
+    )
+
+    result = run_chat(
+        graph,
+        ChatRequest(question="那票据呢？"),
+        UserContext(user_id="u1", role=UserRole.EMPLOYEE),
+        as_of=datetime(2026, 8, 10, tzinfo=UTC),
+        history=[{"role": "user", "content": "出差结束后最晚多久提交报销？"}],
+    )
+
+    assert result.result.status == "success"
+    assert domain.questions == ["出差结束后最晚多久提交报销？ 那票据呢？"]
+
+
 def run(graph):
     return run_chat(
         graph,
@@ -106,8 +132,8 @@ def test_workflow_success_returns_evidence_and_safe_trace() -> None:
     assert len(result.retrieval_candidates) == 1
     assert result.model_calls == 1
     assert [event.component for event in result.trace] == [
-        "domain",
         "rewrite",
+        "domain",
         "retrieve",
         "evidence",
         "generate",
@@ -118,7 +144,11 @@ def test_workflow_success_returns_evidence_and_safe_trace() -> None:
 def test_out_of_scope_stops_before_retrieval() -> None:
     result = run(make_graph(in_scope=False))
     assert result.result.refusal_reason is RefusalReason.OUT_OF_SCOPE
-    assert [event.component for event in result.trace] == ["domain", "refusal"]
+    assert [event.component for event in result.trace] == [
+        "rewrite",
+        "domain",
+        "refusal",
+    ]
 
 
 def test_insufficient_retrieval_returns_refusal() -> None:

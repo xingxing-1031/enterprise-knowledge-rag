@@ -88,7 +88,7 @@ class WorkflowRun:
 def build_workflow(dependencies: WorkflowDependencies):
     def domain_node(state: WorkflowState) -> dict:
         timer = StageTimer("domain")
-        in_scope = dependencies.domain.is_in_scope(state["request"].question)
+        in_scope = dependencies.domain.is_in_scope(state["rewritten_query"])
         return {
             "in_scope": in_scope,
             "trace": [*state["trace"], timer.event("success")],
@@ -292,19 +292,23 @@ def build_workflow(dependencies: WorkflowDependencies):
     graph.add_node("reject_empty_evidence", reject_empty_evidence)
     graph.add_node("generate", generate_node)
     graph.add_node("finalize", finalize_node)
-    graph.add_edge(START, "domain")
-    graph.add_conditional_edges(
-        "domain",
-        lambda state: "rewrite" if state["in_scope"] else "reject_out_of_scope",
-    )
+    graph.add_edge(START, "rewrite")
     graph.add_edge("reject_out_of_scope", END)
     if dependencies.planner is not None and dependencies.hierarchical is not None:
-        graph.add_edge("rewrite", "retrieval_plan")
+        graph.add_edge("rewrite", "domain")
         graph.add_edge("retrieval_plan", "hierarchical_retrieve")
+        retrieval_entry = "retrieval_plan"
         retrieval_source = "hierarchical_retrieve"
     else:
-        graph.add_edge("rewrite", "retrieve")
+        graph.add_edge("rewrite", "domain")
+        retrieval_entry = "retrieve"
         retrieval_source = "retrieve"
+    graph.add_conditional_edges(
+        "domain",
+        lambda state: retrieval_entry
+        if state["in_scope"]
+        else "reject_out_of_scope",
+    )
     graph.add_conditional_edges(
         retrieval_source,
         lambda state: (

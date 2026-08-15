@@ -15,6 +15,7 @@ from enterprise_knowledge_rag.models import (
 )
 from enterprise_knowledge_rag.runtime import (
     EnterpriseDomainClassifier,
+    IdentityQueryRewriter,
     RuntimeChatService,
 )
 from enterprise_knowledge_rag.workflow import WorkflowRun
@@ -176,6 +177,28 @@ def test_domain_classifier_accepts_enterprise_topics_and_rejects_general_chat() 
     assert classifier.is_in_scope("公司年终奖按几个月工资计算？") is True
     assert classifier.is_in_scope("采购到货以后怎么验收？") is True
     assert classifier.is_in_scope("红烧肉怎么做？") is False
+
+
+def test_domain_classifier_accepts_current_retail_and_operations_topics() -> None:
+    classifier = EnterpriseDomainClassifier()
+
+    assert classifier.is_in_scope("退款申请需要多久内提交？") is True
+    assert classifier.is_in_scope("周度运营复盘需要看哪些指标？") is True
+    assert classifier.is_in_scope("门店销售额下降时应该怎么复盘？") is True
+
+
+def test_query_rewriter_resolves_short_follow_up_from_recent_context() -> None:
+    rewriter = IdentityQueryRewriter()
+
+    rewritten = rewriter.rewrite(
+        "那票据呢？",
+        [
+            {"role": "user", "content": "出差结束后最晚多久提交报销？"},
+            {"role": "assistant", "content": "15个自然日内。"},
+        ],
+    )
+
+    assert rewritten == "出差结束后最晚多久提交报销？ 那票据呢？"
 
 
 def test_domain_classifier_accepts_all_in_scope_development_questions() -> None:
