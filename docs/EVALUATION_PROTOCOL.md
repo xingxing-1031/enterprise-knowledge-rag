@@ -86,6 +86,14 @@
 
 Development 题集额外记录父文档路由召回、必需证据需求覆盖、第二跳触发准确性、第二跳成功率和无关证据比例。异常题保留在执行成功率和核心通过率分母中；这些指标只描述当前报告，不代表生产效果。
 
+## 8.1 Agentic RAG v2（待真实实验）
+
+- `evaluation/development-v2.json` 包含 60 条当前语料用例，覆盖 24 个逻辑文档、三种角色和六个部门。
+- `evaluation/frozen-holdout-v2.json` 包含 20 条新冻结用例，尚未消费。
+- v2 使用 Query Decomposition 将复合问题拆成 evidence needs，并按缺口执行最多一次 Iterative Retrieval；“两阶段”是成本边界，不是对外算法名称。
+- 新报告增加 Citation Recall、need coverage precision、阶段耗时、P99 和安全错误码。
+- 在新的三策略真实实验完成前，README 与简历继续只引用历史报告，禁止预填 v2 提升数字。
+
 ## 9. 一次性冻结验收入口
 
 以下命令已在提交 `f31a2e2` 上执行一次，仅作为历史审计记录，不得再次运行：

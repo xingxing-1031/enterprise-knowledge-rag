@@ -11,3 +11,5 @@ Python、FastAPI、LangGraph、PostgreSQL、pgvector、BM25、向量检索、RRF
 ## 数据写法
 
 只引用 `evaluation/reports/` 中已保存的实际报告，并同时说明语料快照、模型、评测集和限制。不要把 development 结果写成通用准确率，也不要声称真实客户或生产 SLA。
+
+Agentic RAG v2 可描述为：基于 Query Decomposition 将复合问题拆分为结构化证据需求，并按证据缺口触发有界 Iterative Retrieval，在权限、版本与证据预算约束下完成跨文档证据聚合。不得把尚未运行的 v2 评测目标写成实际结果。
