@@ -1,7 +1,7 @@
 # Enterprise Knowledge RAG 项目交接
 
-> 更新时间：2026-08-11
-> 当前版本：v0.1 演示与评测骨架
+> 更新时间：2026-08-15
+> 当前版本：Agentic RAG v2 与一次性冻结验收
 
 ## 1. 项目定位
 
@@ -25,8 +25,8 @@
 | `src/enterprise_knowledge_rag` | Python 后端、检索、工作流、评测实现 |
 | `frontend` | React + Vite 企业知识工作台 |
 | `knowledge` | 版本化合成语料和 manifest |
-| `evaluation/development.json` | 开发集，可用于调试和迭代 |
-| `evaluation/frozen_holdout.json` | 已一次性消费的冻结集，不得重跑或据此调参 |
+| `evaluation/development-v2.json` | 60 条当前开发集，可用于调试和迭代 |
+| `evaluation/frozen-holdout-v2.json` | 20 条已一次性消费的冻结集，不得覆盖或据此调参 |
 | `db/migrations` | 带 SHA-256 校验的增量迁移 |
 | `scripts/migrate.py` | 应用迁移 |
 | `scripts/index_knowledge.py` | 解析、切分、写入向量索引 |
@@ -62,14 +62,14 @@
 
 ## 4. 当前验证状态
 
-当前 production 容器已通过 Docker 运行 PostgreSQL/pgvector，并完成远程模型（`text-embedding-v3` / `qwen3-rerank` / `qwen-plus`）的三方案 development 评测（当前 25 份文档语料快照 `sha256:d5148700…`）：
+当前 production 容器已通过 Docker 运行 PostgreSQL/pgvector，并完成远程模型（`text-embedding-v3` / `qwen3-rerank` / `qwen-plus`）的 v2 三方案 development 评测（27 个文档版本、24 个生效文档、103 个切片，语料快照 `sha256:24af1c83…`）：
 
 - `evaluation/reports/development-*-r1..r3.json` 保存百炼 `qwen-plus` 三策略各 3 次对比，`development-summary.json` 保存均值、范围和总体标准差；`latest-development.json` 指向生产默认 `hybrid_rrf_reranker` 的第 3 次报告。容器内无 git 元数据，`code_commit` 记为 `unknown0`。
-- 纯向量、Hybrid RRF、Hybrid + Reranker 的核心通过率均值分别为 57.41%、53.70%、61.11%；执行成功率均值 98.15%–100%，权限泄漏率均为 0。
-- Reranker 本轮核心通过率与引用准确率（83.33%）均为三策略最高、证据覆盖也最高（40.00%），P95 均值（7.66s）与纯向量（7.65s）持平；Hybrid RRF 核心通过率仍低于纯向量，说明策略排序对语料与用例口径敏感，单轮对比不能外推。三策略二跳成功率均为 0（多跳用例 gold 口径限制）。因此生产默认 `hybrid_rrf_reranker` 是链路展示而非"更准"的结论。
+- 60 条 development 对三策略各重复 3 次，共 540 次真实执行。纯向量、Hybrid RRF、Hybrid + Reranker 核心通过率均值分别为 55.56%、60.56%、56.11%；Hybrid RRF 相对纯向量提升 5.00 个百分点。
+- Reranker 的 Recall@5 均值为 95.62%，高于纯向量 93.97%，但 P50/P95 增至 7.98s/15.25s；这是一项召回与延迟权衡，不代表全面更准。
 - 9 份重复报告的权限泄漏率均为 0。
-- 8 条 frozen holdout 已在提交 `f31a2e2` 上一次性运行（本地 `bge-m3`、12 份文档语料快照 `sha256:810fac…`）：执行成功率 75.00%、核心通过率 62.50%、Recall@5 100.00%、引用准确率 85.00%、权限泄漏率 0%、P50/P95 6.93s/41.45s。
-- frozen 中两条远程 `ModelProviderError` 计为失败，病假紧急流程题因引用不完整未通过；报告已归档为 `evaluation/reports/final-holdout.json`，禁止调参后重跑，数字只代表当时快照。
+- 20 条 v2 frozen holdout 已在部署版本 `10993fa` 上一次性运行：执行成功率 95.00%、核心通过率 90.00%、Recall@5 100.00%、引用准确率 97.06%、引用召回 100.00%、正确拒答率 100.00%、权限泄漏率 0%、P50/P95 6.79s/12.58s。
+- frozen 中 1 条远程 `ModelProviderError` 和 1 条多余引用均保留在分母；报告归档为 `evaluation/reports/final-holdout-v2.json`，禁止调参后重跑，数字只代表当时快照。
 - README、简历和验收材料只能引用 `evaluation/reports/` 可追溯的指标，不能填写用户数或生产指标。
 
 ## 5. 下一次运行顺序
@@ -97,7 +97,7 @@ Windows 本地若无法创建临时文件，应设置可写的 `TEMP`/`TMP` 后�
 
 ## 6. 运行安全边界
 
-- 评测脚本只加载 `evaluation/development.json`；不要为了方便修改为自动读取冻结集。
+- development 入口只加载 `evaluation/development-v2.json`；不要为了方便修改为自动读取冻结集。
 - 不要把合成语料写成真实企业数据，不要把本地演示身份写成正式认证。
 - 不要在未生成真实报告前写“准确率 100%”。
 - 不要用 `docker compose down --volumes` 清理包含重要数据的环境。

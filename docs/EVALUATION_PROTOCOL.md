@@ -8,8 +8,9 @@
 
 ## 2. 数据隔离
 
-- `evaluation/development.json`：18 条，可用于调试、错误分析和策略优化，其中包含跨文档、单跳、两跳不足和权限隔离场景。
-- `evaluation/frozen_holdout.json`：8 条，已冻结，默认运行器拒绝执行。
+- `evaluation/development.json` / `evaluation/frozen_holdout.json`：历史 v1 题集与报告，只作对照。
+- `evaluation/development-v2.json`：60 条当前开发集，可用于调试、错误分析和策略优化。
+- `evaluation/frozen-holdout-v2.json`：20 条当前冻结集，已在代码和配置固定后消费一次，默认运行器仍拒绝执行。
 - 冻结集只允许在代码、配置和 development 结论固定后，由最终验收入口显式解锁一次。
 - 只要根据 frozen 结果修改过代码、Prompt、阈值或数据，该题集立即降级为 development，不能继续称为未见集。
 - 题集文件不被聊天 API 或工作流导入，避免标准答案进入运行上下文。
@@ -73,34 +74,33 @@
 
 ## 7. 当前状态
 
-- 题集结构和 gold 证据契约已自动验证。
-- 评分器、路由/需求/hop 观测和冻结锁定已用确定性测试替身验证。
-- 三方案真实执行器、工作流观测转换和报告实验元数据已接入；`scripts/run_development.py` 只允许加载 development 数据集。
-- 当前机器已通过 Docker 启动 PostgreSQL/pgvector，并完成本地 Embedding、可选 Reranker 与真实 Qwen 的端到端评测。
-- 已保存百炼 `qwen-plus` 三策略各 3 次的原始 development 报告和 `development-summary.json`（当前 25 份文档语料快照 `sha256:d5148700…`，生产容器内重跑，容器无 git 元数据故 `code_commit` 记为 `unknown0`）。
-- 三次结果中纯向量核心通过率均值为 57.41%，Hybrid RRF 为 53.70%，Reranker 为 61.11%；证据覆盖率分别为 30.00% / 30.00% / 40.00%，二跳成功率均为 0.00%；P50/P95 均值分别为 4.78s/7.65s、4.73s/8.44s、5.46s/7.66s。Hybrid RRF 本轮核心通过率仍低于纯向量，说明策略排序对语料与用例口径敏感，单轮对比不能外推。
-- 9 份 `qwen-plus` 报告的权限泄漏率均为 0，执行成功率均值 98.15%–100%。Reranker 本轮核心通过率与引用准确率（83.33%）均为三策略最高，P95 均值（7.66s）与纯向量（7.65s）持平；当前生产演示默认策略为 `hybrid_rrf_reranker`，是为展示完整检索链路（BM25 + 向量 RRF + 重排）与二跳边界，选择取决于冻结集验证与成本。
-- frozen holdout 已在 development 结论提交后一次性消费，报告为 `evaluation/reports/final-holdout.json`；禁止重跑或据此调参后继续称为未见集。
+- 题集结构、gold 证据契约、评分器、冻结锁定与并发结果顺序均有自动化测试。
+- 生产服务器当前索引 27 个文档版本、24 个生效文档、103 个切片；语料快照为 `sha256:24af1c83…`。
+- v2 development 在腾讯云生产容器使用 `text-embedding-v3`、`qwen3-rerank`、`qwen-plus`，三策略各 3 次，共 540 次真实执行。部署版本经发布记录核验为 `10993fa`；镜像未复制 `.git`，因此原始报告内 `code_commit` 字段保留为 `unknown0`，未手工篡改。
+- 纯向量、Hybrid RRF、Hybrid + Reranker 的核心通过率均值分别为 55.56%、60.56%、56.11%；Hybrid RRF 相对纯向量提升 5.00 个百分点。
+- 三策略 Recall@5 均值分别为 93.97%、92.28%、95.62%，引用召回分别为 92.61%、91.61%、94.27%。Reranker 提升召回，但 P50/P95 为 7.98s/15.25s，高于纯向量 7.64s/13.73s，不能表述为全面更优。
+- 9 份 development 报告的权限泄漏率均为 0，执行成功率均值为 98.89%–99.44%。
+- 20 条 v2 frozen holdout 已一次性消费并归档为 `evaluation/reports/final-holdout-v2.json`：执行成功率 95.00%、核心通过率 90.00%、Recall@5 100%、引用准确率 97.06%、引用召回 100%、正确拒答率 100%、权限泄漏率 0%、P50/P95 6.79s/12.58s。1 条远程模型异常和 1 条多余引用均保留在分母中。
 
 ## 8. 分层与多跳指标
 
 Development 题集额外记录父文档路由召回、必需证据需求覆盖、第二跳触发准确性、第二跳成功率和无关证据比例。异常题保留在执行成功率和核心通过率分母中；这些指标只描述当前报告，不代表生产效果。
 
-## 8.1 Agentic RAG v2（待真实实验）
+## 8.1 Agentic RAG v2
 
 - `evaluation/development-v2.json` 包含 60 条当前语料用例，覆盖 24 个逻辑文档、三种角色和六个部门。
-- `evaluation/frozen-holdout-v2.json` 包含 20 条新冻结用例，尚未消费。
+- `evaluation/frozen-holdout-v2.json` 包含 20 条冻结用例，已一次性消费。
 - v2 使用 Query Decomposition 将复合问题拆成 evidence needs，并按缺口执行最多一次 Iterative Retrieval；“两阶段”是成本边界，不是对外算法名称。
 - 新报告增加 Citation Recall、need coverage precision、阶段耗时、P99 和安全错误码。
-- 在新的三策略真实实验完成前，README 与简历继续只引用历史报告，禁止预填 v2 提升数字。
+- v2 原始报告与聚合结果已归档，README 与简历只引用其中可复核的真实数字。
 
 ## 9. 一次性冻结验收入口
 
-以下命令已在提交 `f31a2e2` 上执行一次，仅作为历史审计记录，不得再次运行：
+v1 冻结集曾在提交 `f31a2e2` 上执行一次，历史报告保留为 `final-holdout.json`。v2 冻结集在部署版本 `10993fa` 上执行一次，命令如下，仅作审计记录，不得覆盖现有输出：
 
 ```powershell
 $env:FROZEN_HOLDOUT_CONFIRM = "CONSUME_ONCE"
 .\.venv\Scripts\python.exe scripts\run_final_holdout.py
 ```
 
-入口会拒绝错误确认串，也不会覆盖已有的 `evaluation/reports/final-holdout.json`。本次结果为：8 条、执行成功率 75.00%、核心通过率 62.50%、Recall@5 100.00%、引用准确率 85.00%、权限泄漏率 0%、P50/P95 6.93s/41.45s。两条远程模型异常保留在分母中；验收后没有根据单题结果修改代码、Prompt、阈值或数据。
+入口会拒绝错误确认串，也不会覆盖已有的 `evaluation/reports/final-holdout-v2.json`。v2 结果为：20 条、执行成功率 95.00%、核心通过率 90.00%、Recall@5 100.00%、引用准确率 97.06%、引用召回 100.00%、正确拒答率 100.00%、权限泄漏率 0%、P50/P95 6.79s/12.58s。验收后没有根据单题结果修改代码、Prompt、阈值或数据。

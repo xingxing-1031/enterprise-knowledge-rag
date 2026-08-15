@@ -1,6 +1,6 @@
 # 企业知识库 RAG 服务
 
-这是“企析”项目的独立企业知识库 RAG 子项目。它只负责文档进入知识库、权限过滤、混合检索、重排、证据覆盖、引用和拒答，不负责通用聊天、经营数据库查询或 Agent 编排。
+这是“知枢 Nexus”企业智能 Agent 平台的独立可信证据后端。它只负责文档进入知识库、权限过滤、混合检索、重排、证据覆盖、引用和拒答，不负责通用聊天、经营数据库查询或 Agent 编排。
 
 ## 服务边界
 
@@ -10,7 +10,7 @@
                          权限/版本/生效时间 -> Evidence -> 引用回答
 ```
 
-项目一“企析”通过带 `X-Internal-Token` 的 `/internal/evidence` 调用本服务。项目二不会反向调用项目一，因此不存在循环依赖。直接访问本项目只提供知识库管理员控制台，不提供普通用户聊天入口。
+项目一“知枢 Nexus”通过带 `X-Internal-Token` 的 `/internal/evidence` 调用本服务。项目二不会反向调用项目一，因此不存在循环依赖。直接访问本项目只提供知识库管理员控制台，不提供普通用户聊天入口。
 
 ## 核心能力
 
@@ -36,6 +36,8 @@ docker compose up -d --build --wait
 ## 可复现评测
 
 开发集入口是 `scripts/run_development.py`，评测报告位于 `evaluation/reports/`。当前已保存的报告只代表对应语料、模型和代码快照，不外推为通用准确率，也不冒充生产 SLA。指标定义见 [`docs/EVALUATION_PROTOCOL.md`](docs/EVALUATION_PROTOCOL.md)，面试讲解见 [`docs/INTERVIEW_GUIDE_RAG.md`](docs/INTERVIEW_GUIDE_RAG.md)。
+
+当前 v2 评测使用 60 条 development 用例，对三种策略各重复 3 次，共 540 次真实执行。Hybrid RRF 的核心通过率均值为 60.56%，相对纯向量 55.56% 提升 5.00 个百分点；加入 Reranker 后 Recall@5 均值从 93.97% 提升至 95.62%，但 P50 从 7.64s 增至 7.98s，说明重排存在可观测的效果/延迟权衡。20 条一次性 frozen holdout 的核心通过率为 90.00%、Recall@5 与引用召回均为 100%、引用准确率 97.06%、正确拒答率 100%、权限泄漏率 0%。
 
 ## 诚实边界
 
