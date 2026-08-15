@@ -94,4 +94,7 @@ class WorkflowEvaluationExecutor:
             retrieval_hops=workflow_run.retrieval_hops,
             required_need_ids=set(workflow_run.required_need_ids),
             covered_need_ids=set(workflow_run.covered_need_ids),
+            stage_timings_ms={
+                event.component: event.duration_ms for event in workflow_run.trace
+            },
         )

@@ -140,6 +140,7 @@ def test_runner_freezes_strategy_snapshot_and_aggregates_stages() -> None:
     assert report.metrics.access_leakage_rate == 0.0
     assert report.metrics.p50_latency_ms == 200.0
     assert report.metrics.p95_latency_ms == 300.0
+    assert report.metrics.p99_latency_ms == 300.0
     assert report.metrics.total_model_calls == 2
     assert report.experiment.code_commit == "abc1234"
 
@@ -173,6 +174,7 @@ def test_runner_records_case_failure_without_leaking_exception_text() -> None:
     assert report.metrics.execution_success_rate == 0.5
     assert report.metrics.core_pass_rate == 0.5
     assert report.cases[0].error_type == "TimeoutError"
+    assert report.cases[0].error_code == "execution_error"
     assert "secret" not in report.model_dump_json()
 
 

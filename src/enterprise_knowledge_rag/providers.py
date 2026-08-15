@@ -9,6 +9,10 @@ from pydantic import BaseModel
 class ModelProviderError(RuntimeError):
     """Stable model boundary error without provider response details."""
 
+    def __init__(self, message: str, *, stage: str = "provider_error") -> None:
+        super().__init__(message)
+        self.stage = stage
+
 
 def _default_embedding_loader(model_name: str):
     from sentence_transformers import SentenceTransformer
@@ -78,7 +82,10 @@ class SentenceTransformerEmbeddingProvider:
         except ModelProviderError:
             raise
         except Exception as exc:
-            raise ModelProviderError("embedding model request failed") from exc
+            raise ModelProviderError(
+                "embedding model request failed",
+                stage="embedding_provider_error",
+            ) from exc
         return _validate_vectors(vectors, input_texts, self.expected_dimension)
 
     def embed_documents(self, texts: Sequence[str]) -> list[list[float]]:
@@ -127,7 +134,10 @@ class OpenAICompatibleEmbeddingProvider:
         except ModelProviderError:
             raise
         except Exception as exc:
-            raise ModelProviderError("embedding API request failed") from exc
+            raise ModelProviderError(
+                "embedding API request failed",
+                stage="embedding_provider_error",
+            ) from exc
         return _validate_vectors(vectors, input_texts, self._expected_dimension)
 
     def embed_documents(self, texts: Sequence[str]) -> list[list[float]]:
@@ -166,9 +176,15 @@ class CrossEncoderRerankerProvider:
             )
             scores = [float(score) for score in raw_scores]
         except Exception as exc:
-            raise ModelProviderError("reranker model request failed") from exc
+            raise ModelProviderError(
+                "reranker model request failed",
+                stage="reranker_provider_error",
+            ) from exc
         if len(scores) != len(values) or any(not isfinite(score) for score in scores):
-            raise ModelProviderError("reranker returned invalid scores")
+            raise ModelProviderError(
+                "reranker returned invalid scores",
+                stage="reranker_provider_error",
+            )
         return scores
 
 
@@ -208,7 +224,8 @@ class OpenAICompatibleStructuredProvider:
             return schema.model_validate(payload)
         except Exception as exc:
             raise ModelProviderError(
-                "model returned an invalid structured response"
+                "model returned an invalid structured response",
+                stage="structured_provider_error",
             ) from exc
 
 
@@ -243,10 +260,16 @@ class RemoteRerankerProvider:
             )
             payload = response.json() if hasattr(response, "json") else response
         except Exception as exc:
-            raise ModelProviderError("reranker model request failed") from exc
+            raise ModelProviderError(
+                "reranker model request failed",
+                stage="reranker_provider_error",
+            ) from exc
         results = payload.get("results") if isinstance(payload, dict) else None
         if results is None:
-            raise ModelProviderError("reranker returned no results")
+            raise ModelProviderError(
+                "reranker returned no results",
+                stage="reranker_provider_error",
+            )
         by_index: dict[int, float] = {}
         for item in results:
             if not isinstance(item, dict):
@@ -256,7 +279,10 @@ class RemoteRerankerProvider:
                 by_index[index] = float(item.get("relevance_score", 0.0))
         scores = [by_index.get(index, 0.0) for index in range(len(values))]
         if len(scores) != len(values) or any(not isfinite(score) for score in scores):
-            raise ModelProviderError("reranker returned invalid scores")
+            raise ModelProviderError(
+                "reranker returned invalid scores",
+                stage="reranker_provider_error",
+            )
         return scores
 
 

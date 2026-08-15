@@ -70,6 +70,19 @@ def _grade_citations(
     return len(correct) / len(observation.citations)
 
 
+def _grade_citation_recall(
+    case: EvaluationCase,
+    observation: EvaluationObservation,
+) -> float | None:
+    if case.expected_outcome is ExpectedOutcome.REFUSAL:
+        return None
+    if not case.gold_evidence_keys:
+        return None
+    return len(observation.citations & case.gold_evidence_keys) / len(
+        case.gold_evidence_keys
+    )
+
+
 def _grade_answer_facts(
     case: EvaluationCase,
     observation: EvaluationObservation,
@@ -119,6 +132,17 @@ def _grade_need_metrics(
     return coverage, trigger_accuracy, second_success
 
 
+def _grade_need_coverage_precision(
+    case: EvaluationCase,
+    observation: EvaluationObservation,
+) -> float | None:
+    if not case.required_need_ids or not observation.covered_need_ids:
+        return None
+    return len(case.required_need_ids & observation.covered_need_ids) / len(
+        observation.covered_need_ids
+    )
+
+
 def grade_case(
     case: EvaluationCase,
     observation: EvaluationObservation,
@@ -137,6 +161,7 @@ def grade_case(
     )
     version_accuracy = _grade_versions(case, observation)
     citation_accuracy = _grade_citations(case, observation)
+    citation_recall = _grade_citation_recall(case, observation)
     correct_refusal = (
         float(observation.refusal_reason is case.expected_refusal_reason)
         if case.expected_outcome is ExpectedOutcome.REFUSAL
@@ -151,6 +176,7 @@ def grade_case(
         case,
         observation,
     )
+    need_coverage_precision = _grade_need_coverage_precision(case, observation)
     relevant_documents = _gold_document_ids(case)
     irrelevant_ratio = (
         sum(
@@ -189,11 +215,13 @@ def grade_case(
         access_leakage=float(leaked),
         version_accuracy=version_accuracy,
         citation_accuracy=citation_accuracy,
+        citation_recall=citation_recall,
         correct_refusal=correct_refusal,
         false_refusal=false_refusal,
         automated_answer_score=_grade_answer_facts(case, observation),
         document_route_recall=route_recall,
         evidence_need_coverage=need_coverage,
+        need_coverage_precision=need_coverage_precision,
         second_hop_trigger_accuracy=trigger_accuracy,
         second_hop_success=second_success,
         irrelevant_evidence_ratio=irrelevant_ratio,

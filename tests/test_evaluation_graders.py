@@ -82,6 +82,7 @@ def test_case_grading_keeps_business_stages_separate() -> None:
     assert score.access_leakage == 0.0
     assert score.version_accuracy == 1.0
     assert score.citation_accuracy == 1.0
+    assert score.citation_recall == 1.0
     assert score.automated_answer_score == 1.0
     assert score.false_refusal == 0.0
     assert score.core_pass is True
@@ -234,3 +235,32 @@ def test_two_hop_case_fails_core_when_second_hop_does_not_trigger() -> None:
     assert score.second_hop_trigger_accuracy == 0.0
     assert score.second_hop_success == 0.0
     assert score.core_pass is False
+
+
+def test_need_coverage_precision_detects_runtime_overclaim() -> None:
+    case = make_case(
+        case_id="dev-need-precision-001",
+        required_need_ids={"material"},
+        gold_evidence_keys={"leave-material"},
+    )
+    observation = EvaluationObservation(
+        in_scope=True,
+        retrieved=[
+            ObservedEvidence(
+                evidence_key="leave-material",
+                document_id="hr-leave-policy",
+                version="2.0",
+            )
+        ],
+        citations={"leave-material"},
+        status="success",
+        answer="材料已核验。",
+        latency_ms=100.0,
+        model_calls=1,
+        required_need_ids={"material", "exception"},
+        covered_need_ids={"material", "exception"},
+    )
+
+    score = grade_case(case, observation, k=5)
+
+    assert score.need_coverage_precision == 0.5

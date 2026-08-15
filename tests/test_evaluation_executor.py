@@ -8,6 +8,7 @@ from enterprise_knowledge_rag.evaluation.models import (
     ExpectedOutcome,
 )
 from enterprise_knowledge_rag.models import ChatResult, Citation, UserContext, UserRole
+from enterprise_knowledge_rag.tracing import TraceEvent
 from enterprise_knowledge_rag.workflow import WorkflowRun
 
 
@@ -53,7 +54,15 @@ def test_executor_preserves_retrieval_and_citation_keys() -> None:
     service = FakeService(
         WorkflowRun(
             result=result,
-            trace=(),
+            trace=(
+                TraceEvent(
+                    component="retrieval",
+                    status="success",
+                    occurred_at=datetime(2026, 8, 10, tzinfo=UTC),
+                    duration_ms=12.5,
+                    candidate_count=1,
+                ),
+            ),
             in_scope=True,
             retrieval_candidates=(candidate,),
             model_calls=1,
@@ -92,4 +101,5 @@ def test_executor_preserves_retrieval_and_citation_keys() -> None:
     assert observation.retrieval_hops == 2
     assert observation.required_need_ids == {"deadline"}
     assert observation.covered_need_ids == {"deadline"}
+    assert observation.stage_timings_ms == {"retrieval": 12.5}
     assert service.cleared == [("eval-user", "evaluation:dev-001")]

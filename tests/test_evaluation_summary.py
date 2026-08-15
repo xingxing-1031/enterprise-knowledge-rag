@@ -62,6 +62,7 @@ def make_report(
             irrelevant_evidence_ratio=1.0 - core_pass_rate,
             p50_latency_ms=100.0 * repetition,
             p95_latency_ms=200.0 * repetition,
+            p99_latency_ms=300.0 * repetition,
             total_model_calls=2 * repetition,
         ),
         cases=[],

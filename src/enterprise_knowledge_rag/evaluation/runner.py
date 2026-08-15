@@ -90,6 +90,7 @@ def _aggregate(results: Sequence[CaseEvaluation]) -> AggregateMetrics:
         access_leakage_rate=_mean(_metric_values(results, "access_leakage")),
         version_accuracy=_mean(_metric_values(results, "version_accuracy")),
         citation_accuracy=_mean(_metric_values(results, "citation_accuracy")),
+        citation_recall=_mean(_metric_values(results, "citation_recall")),
         correct_refusal_rate=_mean(_metric_values(results, "correct_refusal")),
         false_refusal_rate=_mean(_metric_values(results, "false_refusal")),
         automated_answer_score=_mean(_metric_values(results, "automated_answer_score")),
@@ -98,6 +99,9 @@ def _aggregate(results: Sequence[CaseEvaluation]) -> AggregateMetrics:
         ),
         evidence_need_coverage=_mean(
             _metric_values(results, "evidence_need_coverage")
+        ),
+        need_coverage_precision=_mean(
+            _metric_values(results, "need_coverage_precision")
         ),
         second_hop_trigger_accuracy=_mean(
             _metric_values(results, "second_hop_trigger_accuracy")
@@ -109,6 +113,9 @@ def _aggregate(results: Sequence[CaseEvaluation]) -> AggregateMetrics:
         p50_latency_ms=median(latencies) if latencies else None,
         p95_latency_ms=(
             _nearest_rank_percentile(latencies, 0.95) if latencies else None
+        ),
+        p99_latency_ms=(
+            _nearest_rank_percentile(latencies, 0.99) if latencies else None
         ),
         total_model_calls=sum(result.observation.model_calls for result in successful),
     )
@@ -164,6 +171,7 @@ class EvaluationRunner:
                     CaseEvaluation(
                         case_id=case.case_id,
                         error_type=type(exc).__name__,
+                        error_code=getattr(exc, "stage", "execution_error"),
                     )
                 )
 

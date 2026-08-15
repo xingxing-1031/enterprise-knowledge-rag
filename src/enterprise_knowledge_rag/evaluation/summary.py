@@ -12,13 +12,16 @@ SUMMARY_METRICS = (
     "core_pass_rate",
     "recall_at_k",
     "citation_accuracy",
+    "citation_recall",
     "access_leakage_rate",
     "evidence_need_coverage",
+    "need_coverage_precision",
     "second_hop_trigger_accuracy",
     "second_hop_success",
     "irrelevant_evidence_ratio",
     "p50_latency_ms",
     "p95_latency_ms",
+    "p99_latency_ms",
     "total_model_calls",
 )
 

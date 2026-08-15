@@ -88,6 +88,8 @@ class EvaluationObservation(StrictModel):
     retrieval_hops: int = Field(default=0, ge=0, le=2)
     required_need_ids: set[str] = Field(default_factory=set)
     covered_need_ids: set[str] = Field(default_factory=set)
+    stage_timings_ms: dict[str, float] = Field(default_factory=dict)
+    stage_error_code: str | None = None
 
 
 class ExperimentMetadata(StrictModel):
@@ -113,11 +115,13 @@ class CaseMetrics(StrictModel):
     access_leakage: float = Field(ge=0.0, le=1.0)
     version_accuracy: float | None = Field(default=None, ge=0.0, le=1.0)
     citation_accuracy: float | None = Field(default=None, ge=0.0, le=1.0)
+    citation_recall: float | None = Field(default=None, ge=0.0, le=1.0)
     correct_refusal: float | None = Field(default=None, ge=0.0, le=1.0)
     false_refusal: float = Field(ge=0.0, le=1.0)
     automated_answer_score: float | None = Field(default=None, ge=0.0, le=1.0)
     document_route_recall: float | None = Field(default=None, ge=0.0, le=1.0)
     evidence_need_coverage: float | None = Field(default=None, ge=0.0, le=1.0)
+    need_coverage_precision: float | None = Field(default=None, ge=0.0, le=1.0)
     second_hop_trigger_accuracy: float | None = Field(
         default=None,
         ge=0.0,
@@ -133,6 +137,7 @@ class CaseEvaluation(StrictModel):
     observation: EvaluationObservation | None = None
     metrics: CaseMetrics | None = None
     error_type: str | None = None
+    error_code: str | None = None
 
 
 class AggregateMetrics(StrictModel):
@@ -146,11 +151,13 @@ class AggregateMetrics(StrictModel):
     access_leakage_rate: float | None = Field(default=None, ge=0.0, le=1.0)
     version_accuracy: float | None = Field(default=None, ge=0.0, le=1.0)
     citation_accuracy: float | None = Field(default=None, ge=0.0, le=1.0)
+    citation_recall: float | None = Field(default=None, ge=0.0, le=1.0)
     correct_refusal_rate: float | None = Field(default=None, ge=0.0, le=1.0)
     false_refusal_rate: float | None = Field(default=None, ge=0.0, le=1.0)
     automated_answer_score: float | None = Field(default=None, ge=0.0, le=1.0)
     document_route_recall: float | None = Field(default=None, ge=0.0, le=1.0)
     evidence_need_coverage: float | None = Field(default=None, ge=0.0, le=1.0)
+    need_coverage_precision: float | None = Field(default=None, ge=0.0, le=1.0)
     second_hop_trigger_accuracy: float | None = Field(
         default=None,
         ge=0.0,
@@ -164,6 +171,8 @@ class AggregateMetrics(StrictModel):
     )
     p50_latency_ms: float | None = Field(default=None, ge=0.0)
     p95_latency_ms: float | None = Field(default=None, ge=0.0)
+    p99_latency_ms: float | None = Field(default=None, ge=0.0)
+    refusal_reason_confusion: dict[str, int] = Field(default_factory=dict)
     total_model_calls: int = Field(ge=0)
 
 
