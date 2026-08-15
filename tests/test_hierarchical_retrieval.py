@@ -40,13 +40,22 @@ class FakeCorpus:
 
 
 class FakeRouter:
-    def __init__(self, route):
+    def __init__(self, route, supplemental_routes=None):
         self.route_item = route
+        self.supplemental_routes = list(supplemental_routes or [])
         self.received_keys = None
+        self.calls = []
 
     def route(self, query, document_keys, *, limit=4):
         self.received_keys = document_keys
-        return (self.route_item,) if self.route_item else ()
+        self.calls.append((query, document_keys))
+        index = len(self.calls) - 1
+        route_item = (
+            self.supplemental_routes[index - 1]
+            if index > 0 and index - 1 < len(self.supplemental_routes)
+            else self.route_item
+        )
+        return (route_item,) if route_item else ()
 
 
 class FakeSectionRetrieval:
@@ -157,3 +166,81 @@ def test_one_hop_plan_does_not_retry_when_required_evidence_is_missing() -> None
     assert result.status is RetrievalStatus.INSUFFICIENT_EVIDENCE
     assert result.hop_count == 1
     assert len(sections.calls) == 1
+
+
+def test_missing_need_reroutes_to_another_authorized_parent_document() -> None:
+    material = make_candidate(
+        "leave:material",
+        title="员工请假制度",
+        content="病假超过两天需要提交医疗机构证明材料。",
+        document_id="leave-policy",
+    )
+    exception = make_candidate(
+        "leave:exception",
+        title="Medical emergency process",
+        content="紧急就医无法提前申请时，应向直属主管报备。",
+        document_id="medical-process",
+    )
+    first_route = route_for(material)
+    second_route = route_for(exception)
+    router = FakeRouter(first_route, supplemental_routes=[second_route])
+    sections = FakeSectionRetrieval([material], [exception])
+    service = HierarchicalRetrievalService(
+        corpus=FakeCorpus([material.document, exception.document]),
+        router=router,
+        section_retrieval=sections,
+        coverage=EvidenceCoverageService(),
+    )
+
+    result = service.retrieve(PLAN, USER, AS_OF)
+
+    assert result.status is RetrievalStatus.READY
+    assert result.hop_count == 2
+    assert {route.document_id for route in result.routes} == {
+        "leave-policy",
+        "medical-process",
+    }
+    assert router.calls[1][0].startswith("员工请假 exception")
+    assert sections.calls[-1][1] == frozenset(
+        {("leave-policy", "1.0"), ("medical-process", "1.0")}
+    )
+
+
+def test_related_restricted_document_returns_permission_denied_without_leak() -> None:
+    public = make_candidate(
+        "expense:public",
+        title="差旅与费用报销管理制度",
+        content="普通差旅报销规则。",
+        document_id="finance-expense-policy",
+    )
+    restricted = make_candidate(
+        "payment:restricted",
+        title="付款申请审批权限表",
+        content="全员付款审批额度。",
+        document_id="finance-payment-approval",
+    )
+    restricted.document.visibility = Visibility.RESTRICTED
+    restricted.document.allowed_roles = {UserRole.DEPARTMENT_ADMIN}
+    plan = RetrievalPlan(
+        primary_query="普通员工能查询全员付款审批额度吗",
+        topic="finance",
+        evidence_needs=[
+            EvidenceNeed(need_id="rule", kind="rule", query="付款审批额度")
+        ],
+        requires_multi_hop=False,
+        max_hops=1,
+    )
+    service = HierarchicalRetrievalService(
+        corpus=FakeCorpus([public.document, restricted.document]),
+        router=FakeRouter(route_for(public)),
+        section_retrieval=FakeSectionRetrieval([], []),
+        coverage=EvidenceCoverageService(),
+    )
+
+    result = service.retrieve(plan, USER, AS_OF)
+
+    assert result.status is RetrievalStatus.PERMISSION_DENIED
+    assert all(
+        candidate.document.document_id != "finance-payment-approval"
+        for candidate in result.evidence_candidates
+    )
